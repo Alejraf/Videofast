@@ -4,13 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Goldstar</title>
-  <!-- Tailwind CSS -->
   <script src="https://tailwindcss.com"></script>
-  <!-- React y Babel -->
   <script crossorigin src="https://unpkg.com"></script>
   <script crossorigin src="https://unpkg.com"></script>
-  <script src="https://unpkg.com"></script>
-  <!-- Iconos Lucide -->
   <script src="https://unpkg.com"></script>
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -20,12 +16,11 @@
 <body class="bg-black text-white overflow-hidden select-none">
   <div id="root"></div>
 
-  <!-- Firebase SDK (Módulos) -->
+  <!-- Firebase SDK (Auth y Firestore gratuitos) -->
   <script type="module">
     import { initializeApp } from "https://gstatic.com";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://gstatic.com";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp } from "https://gstatic.com";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://gstatic.com";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAmOYaCC8du903_Et_SfITxLxvrnAEROKU",
@@ -39,17 +34,18 @@
     const app = initializeApp(firebaseConfig);
     window.fbAuth = getAuth(app);
     window.fbDb = getFirestore(app);
-    window.fbStorage = getStorage(app);
     window.fbFuncs = {
       signInAnonymously, onAuthStateChanged,
-      collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp,
-      ref, uploadBytesResumable, getDownloadURL
+      collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp
     };
     window.dispatchEvent(new Event('firebase-ready'));
   </script>
 
   <!-- Lógica de la Aplicación -->
   <script type="text/babel">
+    const CLOUDINARY_CLOUD_NAME = "wtua9l4u";
+    const CLOUDINARY_UPLOAD_PRESET = "Videofast";
+
     const { useState, useEffect, useRef } = React;
 
     function App() {
@@ -85,30 +81,32 @@
         return () => { unsubAuth(); unsubDocs(); };
       }, [ready]);
 
-      useEffect(() => {
-        if (window.lucide) window.lucide.createIcons();
-      });
-
       const handleUpload = async (e) => {
         e.preventDefault();
         if (!file || !ready) return;
         setUploading(true);
+        setProgress(5);
 
-        const { ref, uploadBytesResumable, getDownloadURL, addDoc, collection, serverTimestamp } = window.fbFuncs;
-        const storageRef = ref(window.fbStorage, `videos/${Date.now()}_${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-        uploadTask.on(
-          'state_changed',
-          (snap) => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-          (err) => {
-            alert("Error al subir (revisa si Storage está activado en Firebase): " + err.message);
-            setUploading(false);
-          },
-          async () => {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://cloudinary.com{CLOUDINARY_CLOUD_NAME}/video/upload`, true);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const pct = Math.round((event.loaded / event.total) * 100);
+            setProgress(pct);
+          }
+        };
+
+        xhr.onload = async () => {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            const { addDoc, collection, serverTimestamp } = window.fbFuncs;
             await addDoc(collection(window.fbDb, 'videos'), {
-              videoUrl: downloadURL,
+              videoUrl: response.secure_url,
               caption: caption || 'Video en Goldstar',
               user: user ? `User_${user.uid.slice(0, 5)}` : 'Invitado',
               likes: 0,
@@ -119,8 +117,18 @@
             setFile(null);
             setCaption('');
             setProgress(0);
+          } else {
+            alert("Error al subir a Cloudinary. Verifica que el preset 'Videofast' esté en modo 'Sin firmar'.");
+            setUploading(false);
           }
-        );
+        };
+
+        xhr.onerror = () => {
+          alert("Error de red al intentar subir el video.");
+          setUploading(false);
+        };
+
+        xhr.send(formData);
       };
 
       const handleLike = async (videoId) => {
@@ -130,13 +138,11 @@
 
       return (
         <div className="relative h-screen w-screen bg-black text-white overflow-hidden">
-          {/* Barra superior */}
           <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4 bg-gradient-to-b from-black/80 to-transparent">
             <h1 className="text-xl font-extrabold tracking-wider text-yellow-400">GOLDSTAR</h1>
             <span className="text-xs bg-white/15 px-3 py-1 rounded-full backdrop-blur-sm">Para ti</span>
           </div>
 
-          {/* Feed Vertical */}
           <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar">
             {videos.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-gray-400 p-6 text-center">
@@ -155,7 +161,6 @@
             )}
           </div>
 
-          {/* Menú Inferior */}
           <div className="absolute bottom-0 left-0 right-0 z-20 h-16 bg-black/90 border-t border-white/10 flex justify-around items-center">
             <button className="text-sm font-bold text-white">Inicio</button>
             <button
@@ -167,7 +172,6 @@
             <button className="text-sm text-gray-400">Perfil</button>
           </div>
 
-          {/* Pantalla Subir Video */}
           {showUpload && (
             <div className="absolute inset-0 z-30 bg-black/95 flex flex-col justify-center p-6">
               <div className="flex justify-between items-center mb-6">
@@ -226,4 +230,6 @@
         const observer = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
+              videoRef.current?.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+            } else {
     
