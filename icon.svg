@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#facc15"/>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#facc15"/>
       <stop offset="100%" stop-color="#d97706"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="#09090b"/>
-  <path fill="url(#g)" d="M256 76l51.8 118.4L436 208.2l-96.4 85.6 27.6 126.2L256 355.4 144.8 420l27.6-126.2L76 208.2l128.2-13.8z"/>
+  <rect width="512" height="512" rx="115" fill="#09090b"/>
+  <polygon points="256,74 309,192 438,206 341,293 368,420 256,355 144,420 171,293 74,206 203,192" fill="url(#goldGrad)"/>
 </svg>

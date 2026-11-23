@@ -2,33 +2,58 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Goldstar — Videos Cortos y Reels</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Goldstar — Videos Cortos, Creadores y Series</title>
   <meta name="theme-color" content="#000000" />
-  <meta name="description" content="Comparte y descubre videos verticales cortos en Goldstar." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Goldstar" />
+  <meta name="description" content="Descubre, crea y comparte videos verticales cortos en Goldstar." />
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: #000; color: #fff; overflow: hidden; user-select: none; height: 100dvh; width: 100vw; }
     .app { position: relative; height: 100dvh; width: 100vw; background: #000; overflow: hidden; }
 
-    /* Header */
+    /* Top Header & TikTok Tabs */
     .header {
-      position: absolute; top: 0; left: 0; right: 0; z-index: 20;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 16px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.88), transparent);
+      position: absolute; top: 0; left: 0; right: 0; z-index: 25;
+      padding: calc(10px + env(safe-area-inset-top)) 14px 12px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.92) 40%, transparent);
       pointer-events: none;
     }
-    .header > * { pointer-events: auto; }
-    .logo { font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #facc15; display: flex; align-items: center; gap: 6px; }
-    .header-actions { display: flex; align-items: center; gap: 8px; }
-    .badge { font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.16); backdrop-filter: blur(6px); padding: 5px 11px; border-radius: 20px; }
-    .sound-pill {
-      background: rgba(250,204,21,0.18); border: 1px solid rgba(250,204,21,0.45);
-      color: #facc15; font-size: 11px; font-weight: 800; padding: 5px 10px;
-      border-radius: 20px; cursor: pointer;
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; pointer-events: auto; }
+    .logo { font-size: 18px; font-weight: 900; letter-spacing: 1.5px; color: #facc15; display: flex; align-items: center; gap: 5px; }
+    .header-tools { display: flex; align-items: center; gap: 7px; }
+    .pill-btn {
+      background: rgba(255,255,255,0.14); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.18);
+      color: #fff; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 999px; cursor: pointer;
+    }
+    .pill-btn.gold { background: rgba(250,204,21,0.2); border-color: rgba(250,204,21,0.55); color: #facc15; }
+    .feed-tabs { display: flex; justify-content: center; gap: 18px; pointer-events: auto; }
+    .feed-tab {
+      background: none; border: none; color: rgba(255,255,255,0.62); font-size: 14px; font-weight: 800;
+      padding-bottom: 5px; cursor: pointer; position: relative;
+    }
+    .feed-tab.active { color: #fff; }
+    .feed-tab.active::after {
+      content: ""; position: absolute; left: 20%; right: 20%; bottom: 0; height: 3px;
+      background: #facc15; border-radius: 99px;
+    }
+
+    /* Search Bar Overlay */
+    .search-bar {
+      display: flex; gap: 8px; margin-top: 8px; pointer-events: auto;
+    }
+    .search-bar input {
+      flex: 1; background: rgba(17,24,39,0.92); border: 1px solid #374151; border-radius: 999px;
+      padding: 8px 14px; color: #fff; font-size: 13px; outline: none;
+    }
+    .search-bar button {
+      background: #facc15; color: #000; border: none; border-radius: 999px; padding: 0 14px; font-weight: 800; font-size: 12px; cursor: pointer;
     }
 
     /* Views */
@@ -39,91 +64,120 @@
     .feed { height: 100%; width: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
     .feed::-webkit-scrollbar { display: none; }
     .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; color: #9ca3af; }
-    .btn-primary { background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-weight: 800; border: none; padding: 13px 26px; border-radius: 30px; font-size: 15px; margin-top: 16px; cursor: pointer; }
+    .btn-primary { background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-weight: 900; border: none; padding: 12px 24px; border-radius: 30px; font-size: 14px; margin-top: 14px; cursor: pointer; }
 
     /* Video Slide */
     .slide { position: relative; height: 100dvh; width: 100vw; scroll-snap-align: start; background: #000; display: flex; align-items: center; justify-content: center; }
     .slide video { height: 100%; width: 100%; object-fit: cover; }
+    .speed-badge {
+      position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.75); border: 1px solid #facc15; color: #facc15;
+      font-size: 11px; font-weight: 900; padding: 4px 12px; border-radius: 999px; z-index: 18; display: none;
+    }
     .heart-burst {
-      position: absolute; font-size: 82px; pointer-events: none; opacity: 0;
+      position: absolute; font-size: 86px; pointer-events: none; opacity: 0;
       transform: scale(0.4); transition: all 0.35s ease; z-index: 15;
     }
     .heart-burst.show { opacity: 1; transform: scale(1.15); }
 
-    .actions { position: absolute; right: 14px; bottom: 92px; z-index: 12; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    /* Interactive Progress Bar */
+    .vid-progress {
+      position: absolute; left: 0; right: 0; bottom: 64px; height: 4px;
+      background: rgba(255,255,255,0.22); z-index: 18; cursor: pointer;
+    }
+    .vid-progress-fill { height: 100%; width: 0%; background: #facc15; transition: width 0.1s linear; }
+
+    /* Right Action Rail */
+    .actions { position: absolute; right: 12px; bottom: 86px; z-index: 14; display: flex; flex-direction: column; align-items: center; gap: 13px; }
     .act-item { display: flex; flex-direction: column; align-items: center; }
     .act-btn {
-      background: rgba(0,0,0,0.52); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.14);
-      color: #fff; width: 46px; height: 46px; border-radius: 50%; font-size: 20px;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.16);
+      color: #fff; width: 45px; height: 45px; border-radius: 50%; font-size: 19px;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .act-btn.liked { background: rgba(239,68,68,0.28); border-color: #ef4444; }
+    .act-btn.liked { background: rgba(239,68,68,0.3); border-color: #ef4444; }
+    .act-btn.saved { background: rgba(250,204,21,0.28); border-color: #facc15; }
     .act-count { font-size: 11px; font-weight: 700; margin-top: 3px; text-shadow: 0 1px 3px #000; }
 
-    .info { position: absolute; left: 16px; bottom: 82px; right: 76px; z-index: 12; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
-    .username { font-weight: 800; font-size: 15px; color: #facc15; margin-bottom: 4px; }
+    /* Bottom Video Info */
+    .info { position: absolute; left: 14px; bottom: 80px; right: 74px; z-index: 14; text-shadow: 0 1px 4px rgba(0,0,0,0.92); }
+    .creator-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+    .username { font-weight: 900; font-size: 15px; color: #facc15; cursor: pointer; }
+    .follow-btn {
+      background: #facc15; color: #000; border: none; border-radius: 999px;
+      font-size: 11px; font-weight: 900; padding: 3px 10px; cursor: pointer;
+    }
+    .follow-btn.following { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
     .caption { font-size: 13.5px; color: #f3f4f6; line-height: 1.35; word-break: break-word; }
-    .tag-pill { display: inline-block; margin-top: 6px; font-size: 11px; background: rgba(255,255,255,0.14); padding: 2px 8px; border-radius: 6px; color: #fde047; }
+    .hashtags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .hash-chip { font-size: 11.5px; font-weight: 700; color: #fde047; cursor: pointer; }
+    .badges-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .tag-pill { display: inline-block; font-size: 10.5px; font-weight: 700; background: rgba(255,255,255,0.14); padding: 2px 8px; border-radius: 6px; color: #fde047; }
+    .sponsor-pill { display: inline-block; font-size: 10.5px; font-weight: 800; background: rgba(16,185,129,0.22); border: 1px solid rgba(16,185,129,0.45); padding: 2px 8px; border-radius: 6px; color: #6ee7b7; }
 
-    /* Native Sponsored Slide (Monetag Interstitial / Direct Link Card) */
-    .ad-slide {
-      background: radial-gradient(circle at top, #1f1907, #050505 70%);
-      padding: 28px; text-align: center; flex-direction: column;
-    }
-    .ad-card {
-      max-width: 340px; width: 100%; background: #111827; border: 1px solid rgba(250,204,21,0.35);
-      border-radius: 22px; padding: 24px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.75);
-    }
+    /* Native Sponsored Slide */
+    .ad-slide { background: radial-gradient(circle at top, #1f1907, #050505 70%); padding: 28px; text-align: center; flex-direction: column; }
+    .ad-card { max-width: 340px; width: 100%; background: #111827; border: 1px solid rgba(250,204,21,0.35); border-radius: 22px; padding: 24px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.75); }
     .ad-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #facc15; background: rgba(250,204,21,0.14); padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
     .ad-card h3 { font-size: 19px; margin-bottom: 8px; color: #fff; }
     .ad-card p { font-size: 13px; color: #9ca3af; line-height: 1.45; margin-bottom: 18px; }
-    .ad-cta {
-      display: block; width: 100%; padding: 14px; border-radius: 14px; border: none;
-      background: linear-gradient(135deg, #facc15, #d97706); color: #000;
-      font-weight: 900; font-size: 15px; cursor: pointer; text-decoration: none;
-    }
+    .ad-cta { display: block; width: 100%; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-weight: 900; font-size: 15px; cursor: pointer; text-decoration: none; }
 
-    /* Profile View */
-    .profile-wrap { height: 100%; overflow-y: auto; padding: 74px 16px 90px; background: #09090b; }
-    .prof-card { background: #111827; border: 1px solid #1f2937; border-radius: 18px; padding: 18px; text-align: center; margin-bottom: 16px; }
+    /* Profile & Creator Studio */
+    .profile-wrap { height: 100%; overflow-y: auto; padding: 84px 16px 96px; background: #09090b; }
+    .prof-card { background: #111827; border: 1px solid #1f2937; border-radius: 18px; padding: 18px; text-align: center; margin-bottom: 14px; }
     .avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-size: 26px; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-    .name-row { display: flex; gap: 8px; margin-top: 12px; }
-    .name-row input { flex: 1; background: #030712; border: 1px solid #374151; border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 14px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; background: #030712; padding: 10px; border-radius: 12px; border: 1px solid #1f2937; }
+    .stat-box strong { display: block; font-size: 16px; color: #facc15; }
+    .stat-box span { font-size: 11px; color: #9ca3af; }
+    .name-row { display: flex; gap: 8px; margin-top: 10px; }
+    .name-row input { flex: 1; background: #030712; border: 1px solid #374151; border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 13.5px; }
     .name-row button { background: #facc15; color: #000; border: none; border-radius: 10px; padding: 0 14px; font-weight: 800; cursor: pointer; }
-    .my-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+    .brand-studio {
+      background: linear-gradient(135deg, #172554, #1e1b4b); border: 1px solid #3b82f6;
+      border-radius: 16px; padding: 14px; margin-bottom: 14px;
+    }
+    .brand-studio h4 { font-size: 14px; color: #93c5fd; margin-bottom: 4px; }
+    .brand-studio p { font-size: 12px; color: #dbeafe; line-height: 1.4; margin-bottom: 10px; }
+    .prof-subtabs { display: flex; gap: 8px; margin-bottom: 10px; }
+    .prof-subtab { flex: 1; background: #111827; border: 1px solid #1f2937; color: #9ca3af; padding: 9px; border-radius: 10px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+    .prof-subtab.active { border-color: #facc15; color: #facc15; }
+    .my-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
     .grid-item { position: relative; aspect-ratio: 9/16; background: #1f2937; border-radius: 10px; overflow: hidden; }
     .grid-item video { width: 100%; height: 100%; object-fit: cover; }
     .del-vid { position: absolute; top: 5px; right: 5px; background: rgba(220,38,38,0.88); color: #fff; border: none; border-radius: 6px; padding: 3px 6px; font-size: 11px; cursor: pointer; }
-    .legal-box { margin-top: 18px; font-size: 11.5px; color: #9ca3af; text-align: center; line-height: 1.5; }
-    .legal-box a { color: #facc15; text-decoration: none; margin: 0 6px; }
+    .legal-box { margin-top: 18px; font-size: 11.5px; color: #9ca3af; text-align: center; line-height: 1.5; background: #111827; padding: 14px; border-radius: 14px; border: 1px solid #1f2937; }
+    .legal-box a { color: #facc15; text-decoration: none; margin: 0 6px; font-weight: 700; }
+    .danger-btn { margin-top: 10px; background: rgba(239,68,68,0.16); border: 1px solid rgba(239,68,68,0.45); color: #fca5a5; padding: 8px 14px; border-radius: 10px; font-size: 11.5px; font-weight: 700; cursor: pointer; }
 
-    /* Navbar Inferior */
+    /* Bottom Navbar */
     .navbar {
-      position: absolute; bottom: 0; left: 0; right: 0; z-index: 20; height: 64px;
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 25; height: 64px;
       background: rgba(0,0,0,0.96); border-top: 1px solid rgba(255,255,255,0.12);
       display: flex; justify-content: space-around; align-items: center;
     }
-    .nav-btn { background: none; border: none; color: #9ca3af; font-size: 12px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+    .nav-btn { background: none; border: none; color: #9ca3af; font-size: 11.5px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
     .nav-btn.active { color: #facc15; }
     .add-btn { background: linear-gradient(135deg, #facc15, #d97706); color: #000; border: none; padding: 6px 20px; border-radius: 12px; font-size: 22px; font-weight: 900; cursor: pointer; }
 
     /* Modals */
-    .modal { position: absolute; inset: 0; z-index: 40; background: rgba(0,0,0,0.96); display: flex; flex-direction: column; justify-content: center; padding: 22px; overflow-y: auto; }
+    .modal { position: absolute; inset: 0; z-index: 45; background: rgba(0,0,0,0.96); display: flex; flex-direction: column; justify-content: center; padding: 20px; overflow-y: auto; }
     .hidden { display: none !important; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-    .modal-title { font-size: 20px; font-weight: 900; color: #facc15; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-title { font-size: 19px; font-weight: 900; color: #facc15; }
     .close-btn { background: #1f2937; border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; }
-    .dropzone { border: 2px dashed #4b5563; border-radius: 16px; padding: 26px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; margin-bottom: 14px; }
-    .text-input { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 12px; padding: 13px; color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; }
-    .check-row { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; color: #d1d5db; margin-bottom: 14px; line-height: 1.35; }
+    .dropzone { border: 2px dashed #4b5563; border-radius: 16px; padding: 22px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; margin-bottom: 12px; }
+    .text-input, .select-input { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 12px; padding: 12px; color: #fff; font-size: 14px; margin-bottom: 10px; outline: none; }
+    .check-row { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; color: #d1d5db; margin-bottom: 12px; line-height: 1.35; }
     .check-row input { margin-top: 3px; accent-color: #facc15; }
-    .progress-wrap { width: 100%; background: #1f2937; border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 14px; }
+    .progress-wrap { width: 100%; background: #1f2937; border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 12px; }
     .progress-fill { background: #facc15; height: 100%; width: 0%; transition: width 0.2s; }
     .submit-btn { width: 100%; background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-weight: 900; font-size: 15px; border: none; padding: 14px; border-radius: 12px; cursor: pointer; }
     .submit-btn:disabled { background: #374151; color: #9ca3af; cursor: not-allowed; }
+    .report-option { width: 100%; text-align: left; background: #111827; border: 1px solid #374151; color: #fff; padding: 13px; border-radius: 12px; margin-bottom: 9px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 
     /* Comments Drawer */
-    .drawer { position: absolute; left: 0; right: 0; bottom: 0; height: 65dvh; z-index: 35; background: #111827; border-top: 1px solid #374151; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; padding: 16px; }
+    .drawer { position: absolute; left: 0; right: 0; bottom: 0; height: 65dvh; z-index: 40; background: #111827; border-top: 1px solid #374151; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; padding: 16px; }
     .comments-list { flex: 1; overflow-y: auto; margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
     .comment-item { background: #1f2937; padding: 10px 12px; border-radius: 12px; font-size: 13px; }
     .comment-item strong { color: #facc15; font-size: 12px; display: block; margin-bottom: 2px; }
@@ -131,50 +185,75 @@
     .comment-form input { flex: 1; background: #030712; border: 1px solid #374151; border-radius: 10px; padding: 11px; color: #fff; font-size: 14px; }
     .comment-form button { background: #facc15; color: #000; border: none; border-radius: 10px; padding: 0 16px; font-weight: 800; cursor: pointer; }
 
-    #toast { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); background: rgba(17,24,39,0.95); border: 1px solid #facc15; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700; z-index: 99; display: none; }
+    #toast { position: fixed; top: 86px; left: 50%; transform: translateX(-50%); background: rgba(17,24,39,0.96); border: 1px solid #facc15; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700; z-index: 99; display: none; text-align: center; max-width: 90%; }
   </style>
 </head>
 <body>
 
   <div class="app">
     <div class="header">
-      <div class="logo">★ GOLDSTAR</div>
-      <div class="header-actions">
-        <button id="sound-toggle" class="sound-pill" onclick="toggleMuteAll()">🔇 Activar sonido</button>
-        <div id="status-badge" class="badge">Conectando...</div>
-      </div>
-    </div>
-
-    <!-- VISTA 1: FEED VERTICAL TIPO REELS / TIKTOK -->
-    <div id="view-feed" class="view active">
-      <div id="video-feed" class="feed">
-        <div class="empty-state">
-          <p>Cargando videos de Goldstar...</p>
+      <div class="header-top">
+        <div class="logo">★ GOLDSTAR</div>
+        <div class="header-tools">
+          <button id="install-app-btn" class="pill-btn gold hidden" onclick="triggerInstallApp()">📲 Instalar App</button>
+          <button class="pill-btn" onclick="toggleSearchBar()">🔍</button>
+          <button id="sound-toggle" class="pill-btn gold" onclick="toggleMuteAll()">🔇 Sonido</button>
         </div>
       </div>
+      <div class="feed-tabs" id="feed-tabs">
+        <button class="feed-tab" data-mode="following" onclick="setFeedMode('following', this)">Siguiendo</button>
+        <button class="feed-tab active" data-mode="foryou" onclick="setFeedMode('foryou', this)">Para ti</button>
+        <button class="feed-tab" data-mode="trending" onclick="setFeedMode('trending', this)">Tendencias</button>
+      </div>
+      <div id="search-bar" class="search-bar hidden">
+        <input id="search-input" type="text" placeholder="Buscar #hashtag, @creador o tema..." oninput="applySearchFilter()" />
+        <button onclick="clearSearch()">Limpiar</button>
+      </div>
     </div>
 
-    <!-- VISTA 2: PERFIL Y MIS VIDEOS -->
+    <!-- VISTA 1: FEED VERTICAL -->
+    <div id="view-feed" class="view active">
+      <div id="video-feed" class="feed">
+        <div class="empty-state"><p>Cargando videos de Goldstar...</p></div>
+      </div>
+    </div>
+
+    <!-- VISTA 2: PERFIL Y CREATOR STUDIO -->
     <div id="view-profile" class="view">
       <div class="profile-wrap">
         <div class="prof-card">
           <div class="avatar" id="prof-avatar">★</div>
           <h3 id="prof-title">@Creador</h3>
-          <p style="font-size:12px;color:#9ca3af;margin-top:4px;">Publica videos verticales propios y gana visibilidad en el feed</p>
+          <p style="font-size:12px;color:#9ca3af;margin-top:4px;">Creador Oficial en Goldstar</p>
+          <div class="stats-row">
+            <div class="stat-box"><strong id="stat-videos">0</strong><span>Videos</span></div>
+            <div class="stat-box"><strong id="stat-likes">0</strong><span>Me gusta</span></div>
+            <div class="stat-box"><strong id="stat-following">0</strong><span>Siguiendo</span></div>
+          </div>
           <div class="name-row">
             <input id="username-input" type="text" maxlength="20" placeholder="Tu nombre de usuario..." />
             <button onclick="saveUsername()">Guardar</button>
           </div>
         </div>
 
-        <h4 style="font-size:14px;color:#facc15;">Mis Videos Publicados</h4>
+        <div class="brand-studio">
+          <h4>🤝 Goldstar Creator & Brand Studio</h4>
+          <p>Colabora con marcas declarando tus patrocinios de forma transparente y construye tu audiencia con series y hashtags.</p>
+          <button class="pill-btn gold" onclick="triggerInstallApp()">📲 Abrir Goldstar sin barra del navegador</button>
+        </div>
+
+        <div class="prof-subtabs">
+          <button id="subtab-mine" class="prof-subtab active" onclick="switchProfileGrid('mine', this)">🎬 Mis Videos</button>
+          <button id="subtab-saved" class="prof-subtab" onclick="switchProfileGrid('saved', this)">🔖 Guardados</button>
+        </div>
         <div id="my-videos-grid" class="my-grid"></div>
 
         <div class="legal-box">
           <a href="#" onclick="showLegal('terms');return false;">Normas de la Comunidad</a> •
-          <a href="#" onclick="showLegal('privacy');return false;">Privacidad</a> •
-          <a href="#" onclick="showLegal('dmca');return false;">Derechos de Autor (DMCA)</a>
-          <p style="margin-top:6px;">Goldstar solo permite contenido original o con derechos de uso. Los videos reportados son ocultados automáticamente.</p>
+          <a href="#" onclick="showLegal('privacy');return false;">Privacidad (LGPD)</a> •
+          <a href="#" onclick="showLegal('dmca');return false;">Copyright / DMCA</a>
+          <p style="margin-top:6px;">Contacto legal y marcas: <strong>suporte@goldstarapp.sbs</strong></p>
+          <button class="danger-btn" onclick="deleteAllMyData()">🗑️ Eliminar mi cuenta y mis datos (LGPD)</button>
         </div>
       </div>
     </div>
@@ -189,22 +268,36 @@
     <!-- MODAL SUBIR VIDEO -->
     <div id="upload-modal" class="modal hidden">
       <div class="modal-header">
-        <div class="modal-title">Publicar Video</div>
+        <div class="modal-title">Publicar en Goldstar</div>
         <button onclick="closeModal()" class="close-btn">✕</button>
       </div>
 
       <form id="upload-form">
         <label class="dropzone">
-          <span style="font-size: 36px; margin-bottom: 8px;">🎬</span>
-          <span id="file-label" style="font-size: 14px; color: #d1d5db;">Toca aquí para elegir un video (.mp4 / máx. 45 MB)</span>
+          <span style="font-size: 34px; margin-bottom: 6px;">🎬</span>
+          <span id="file-label" style="font-size: 13.5px; color: #d1d5db;">Toca aquí para elegir un video (.mp4 / máx. 45 MB)</span>
           <input id="video-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" style="display: none;" required />
         </label>
 
-        <input id="caption-input" type="text" maxlength="140" placeholder="Escribe una descripción o #hashtag..." class="text-input" />
+        <select id="category-input" class="select-input">
+          <option value="Entretenimiento">🎭 Categoría: Entretenimiento</option>
+          <option value="Comedia">😂 Categoría: Comedia / Animación</option>
+          <option value="Música">🎵 Categoría: Música</option>
+          <option value="Gaming">🎮 Categoría: Gaming</option>
+          <option value="Educación">💡 Categoría: Tips / Educación</option>
+          <option value="Marcas">🛍️ Categoría: Productos / Negocios</option>
+        </select>
+
+        <input id="caption-input" type="text" maxlength="140" placeholder="Descripción y #hashtags (ej. #Humor #SerieEp1)..." class="text-input" />
+
+        <label class="check-row">
+          <input id="sponsored-check" type="checkbox" />
+          <span><strong>🤝 Colaboración pagada / Marca:</strong> Marcar si este video promociona un producto o patrocinador (se mostrará etiqueta transparente).</span>
+        </label>
 
         <label class="check-row">
           <input id="rights-check" type="checkbox" required />
-          <span>Confirmo que este video es mío o tengo permiso para publicarlo y cumple las normas (sin contenido adulto, violencia ni copyright).</span>
+          <span>Confirmo que soy autor o tengo licencia de este video y cumple las normas legales (sin desnudez, violencia, menores en riesgo ni copyright ajeno).</span>
         </label>
 
         <div id="progress-container" class="progress-wrap hidden">
@@ -213,6 +306,19 @@
 
         <button id="submit-btn" type="submit" class="submit-btn">Publicar Ahora</button>
       </form>
+    </div>
+
+    <!-- MODAL REPORTE LEGAL (DMCA / MARCO CIVIL / LGPD) -->
+    <div id="report-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">🚩 Reportar Contenido</div>
+        <button onclick="closeReportModal()" class="close-btn">✕</button>
+      </div>
+      <p style="font-size:13px;color:#9ca3af;margin-bottom:14px;">Selecciona el motivo de la denuncia. El video será ocultado y enviado a revisión:</p>
+      <button class="report-option" onclick="submitReportReason('Copyright / DMCA')">©️ Infracción de Derechos de Autor (DMCA)</button>
+      <button class="report-option" onclick="submitReportReason('Contenido sexual o sensible')">🔞 Contenido sexual o no apto</button>
+      <button class="report-option" onclick="submitReportReason('Violencia, acoso o discurso de odio')">⚠️ Violencia, acoso o discurso de odio</button>
+      <button class="report-option" onclick="submitReportReason('Spam o publicidad engañosa')">🚫 Spam, estafa o publicidad engañosa</button>
     </div>
 
     <!-- DRAWER COMENTARIOS -->
@@ -259,11 +365,33 @@
     let currentUser = null;
     let isMuted = true;
     let activeCommentVideoId = null;
+    let pendingReportVideoId = null;
     let unsubComments = null;
     let allVideosCache = [];
+    let feedMode = 'foryou';
+    let searchQuery = '';
+    let profileGridMode = 'mine';
+    let deferredInstallPrompt = null;
 
-    const statusBadge = document.getElementById('status-badge');
     const feedEl = document.getElementById('video-feed');
+
+    // PWA Install Prompt (abrir sin barra del navegador)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById('install-app-btn').classList.remove('hidden');
+    });
+
+    window.triggerInstallApp = async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        document.getElementById('install-app-btn').classList.add('hidden');
+      } else {
+        alert('Para abrir Goldstar sin la barra del navegador:\n\n1. En Chrome Android toca los 3 puntos (⋮) arriba a la derecha.\n2. Selecciona "Instalar aplicación" o "Añadir a pantalla de inicio".\n3. Ábrela desde el ícono de estrella dorada en tu pantalla.');
+      }
+    };
 
     function toast(msg) {
       const t = document.getElementById('toast');
@@ -290,28 +418,64 @@
       document.getElementById('prof-title').textContent = '@' + name;
       document.getElementById('prof-avatar').textContent = name.charAt(0).toUpperCase();
       document.getElementById('username-input').value = localStorage.getItem('gs_username') || '';
+      const mine = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
+      const totalLikes = mine.reduce((acc, v) => acc + Number(v.likes || 0), 0);
+      document.getElementById('stat-videos').textContent = mine.length;
+      document.getElementById('stat-likes').textContent = totalLikes;
+      document.getElementById('stat-following').textContent = getFollowingSet().size;
     }
 
-    signInAnonymously(auth)
-      .then(() => { statusBadge.textContent = "Para ti"; })
-      .catch(() => { statusBadge.textContent = "Modo invitado"; });
+    signInAnonymously(auth).catch(() => {});
 
     onAuthStateChanged(auth, (u) => {
       currentUser = u;
       updateProfileHeader();
-      renderMyVideos();
+      renderProfileGrid();
     });
 
-    function getLikedSet() {
-      try { return new Set(JSON.parse(localStorage.getItem('gs_likes') || '[]')); } catch { return new Set(); }
+    function getSet(key) {
+      try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); } catch { return new Set(); }
     }
-    function saveLikedSet(set) {
-      localStorage.setItem('gs_likes', JSON.stringify([...set]));
+    function saveSet(key, set) {
+      localStorage.setItem(key, JSON.stringify([...set]));
     }
+    function getLikedSet() { return getSet('gs_likes'); }
+    function getSavedSet() { return getSet('gs_saved'); }
+    function getFollowingSet() { return getSet('gs_following'); }
+    function getHiddenSet() { return getSet('gs_hidden'); }
 
-    function getHiddenSet() {
-      try { return new Set(JSON.parse(localStorage.getItem('gs_hidden') || '[]')); } catch { return new Set(); }
-    }
+    window.setFeedMode = (mode, btn) => {
+      feedMode = mode;
+      document.querySelectorAll('.feed-tab').forEach((b) => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderFeed();
+    };
+
+    window.toggleSearchBar = () => {
+      const bar = document.getElementById('search-bar');
+      bar.classList.toggle('hidden');
+      if (!bar.classList.contains('hidden')) document.getElementById('search-input').focus();
+    };
+
+    window.applySearchFilter = () => {
+      searchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+      renderFeed();
+    };
+
+    window.filterByTag = (tag) => {
+      const bar = document.getElementById('search-bar');
+      bar.classList.remove('hidden');
+      document.getElementById('search-input').value = tag;
+      searchQuery = tag.toLowerCase();
+      renderFeed();
+    };
+
+    window.clearSearch = () => {
+      document.getElementById('search-input').value = '';
+      searchQuery = '';
+      document.getElementById('search-bar').classList.add('hidden');
+      renderFeed();
+    };
 
     const q = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snapshot) => {
@@ -323,35 +487,72 @@
           allVideosCache.push({ id: d.id, ...data });
         }
       });
-
+      updateProfileHeader();
       renderFeed();
-      renderMyVideos();
+      renderProfileGrid();
     }, (err) => {
       feedEl.innerHTML = `<div class="empty-state" style="color:#f87171;">⚠️ Error al cargar feed: ${err.message}</div>`;
     });
 
+    function getFilteredVideos() {
+      let list = [...allVideosCache];
+      const following = getFollowingSet();
+
+      if (feedMode === 'following') {
+        list = list.filter((v) => following.has(v.uid || v.user));
+      } else if (feedMode === 'trending') {
+        list.sort((a, b) => ((b.likes || 0) * 2 + (b.commentsCount || 0) * 3) - ((a.likes || 0) * 2 + (a.commentsCount || 0) * 3));
+      }
+
+      if (searchQuery) {
+        list = list.filter((v) =>
+          (v.caption || '').toLowerCase().includes(searchQuery) ||
+          (v.user || '').toLowerCase().includes(searchQuery) ||
+          (v.category || '').toLowerCase().includes(searchQuery)
+        );
+      }
+      return list;
+    }
+
+    function extractHashtags(text) {
+      const matches = (text || '').match(/#[a-zA-Z0-9_áéíóúÁÉÍÓÚñÑ]+/g);
+      return matches ? [...new Set(matches)].slice(0, 4) : [];
+    }
+
     function renderFeed() {
-      if (allVideosCache.length === 0) {
+      const videosToRender = getFilteredVideos();
+
+      if (videosToRender.length === 0) {
         feedEl.innerHTML = `
           <div class="empty-state">
-            <div style="font-size:48px;margin-bottom:10px;">★</div>
-            <p style="font-size:17px;color:#fff;font-weight:700;">Aún no hay videos en Goldstar</p>
-            <p style="font-size:13px;margin-top:6px;">Sé el primero en publicar un video corto vertical.</p>
-            <button onclick="openModal()" class="btn-primary">+ Subir primer video</button>
+            <div style="font-size:44px;margin-bottom:10px;">★</div>
+            <p style="font-size:16px;color:#fff;font-weight:800;">${feedMode === 'following' ? 'Aún no sigues creadores con videos' : 'No se encontraron videos aquí'}</p>
+            <p style="font-size:13px;margin-top:6px;">Explora "Para ti" o publica un video corto vertical.</p>
+            <button onclick="setFeedMode('foryou', document.querySelector('[data-mode=foryou]'))" class="btn-primary">Ver Para ti</button>
           </div>`;
         return;
       }
 
       const likedSet = getLikedSet();
+      const savedSet = getSavedSet();
+      const followingSet = getFollowingSet();
       feedEl.innerHTML = '';
 
-      allVideosCache.forEach((v, idx) => {
+      videosToRender.forEach((v, idx) => {
         const isLiked = likedSet.has(v.id);
+        const isSaved = savedSet.has(v.id);
+        const creatorKey = v.uid || v.user || 'creator';
+        const isFollowing = followingSet.has(creatorKey);
+        const tags = extractHashtags(v.caption);
+
         const slide = document.createElement('div');
         slide.className = 'slide';
         slide.innerHTML = `
           <video src="${v.videoUrl}" loop playsinline ${isMuted ? 'muted' : ''} preload="metadata"></video>
+          <div class="speed-badge" id="spd-${v.id}">⏩ 2x Velocidad</div>
           <div class="heart-burst" id="burst-${v.id}">❤️</div>
+          <div class="vid-progress" id="prog-${v.id}"><div class="vid-progress-fill" id="pfill-${v.id}"></div></div>
+
           <div class="actions">
             <div class="act-item">
               <button onclick="likeVideo('${v.id}', this)" class="act-btn ${isLiked ? 'liked' : ''}">❤️</button>
@@ -362,24 +563,68 @@
               <div class="act-count">${v.commentsCount || 0}</div>
             </div>
             <div class="act-item">
+              <button onclick="toggleSaveVideo('${v.id}', this)" class="act-btn ${isSaved ? 'saved' : ''}">🔖</button>
+              <div class="act-count">Guardar</div>
+            </div>
+            <div class="act-item">
               <button onclick="shareVideo('${v.id}', '${(v.caption || 'Mira este video en Goldstar').replace(/'/g, '')}')" class="act-btn">↗️</button>
               <div class="act-count">Compartir</div>
             </div>
             <div class="act-item">
-              <button onclick="reportVideo('${v.id}')" class="act-btn" style="width:38px;height:38px;font-size:15px;">🚩</button>
+              <button onclick="openReportModal('${v.id}')" class="act-btn" style="width:36px;height:36px;font-size:14px;">🚩</button>
               <div class="act-count">Reportar</div>
             </div>
           </div>
+
           <div class="info">
-            <div class="username">@${v.user || 'Creador'}</div>
+            <div class="creator-row">
+              <span class="username" onclick="filterByTag('${v.user || ''}')">@${v.user || 'Creador'}</span>
+              <button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${creatorKey}', '${v.user || 'Creador'}', this)">
+                ${isFollowing ? 'Siguiendo' : '+ Seguir'}
+              </button>
+            </div>
             <div class="caption">${v.caption || ''}</div>
-            <span class="tag-pill">★ Goldstar Original</span>
+            ${tags.length ? `<div class="hashtags">${tags.map((t) => `<span class="hash-chip" onclick="filterByTag('${t}')">${t}</span>`).join('')}</div>` : ''}
+            <div class="badges-row">
+              <span class="tag-pill">★ ${v.category || 'Goldstar Original'}</span>
+              ${v.isSponsored ? `<span class="sponsor-pill">🤝 Patrocinado por marca</span>` : ''}
+            </div>
           </div>
         `;
 
-        // Doble toque para dar Like tipo Instagram + toque simple para pausar/reproducir
         const vidEl = slide.querySelector('video');
+        const pFill = slide.querySelector('#pfill-' + v.id);
+        const pBar = slide.querySelector('#prog-' + v.id);
+        const spdBadge = slide.querySelector('#spd-' + v.id);
+
+        vidEl.addEventListener('timeupdate', () => {
+          if (vidEl.duration) {
+            pFill.style.width = ((vidEl.currentTime / vidEl.duration) * 100) + '%';
+          }
+        });
+
+        pBar.addEventListener('click', (e) => {
+          const rect = pBar.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          if (vidEl.duration) vidEl.currentTime = ratio * vidEl.duration;
+        });
+
+        // Doble toque para Like + mantener presionado para 2x
         let lastTap = 0;
+        let holdTimer = null;
+        vidEl.addEventListener('pointerdown', () => {
+          holdTimer = setTimeout(() => {
+            vidEl.playbackRate = 2.0;
+            spdBadge.style.display = 'block';
+          }, 350);
+        });
+        vidEl.addEventListener('pointerup', () => {
+          clearTimeout(holdTimer);
+          if (vidEl.playbackRate !== 1.0) {
+            vidEl.playbackRate = 1.0;
+            spdBadge.style.display = 'none';
+          }
+        });
         vidEl.addEventListener('click', () => {
           const now = Date.now();
           if (now - lastTap < 280) {
@@ -400,7 +645,7 @@
 
         feedEl.appendChild(slide);
 
-        // Intercalar tarjeta patrocinada Monetag cada 4 videos (100% legal y nativa como Reels Ads)
+        // Tarjeta patrocinada nativa cada 4 videos
         if ((idx + 1) % 4 === 0) {
           const adSlide = document.createElement('div');
           adSlide.className = 'slide ad-slide';
@@ -419,18 +664,64 @@
       setupAutoPlay();
     }
 
-    function renderMyVideos() {
+    window.toggleFollow = (creatorKey, creatorName, btn) => {
+      const set = getFollowingSet();
+      if (set.has(creatorKey)) {
+        set.delete(creatorKey);
+        btn.classList.remove('following');
+        btn.textContent = '+ Seguir';
+        toast('Dejaste de seguir a @' + creatorName);
+      } else {
+        set.add(creatorKey);
+        btn.classList.add('following');
+        btn.textContent = 'Siguiendo';
+        toast('Siguiendo a @' + creatorName);
+      }
+      saveSet('gs_following', set);
+      updateProfileHeader();
+    };
+
+    window.toggleSaveVideo = (videoId, btn) => {
+      const set = getSavedSet();
+      if (set.has(videoId)) {
+        set.delete(videoId);
+        btn.classList.remove('saved');
+        toast('Quitado de Guardados');
+      } else {
+        set.add(videoId);
+        btn.classList.add('saved');
+        toast('🔖 Guardado en tu Perfil');
+      }
+      saveSet('gs_saved', set);
+      renderProfileGrid();
+    };
+
+    window.switchProfileGrid = (mode, btn) => {
+      profileGridMode = mode;
+      document.querySelectorAll('.prof-subtab').forEach((b) => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderProfileGrid();
+    };
+
+    function renderProfileGrid() {
       const grid = document.getElementById('my-videos-grid');
       if (!grid) return;
-      const mine = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
-      if (mine.length === 0) {
-        grid.innerHTML = '<p style="grid-column:1/-1;font-size:12px;color:#9ca3af;margin-top:6px;">Todavía no has subido videos desde este dispositivo.</p>';
+      let list = [];
+      if (profileGridMode === 'mine') {
+        list = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
+      } else {
+        const saved = getSavedSet();
+        list = allVideosCache.filter((v) => saved.has(v.id));
+      }
+
+      if (list.length === 0) {
+        grid.innerHTML = `<p style="grid-column:1/-1;font-size:12px;color:#9ca3af;margin-top:6px;">${profileGridMode === 'mine' ? 'Todavía no has subido videos desde este dispositivo.' : 'Aún no tienes videos guardados en favoritos.'}</p>`;
         return;
       }
-      grid.innerHTML = mine.map((v) => `
+      grid.innerHTML = list.map((v) => `
         <div class="grid-item">
           <video src="${v.videoUrl}" muted preload="metadata"></video>
-          <button class="del-vid" onclick="deleteMyVideo('${v.id}')">🗑️</button>
+          ${profileGridMode === 'mine' ? `<button class="del-vid" onclick="deleteMyVideo('${v.id}')">🗑️</button>` : ''}
         </div>
       `).join('');
     }
@@ -439,6 +730,22 @@
       if (!confirm('¿Eliminar este video de Goldstar?')) return;
       await deleteDoc(doc(db, 'videos', id));
       toast('Video eliminado');
+    };
+
+    window.deleteAllMyData = async () => {
+      if (!confirm('¿Eliminar tu cuenta local y todos tus videos publicados en Goldstar (Derecho de supresión LGPD)?')) return;
+      const mine = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
+      for (const v of mine) {
+        try { await deleteDoc(doc(db, 'videos', v.id)); } catch (e) {}
+      }
+      localStorage.removeItem('gs_username');
+      localStorage.removeItem('gs_likes');
+      localStorage.removeItem('gs_saved');
+      localStorage.removeItem('gs_following');
+      localStorage.removeItem('gs_hidden');
+      updateProfileHeader();
+      renderProfileGrid();
+      toast('Tus datos y publicaciones han sido eliminados.');
     };
 
     function setupAutoPlay() {
@@ -459,7 +766,7 @@
     window.toggleMuteAll = () => {
       isMuted = !isMuted;
       const btn = document.getElementById('sound-toggle');
-      btn.textContent = isMuted ? '🔇 Activar sonido' : '🔊 Sonido activo';
+      btn.textContent = isMuted ? '🔇 Sonido' : '🔊 Activo';
       document.querySelectorAll('video').forEach((v) => { v.muted = isMuted; });
     };
 
@@ -468,8 +775,11 @@
       document.querySelectorAll('.nav-btn').forEach((el) => el.classList.remove('active'));
       document.getElementById('view-' + tab).classList.add('active');
       document.getElementById('nav-' + tab).classList.add('active');
+      document.getElementById('feed-tabs').style.display = tab === 'feed' ? 'flex' : 'none';
       if (tab === 'profile') {
         document.querySelectorAll('#video-feed video').forEach((v) => v.pause());
+        updateProfileHeader();
+        renderProfileGrid();
       } else {
         setupAutoPlay();
       }
@@ -482,7 +792,7 @@
       const liked = getLikedSet();
       if (liked.has(videoId)) return;
       liked.add(videoId);
-      saveLikedSet(liked);
+      saveSet('gs_likes', liked);
       if (btnEl) btnEl.classList.add('liked');
       const countEl = document.getElementById('lc-' + videoId);
       if (countEl) countEl.textContent = Number(countEl.textContent || 0) + 1;
@@ -501,19 +811,29 @@
       }
     };
 
-    window.reportVideo = async (videoId) => {
-      if (!confirm('¿Reportar y ocultar este video por infringir las normas?')) return;
+    window.openReportModal = (videoId) => {
+      pendingReportVideoId = videoId;
+      document.getElementById('report-modal').classList.remove('hidden');
+    };
+    window.closeReportModal = () => {
+      pendingReportVideoId = null;
+      document.getElementById('report-modal').classList.add('hidden');
+    };
+    window.submitReportReason = async (reason) => {
+      const vid = pendingReportVideoId;
+      closeReportModal();
+      if (!vid) return;
       const hidden = getHiddenSet();
-      hidden.add(videoId);
-      localStorage.setItem('gs_hidden', JSON.stringify([...hidden]));
+      hidden.add(vid);
+      saveSet('gs_hidden', hidden);
       renderFeed();
-      toast('Video reportado y ocultado');
+      toast('🚩 Reporte enviado (' + reason + '). Video ocultado.');
       try {
-        await updateDoc(doc(db, 'videos', videoId), { reports: increment(1) });
+        await updateDoc(doc(db, 'videos', vid), { reports: increment(1), lastReportReason: reason });
       } catch (e) {}
     };
 
-    // Comentarios en tiempo real
+    // Comentarios
     window.openComments = (videoId) => {
       activeCommentVideoId = videoId;
       document.getElementById('comments-drawer').classList.remove('hidden');
@@ -564,7 +884,7 @@
       }
     });
 
-    // Subida real de video a Cloudinary + guardado en Firestore
+    // Subida a Cloudinary + Firestore
     const videoInput = document.getElementById('video-input');
     const fileLabel = document.getElementById('file-label');
     videoInput.addEventListener('change', (e) => {
@@ -609,9 +929,13 @@
           if (xhr.status >= 200 && xhr.status < 300) {
             const resp = JSON.parse(xhr.responseText);
             const caption = document.getElementById('caption-input').value.trim();
+            const category = document.getElementById('category-input').value;
+            const isSponsored = document.getElementById('sponsored-check').checked;
             await addDoc(collection(db, 'videos'), {
               videoUrl: resp.secure_url,
               caption,
+              category,
+              isSponsored,
               user: getUserName(),
               uid: currentUser ? currentUser.uid : 'guest',
               likes: 0,
@@ -648,16 +972,16 @@
 
     window.showLegal = (type) => {
       if (type === 'terms') {
-        alert('Normas de la Comunidad Goldstar: Prohibido subir contenido sexual, violencia, acoso, spam o material con derechos de autor de terceros. Los videos con múltiples reportes son retirados automáticamente.');
+        alert('Normas de la Comunidad Goldstar: Prohibido subir contenido sexual, violencia, acoso, spam o material protegido sin derechos. Las colaboraciones comerciales deben marcarse como patrocinadas.');
       } else if (type === 'privacy') {
-        alert('Política de Privacidad Goldstar: Usamos autenticación anónima de dispositivo para gestionar tus publicaciones y preferencias. No vendemos datos personales.');
+        alert('Política de Privacidad (LGPD): Solo almacenamos tu identificador de sesión, nombre público y videos subidos voluntariamente. Puedes eliminar tu cuenta y todos tus videos en cualquier momento desde tu Perfil.');
       } else {
-        alert('Política DMCA / Copyright: Si algún video infringe derechos de autor, usa el botón Reportar (🚩) en el video para retirarlo de inmediato.');
+        alert('Política DMCA / Copyright: Si un contenido infringe derechos de autor, repórtalo con el botón 🚩 o escribe a suporte@goldstarapp.sbs para su retirada inmediata.');
       }
     };
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
     }
   </script>
 </body>

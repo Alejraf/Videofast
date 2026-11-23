@@ -1,4 +1,4 @@
-const CACHE_NAME = 'goldstar-v2-0-0';
+const CACHE_NAME = 'goldstar-v3-0-0';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -12,5 +12,15 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request)));
+  event.respondWith(
+    fetch(event.request, { cache: 'no-store' })
+      .then((res) => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
