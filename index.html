@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Goldstar</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #000; color: #fff; overflow: hidden; user-select: none; height: 100vh; width: 100vw; }
+    .app { position: relative; height: 100vh; width: 100vw; background: #000; overflow: hidden; }
+    
+    /* Header */
+    .header { position: absolute; top: 0; left: 0; right: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; padding: 16px; background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent); }
+    .logo { font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #facc15; }
+    .badge { font-size: 12px; background: rgba(255,255,255,0.18); padding: 4px 12px; border-radius: 20px; }
+
+    /* Feed */
+    .feed { height: 100%; width: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+    .feed::-webkit-scrollbar { display: none; }
+    .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; color: #9ca3af; }
+    .btn-primary { background: #eab308; color: #000; font-weight: 800; border: none; padding: 14px 28px; border-radius: 30px; font-size: 16px; margin-top: 16px; cursor: pointer; }
+
+    /* Video Card */
+    .slide { position: relative; height: 100vh; width: 100vw; scroll-snap-align: start; background: #000; display: flex; align-items: center; justify-content: center; }
+    .slide video { height: 100%; width: 100%; object-fit: cover; }
+    .actions { position: absolute; right: 16px; bottom: 100px; z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    .like-btn { background: rgba(0,0,0,0.5); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .like-count { font-size: 13px; font-weight: bold; margin-top: 4px; text-align: center; color: #fff; }
+    .info { position: absolute; left: 16px; bottom: 85px; right: 80px; z-index: 10; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+    .username { font-weight: bold; font-size: 15px; color: #facc15; margin-bottom: 4px; }
+    .caption { font-size: 14px; color: #f3f4f6; line-height: 1.3; }
+
+    /* Navbar Inferior */
+    .navbar { position: absolute; bottom: 0; left: 0; right: 0; z-index: 20; height: 64px; background: rgba(0,0,0,0.95); border-top: 1px solid rgba(255,255,255,0.12); display: flex; justify-content: space-around; align-items: center; }
+    .nav-btn { background: none; border: none; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .nav-btn.muted { color: #9ca3af; }
+    .add-btn { background: linear-gradient(135deg, #facc15, #d97706); color: #000; border: none; padding: 6px 18px; border-radius: 12px; font-size: 24px; font-weight: 900; cursor: pointer; }
+
+    /* Modal Subir */
+    .modal { position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.96); display: flex; flex-direction: column; justify-content: center; padding: 24px; }
+    .hidden { display: none !important; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-title { font-size: 22px; font-weight: bold; color: #facc15; }
+    .close-btn { background: none; border: none; color: #fff; font-size: 26px; cursor: pointer; }
+    .dropzone { border: 2px dashed #4b5563; border-radius: 16px; padding: 32px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; margin-bottom: 16px; }
+    .text-input { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 12px; padding: 14px; color: #fff; font-size: 15px; margin-bottom: 16px; outline: none; }
+    .progress-wrap { width: 100%; background: #1f2937; border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 16px; }
+    .progress-fill { background: #facc15; height: 100%; width: 0%; transition: width 0.2s; }
+    .submit-btn { width: 100%; background: #eab308; color: #000; font-weight: bold; font-size: 16px; border: none; padding: 15px; border-radius: 12px; cursor: pointer; }
+    .submit-btn:disabled { background: #374151; color: #9ca3af; }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <div class="header">
+      <div class="logo">GOLDSTAR</div>
+      <div id="status-badge" class="badge">Conectando...</div>
+    </div>
+
+    <div id="video-feed" class="feed">
+      <div class="empty-state">
+        <p>Cargando videos de Goldstar...</p>
+      </div>
+    </div>
+
+    <div class="navbar">
+      <button onclick="location.reload()" class="nav-btn">Inicio</button>
+      <button onclick="openModal()" class="add-btn">+</button>
+      <button class="nav-btn muted">Perfil</button>
+    </div>
+
+    <div id="upload-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">Nuevo Video</div>
+        <button onclick="closeModal()" class="close-btn">✕</button>
+      </div>
+
+      <form id="upload-form">
+        <label class="dropzone">
+          <span style="font-size: 36px; margin-bottom: 8px;">🎬</span>
+          <span id="file-label" style="font-size: 14px; color: #d1d5db;">Toca aquí para elegir un video (.mp4)</span>
+          <input id="video-input" type="file" accept="video/mp4,video/webm,video/*" style="display: none;" required />
+        </label>
+
+        <input id="caption-input" type="text" placeholder="Escribe una descripción..." class="text-input" />
+
+        <div id="progress-container" class="progress-wrap hidden">
+          <div id="progress-bar" class="progress-fill"></div>
+        </div>
+
+        <button id="submit-btn" type="submit" class="submit-btn">Publicar Ahora</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://gstatic.com";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp } from "https://gstatic.com";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmOYaCC8du903_Et_SfITxLxvrnAEROKU",
+      authDomain: "://firebaseapp.com",
+      projectId: "goldstar-9e03b",
+      storageBucket: "goldstar-9e03b.firebasestorage.app",
+      messagingSenderId: "786421674823",
+      appId: "1:786421674823:web:4a65b3fa0550c180bcd262"
+    };
+
+    const CLOUDINARY_CLOUD_NAME = "wtua9l4u";
+    const CLOUDINARY_UPLOAD_PRESET = "Videofast";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let currentUser = null;
+
+    const statusBadge = document.getElementById('status-badge');
+    const feedEl = document.getElementById('video-feed');
+
+    signInAnonymously(auth)
+      .then(() => { statusBadge.textContent = "Para ti"; })
+      .catch((err) => {
+        statusBadge.textContent = "Revisar Auth";
+        console.error(err);
+      });
+
+    onAuthStateChanged(auth, (u) => { currentUser = u; });
+
+    const q = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        feedEl.innerHTML = `
+          <div class="empty-state">
+            <p style="font-size: 18px;">Aún no hay videos en Goldstar.</p>
+            <button onclick="openModal()" class="btn-primary">+ Subir primer video</button>
+          </div>`;
+        return;
+      }
+
+      feedEl.innerHTML = '';
+      snapshot.forEach((docSnap) => {
+        const v = docSnap.data();
+        const id = docSnap.id;
+
+        const slide = document.createElement('div');
+        slide.className = "slide";
+        slide.innerHTML = `
+          <video src="${v.videoUrl}" loop playsinline onclick="this.paused ? this.play() : this.pause()"></video>
+          <div class="actions">
+            <div>
+              <button onclick="likeVideo('${id}')" class="like-btn">❤️</button>
+              <div class="like-count">${v.likes || 0}</div>
+            </div>
+          </div>
+          <div class="info">
+            <div class="username">@${v.user || 'Invitado'}</div>
+            <div class="caption">${v.caption || ''}</div>
+          </div>
+        `;
+        feedEl.appendChild(slide);
+      });
+
+      setupAutoPlay();
+    }, (err) => {
+      feedEl.innerHTML = `<div class="empty-state" style="color: #f87171;">⚠️ Error de Firebase: ${err.message}<br><br>Asegúrate de haber creado Firestore Database en Modo de Prueba.</div>`;
+    });
+
+    function setupAutoPlay() {
+      const videos = document.querySelectorAll('video');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.play().catch(() => {});
+          } else {
+            entry.target.pause();
+          }
+        });
+      }, { threshold: 0.7 });
+      videos.forEach((vid) => observer.observe(vid));
+    }
+
+    window.openModal = () => document.getElementById('upload-modal').classList.remove('hidden');
+    window.closeModal = () => document.getElementById('upload-modal').classList.add('hidden');
+    window.likeVideo = async (videoId) => {
+      await updateDoc(doc(db, 'videos', videoId), { likes: increment(1) });
+    };
+
+    const videoInput = document.getElementById('video-input');
+    const fileLabel = document.getElementById('file-label');
+    videoInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files) {
+        fileLabel.textContent = e.target.files.name;
+      }
+    
