@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Goldstar</title>
+  <script src="https://tailwindcss.com"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-black text-white overflow-hidden select-none">
+
+  <div class="relative h-screen w-screen bg-black text-white overflow-hidden">
+    <!-- Barra superior -->
+    <div class="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4 bg-gradient-to-b from-black/80 to-transparent">
+      <h1 class="text-xl font-extrabold tracking-wider text-yellow-400">GOLDSTAR</h1>
+      <span id="status-badge" class="text-xs bg-white/15 px-3 py-1 rounded-full backdrop-blur-sm">Conectando...</span>
+    </div>
+
+    <!-- Feed Vertical -->
+    <div id="video-feed" class="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar">
+      <div class="h-full flex flex-col items-center justify-center text-gray-400 p-6 text-center">
+        <p class="mb-4 text-lg">Cargando videos...</p>
+      </div>
+    </div>
+
+    <!-- Menú Inferior -->
+    <div class="absolute bottom-0 left-0 right-0 z-20 h-16 bg-black/90 border-t border-white/10 flex justify-around items-center">
+      <button onclick="location.reload()" class="text-sm font-bold text-white">Inicio</button>
+      <button onclick="openModal()" class="bg-gradient-to-r from-yellow-400 to-amber-600 text-black px-5 py-1.5 rounded-xl font-black text-2xl shadow-lg active:scale-95 transition">
+        +
+      </button>
+      <button class="text-sm text-gray-400">Perfil</button>
+    </div>
+
+    <!-- Modal Subir Video -->
+    <div id="upload-modal" class="hidden absolute inset-0 z-30 bg-black/95 flex flex-col justify-center p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-yellow-400">Nuevo Video</h2>
+        <button onclick="closeModal()" class="text-2xl font-bold px-2">✕</button>
+      </div>
+
+      <form id="upload-form" class="space-y-4">
+        <label class="border-2 border-dashed border-gray-600 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-yellow-400">
+          <span class="text-3xl mb-2">🎬</span>
+          <span id="file-label" class="text-sm text-gray-300 text-center">Toca aquí para elegir un video (.mp4)</span>
+          <input id="video-input" type="file" accept="video/mp4,video/webm,video/*" class="hidden" required />
+        </label>
+
+        <input id="caption-input" type="text" placeholder="Escribe una descripción..." class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-yellow-400" />
+
+        <div id="progress-container" class="hidden w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+          <div id="progress-bar" class="bg-yellow-400 h-3 transition-all" style="width: 0%"></div>
+        </div>
+
+        <button id="submit-btn" type="submit" class="w-full bg-yellow-500 disabled:bg-gray-700 text-black font-bold py-3.5 rounded-xl transition">
+          Publicar Ahora
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase + Lógica Nativa (Sin Babel, carga instantánea) -->
+  <script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://gstatic.com";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp } from "https://gstatic.com";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmOYaCC8du903_Et_SfITxLxvrnAEROKU",
+      authDomain: "://firebaseapp.com",
+      projectId: "goldstar-9e03b",
+      storageBucket: "goldstar-9e03b.firebasestorage.app",
+      messagingSenderId: "786421674823",
+      appId: "1:786421674823:web:4a65b3fa0550c180bcd262"
+    };
+
+    const CLOUDINARY_CLOUD_NAME = "wtua9l4u";
+    const CLOUDINARY_UPLOAD_PRESET = "Videofast";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let currentUser = null;
+
+    const statusBadge = document.getElementById('status-badge');
+    const feedEl = document.getElementById('video-feed');
+
+    // 1. Autenticación anónima
+    signInAnonymously(auth)
+      .then(() => { statusBadge.textContent = "Para ti"; })
+      .catch((err) => {
+        statusBadge.textContent = "Error Auth";
+        alert("Activa Authentication -> Anônimo en Firebase: " + err.message);
+      });
+
+    onAuthStateChanged(auth, (u) => { currentUser = u; });
+
+    // 2. Escuchar videos en tiempo real
+    const q = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        feedEl.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-gray-400 p-6 text-center">
+            <p class="mb-4 text-lg">Aún no hay videos en Goldstar.</p>
+            <button onclick="openModal()" class="bg-yellow-500 text-black font-bold px-6 py-3 rounded-full shadow-lg">
+              + Subir primer video
+            </button>
+          </div>`;
+        return;
+      }
+
+      feedEl.innerHTML = '';
+      snapshot.forEach((docSnap) => {
+        const v = docSnap.data();
+        const id = docSnap.id;
+
+        const slide = document.createElement('div');
+        slide.className = "relative h-full w-full snap-start flex items-center justify-center bg-black";
+        slide.innerHTML = `
+          <video src="${v.videoUrl}" loop playsinline class="h-full w-full object-cover" onclick="this.paused ? this.play() : this.pause()"></video>
+          <div class="absolute right-4 bottom-24 z-10 flex flex-col items-center space-y-5">
+            <button onclick="likeVideo('${id}')" class="flex flex-col items-center">
+              <div class="bg-black/50 w-12 h-12 rounded-full flex items-center justify-center text-2xl active:scale-125 transition">❤️</div>
+              <span class="text-xs font-bold mt-1">${v.likes || 0}</span>
+            </button>
+          </div>
+          <div class="absolute left-4 bottom-20 right-20 z-10">
+            <p class="font-bold text-sm text-yellow-400">@${v.user || 'Invitado'}</p>
+            <p class="text-sm text-white/95 mt-1 line-clamp-2">${v.caption || ''}</p>
+          </div>
+        `;
+        feedEl.appendChild(slide);
+      });
+
+      setupAutoPlay();
+    }, (err) => {
+      feedEl.innerHTML = `<div class="h-full flex items-center justify-center p-6 text-center text-red-400">Error de Firestore: ${err.message}. Verifica que Firestore esté creado en Modo de Prueba.</div>`;
+    });
+
+    // 3. Reproducción automática al deslizar
+    function setupAutoPlay() {
+      const videos = document.querySelectorAll('video');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.play().catch(() => {});
+          } else {
+            entry.target.pause();
+          }
+        });
+      }, { threshold: 0.7 });
+      videos.forEach((vid) => observer.observe(vid));
+    }
+
+    // 4. Funciones globales para botones
+    window.openModal = () => document.getElementById('upload-modal').classList.remove('hidden');
+    window.closeModal = () => document.getElementById('upload-modal').classList.add('hidden');
+    window.likeVideo = async (videoId) => {
+      await updateDoc(doc(db, 'videos', videoId), { likes: increment(1) });
+    };
+
+    // 5. Subida de video a Cloudinary
+    const videoInput = document.getElementById('video-input');
+    const fileLabel = document.getElementById('file-label');
+    videoInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        fileLabel.textContent = e.target.files[0].name;
+      }
+    });
+
+    document.getElementById('upload-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const file = videoInput.files[0];
+      if (!file) return;
+
+      const submitBtn = document.getElementById('submit-btn');
+      const progCont = document.getElementById('progress-container');
+      const progBar = document.getElementById('progress-bar');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Subiendo...";
+      progCont.classList.remove('hidden');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://cloudinary.com{CLOUDINARY_CLOUD_NAME}/video/upload`, true);
+
+      xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable) {
+          const pct = Math.round((ev.loaded / ev.total) * 100);
+          progBar.style.width = pct + '%';
+          submitBtn.textContent = `Subiendo... ${pct}%`;
+        }
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status === 200) {
+          const res = JSON.parse(xhr.responseText);
+          await addDoc(collection(db, 'videos'), {
+            videoUrl: res.secure_url,
+            caption: document.getElementById('caption-input').value || 'Video en Goldstar',
+            user: currentUser ? `User_${currentUser.uid.slice(0, 5)}` : 'Invitado',
+            likes: 0,
+            createdAt: serverTimestamp()
+          });
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Publicar Ahora";
+          progCont.classList.add('hidden');
+          progBar.style.width = '0%';
+          document.getElementById('upload-form').reset();
+          fileLabel.textContent = "Toca aquí para elegir un video (.mp4)";
