@@ -19,25 +19,17 @@
       <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.75"/>
     </filter>
   </defs>
-
-  <!-- App Rounded Squircle Background -->
   <rect width="512" height="512" rx="116" fill="url(#bgGlow)"/>
   <rect x="18" y="18" width="476" height="476" rx="102" fill="none" stroke="url(#goldLight)" stroke-width="5" opacity="0.75"/>
-
-  <!-- Subtle Gold Sparkle Dust -->
   <circle cx="155" cy="145" r="2.5" fill="#fef08a" opacity="0.7"/>
   <circle cx="365" cy="150" r="3" fill="#facc15" opacity="0.8"/>
   <circle cx="385" cy="310" r="2.5" fill="#fef08a" opacity="0.6"/>
   <circle cx="130" cy="325" r="2" fill="#facc15" opacity="0.7"/>
-
-  <!-- Star Outer Frame -->
   <g filter="url(#dropShadow)">
     <polygon points="256,64 313,182 444,200 348,291 372,420 256,358 140,420 164,291 68,200 199,182"
              fill="none" stroke="url(#goldLight)" stroke-width="24" stroke-linejoin="round"/>
     <polygon points="256,82 307,188 424,204 338,286 360,401 256,345 152,401 174,286 88,204 205,188"
              fill="none" stroke="url(#goldDark)" stroke-width="7" stroke-linejoin="round" opacity="0.85"/>
-
-    <!-- Intertwined Dynamic "S" Ribbon -->
     <path d="M 332 135 C 280 120, 210 142, 206 196 C 202 246, 304 242, 300 296 C 296 344, 224 360, 174 342 C 216 376, 314 366, 326 300 C 338 234, 232 234, 236 188 C 240 148, 294 140, 332 135 Z"
           fill="url(#goldLight)"/>
     <path d="M 326 140 C 282 128, 220 148, 216 194 C 212 238, 308 238, 304 294 C 300 338, 232 354, 184 342"
