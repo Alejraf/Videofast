@@ -1,15 +1,14 @@
 {
-  "name": "StarVibe — Reels, Series & Live",
+  "name": "StarVibe",
   "short_name": "StarVibe",
-  "description": "Short vertical videos, series and live streams on StarVibe.",
+  "description": "Plataforma de videos cortos, salas En Vivo y creación con StarVibe Studio Pro.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait",
   "background_color": "#050507",
   "theme_color": "#050507",
-  "orientation": "portrait",
-  "categories": ["entertainment", "social", "video"],
+  "categories": ["entertainment", "video", "social"],
   "icons": [
     {
       "src": "/icon.svg",

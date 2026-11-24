@@ -3,7 +3,10 @@
 <head>
   <meta name="monetag" content="813edf97f0d4ebb06e8cda435e3e584b">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#050507" />
   <title>StarVibe — Videos Cortos, Series y En Vivo</title>
   <meta name="description" content="Mira videos cortos, series originales y transmisiones en vivo en StarVibe. Gana recompensas por videos (+45s), regalos en vivo y referidos con retiro por PIX." />
   <meta name="keywords" content="StarVibe, videos cortos, series, transmisiones en vivo, live streaming, creadores, recompensas, PIX, monetizacion" />
@@ -404,7 +407,9 @@
 
     /* Bottom Navbar */
     .navbar {
-      position: absolute; bottom: 0; left: 0; right: 0; z-index: 26; height: 64px;
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 26;
+      height: calc(64px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       background: rgba(5,5,7,0.97); border-top: 1px solid rgba(250,204,21,0.18);
       display: flex; justify-content: space-around; align-items: center;
     }
@@ -595,7 +600,8 @@
           <button id="live-pause-btn" class="pill-btn hidden" style="padding:5px 9px;font-size:11px;border-color:#60a5fa;color:#93c5fd;" onclick="toggleHostPauseLive()">⏸️ Pausar Sala</button>
           <button id="live-end-btn" class="pill-btn hidden" style="padding:5px 9px;font-size:11px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;" onclick="endActiveLiveRoom()">⏹️ Terminar Live</button>
           <button class="pill-btn gold" style="padding:5px 9px;font-size:11px;" onclick="openRechargeModal()">🪙 <span id="room-coins-badge">100</span></button>
-          <button class="pill-btn" style="padding:5px 9px;font-size:11px;" onclick="reportActiveLive()">🚩</button>
+          <button class="pill-btn" style="padding:5px 9px;font-size:11px;" onclick="reportActiveLive()" title="Reportar Sala">🚩</button>
+          <button class="pill-btn" style="padding:5px 9px;font-size:11px;border-color:#ef4444;color:#fca5a5;" onclick="blockActiveLiveCreator()" title="Bloquear Creador">🚫</button>
           <button class="close-btn" style="width:28px;height:28px;font-size:14px;" onclick="closeLiveRoom()">✕</button>
         </div>
       </div>
@@ -788,11 +794,15 @@
         <div id="my-videos-grid" class="my-grid"></div>
 
         <div class="legal-box">
-          <a href="#" onclick="showLegal('terms');return false;" data-i18n="legal_terms">Normas de la Comunidad</a> •
-          <a href="#" onclick="showLegal('privacy');return false;" data-i18n="legal_privacy">Privacidad (LGPD)</a> •
+          <a href="/terms" target="_blank" rel="noopener">Normas de la Comunidad</a> •
+          <a href="/privacy" target="_blank" rel="noopener">Política de Privacidad (LGPD)</a> •
+          <a href="/account-deletion" target="_blank" rel="noopener">Eliminación de Cuenta</a> •
           <a href="#" onclick="showLegal('dmca');return false;" data-i18n="legal_dmca">Copyright / DMCA</a>
-          <p style="margin-top:6px;">Legal & Brands: <strong>suporte@starvibeapp.sbs</strong></p>
-          <button class="danger-btn" onclick="deleteAllMyData()" data-i18n="delete_account_btn">🗑️ Eliminar mi cuenta y mis datos (LGPD)</button>
+          <p style="margin-top:6px;">Soporte & Legal: <strong>suporte@starvibeapp.sbs</strong></p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+            <button type="button" class="pill-btn" style="font-size:11px;" onclick="unblockAllUsers()">🔓 Desbloquear usuarios</button>
+            <button type="button" class="danger-btn" style="margin-top:0;" onclick="deleteAllMyData()" data-i18n="delete_account_btn">🗑️ Eliminar mi cuenta y mis datos (LGPD)</button>
+          </div>
         </div>
       </div>
     </div>
@@ -827,55 +837,99 @@
           <input id="video-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" style="display: none;" required />
         </label>
 
-        <!-- EDITOR INTEGRADO STARVIBE STUDIO (9:16, 16:9, Recorte, Texto, Subtítulos Automáticos) -->
-        <div id="sv-video-editor-box" class="hidden" style="background:#0c0e14;border:1px solid rgba(250,204,21,0.45);border-radius:14px;padding:11px;margin-bottom:10px;">
+        <!-- EDITOR INTEGRADO MODERNIZADO STARVIBE STUDIO v2 (Android 15/16 Ready) -->
+        <div id="sv-video-editor-box" class="hidden" style="background:linear-gradient(180deg,#11141d,#090b10);border:1px solid rgba(250,204,21,0.5);border-radius:16px;padding:12px;margin-bottom:12px;box-shadow:0 12px 30px rgba(0,0,0,0.65);">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <strong style="font-size:12.5px;color:#fef08a;">✂️ Editor Integrado StarVibe Studio</strong>
-            <span id="sv-edit-status-pill" style="font-size:10.5px;color:#6ee7b7;background:rgba(16,185,129,0.14);padding:2px 8px;border-radius:999px;">Original</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:15px;">🎬</span>
+              <strong style="font-size:13px;color:#fef08a;">StarVibe Studio Pro</strong>
+            </div>
+            <span id="sv-edit-status-pill" style="font-size:10.5px;color:#6ee7b7;background:rgba(16,185,129,0.16);border:1px solid rgba(16,185,129,0.35);padding:2px 9px;border-radius:999px;font-weight:700;">Original</span>
           </div>
 
-          <!-- Vista previa Canvas -->
-          <div style="position:relative;width:100%;max-height:230px;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:8px;border:1px solid #1f2430;">
-            <canvas id="sv-editor-canvas" width="480" height="854" style="max-height:230px;max-width:100%;object-fit:contain;background:#000;"></canvas>
+          <!-- Monitor de Vista Previa -->
+          <div style="position:relative;width:100%;height:235px;background:#000;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:8px;border:1px solid #232938;">
+            <canvas id="sv-editor-canvas" width="480" height="854" style="max-height:235px;max-width:100%;object-fit:contain;background:#000;"></canvas>
             <video id="sv-editor-src-vid" playsinline webkit-playsinline muted preload="auto" style="position:absolute;width:2px;height:2px;opacity:0.01;pointer-events:none;"></video>
+            <div id="sv-editor-time-hud" style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.75);color:#fef08a;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;border:1px solid rgba(250,204,21,0.3);">00:00</div>
           </div>
 
-          <!-- 1. Formato de Pantalla (9:16, 16:9, 1:1) y Encuadre -->
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
-            <button type="button" class="pill-btn gold sv-aspect-btn" data-aspect="9:16" onclick="setEditorAspect('9:16', this)" style="flex:1;padding:6px 4px;font-size:11px;">📱 9:16 Vertical</button>
-            <button type="button" class="pill-btn sv-aspect-btn" data-aspect="16:9" onclick="setEditorAspect('16:9', this)" style="flex:1;padding:6px 4px;font-size:11px;">🖥️ 16:9 Horizontal</button>
-            <button type="button" class="pill-btn sv-aspect-btn" data-aspect="1:1" onclick="setEditorAspect('1:1', this)" style="flex:1;padding:6px 4px;font-size:11px;">⬜ 1:1 Cuadrado</button>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;font-size:11px;color:#d1d5db;">
-            <span>Encuadre:</span>
-            <select id="sv-fit-mode" onchange="renderEditorPreviewFrame()" style="flex:1;background:#161922;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:5px 7px;font-size:11px;">
-              <option value="cover">Llenar pantalla (Recorte centrado)</option>
-              <option value="contain">Ajustar completo (Fondo difuminado)</option>
-            </select>
+          <!-- Barra de Transporte y Scrubber táctil (Android Friendly) -->
+          <div style="background:#141824;border-radius:10px;padding:8px;margin-bottom:9px;border:1px solid #222838;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button type="button" id="sv-play-toggle-btn" class="pill-btn gold" onclick="toggleEditorPlayPause()" style="padding:6px 11px;font-size:11.5px;font-weight:800;">▶️ Play</button>
+              <input id="sv-timeline-scrubber" type="range" min="0" max="100" step="0.1" value="0" oninput="onScrubEditorTimeline(this.value)" style="flex:1;accent-color:#facc15;height:6px;cursor:pointer;" />
+            </div>
           </div>
 
-          <!-- 2. Recorte de Tiempo (Inicio / Fin en segundos) -->
-          <div style="background:#131620;border-radius:10px;padding:8px;margin-bottom:8px;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:#facc15;margin-bottom:4px;">
-              <span>⏱️ Recortar duración:</span>
+          <!-- Pestañas Compactas de Herramientas (Formato | Recorte | Filtros & Vel | Texto & Subtítulos) -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:9px;">
+            <button type="button" class="pill-btn gold sv-tool-tab" data-panel="format" onclick="switchEditorToolPanel('format', this)" style="padding:6px 2px;font-size:10.5px;text-align:center;">📐 Formato</button>
+            <button type="button" class="pill-btn sv-tool-tab" data-panel="trim" onclick="switchEditorToolPanel('trim', this)" style="padding:6px 2px;font-size:10.5px;text-align:center;">✂️ Recortar</button>
+            <button type="button" class="pill-btn sv-tool-tab" data-panel="style" onclick="switchEditorToolPanel('style', this)" style="padding:6px 2px;font-size:10.5px;text-align:center;">🎨 Filtro/Vel</button>
+            <button type="button" class="pill-btn sv-tool-tab" data-panel="text" onclick="switchEditorToolPanel('text', this)" style="padding:6px 2px;font-size:10.5px;text-align:center;">💬 Subtítulos</button>
+          </div>
+
+          <!-- PANEL 1: FORMATO Y ENCUADRE -->
+          <div id="sv-panel-format" class="sv-editor-panel" style="background:#131620;border-radius:10px;padding:9px;margin-bottom:9px;">
+            <div style="display:flex;gap:5px;margin-bottom:7px;">
+              <button type="button" class="pill-btn gold sv-aspect-btn" data-aspect="9:16" onclick="setEditorAspect('9:16', this)" style="flex:1;padding:6px 4px;font-size:11px;">📱 9:16</button>
+              <button type="button" class="pill-btn sv-aspect-btn" data-aspect="16:9" onclick="setEditorAspect('16:9', this)" style="flex:1;padding:6px 4px;font-size:11px;">🖥️ 16:9</button>
+              <button type="button" class="pill-btn sv-aspect-btn" data-aspect="1:1" onclick="setEditorAspect('1:1', this)" style="flex:1;padding:6px 4px;font-size:11px;">⬜ 1:1</button>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:#d1d5db;">
+              <span>Encuadre:</span>
+              <select id="sv-fit-mode" onchange="renderEditorPreviewFrame()" style="flex:1;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:6px;font-size:11px;">
+                <option value="cover">Llenar pantalla (Recorte centrado)</option>
+                <option value="contain">Ajustar completo (Fondo difuminado)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- PANEL 2: RECORTE DE DURACIÓN -->
+          <div id="sv-panel-trim" class="sv-editor-panel hidden" style="background:#131620;border-radius:10px;padding:9px;margin-bottom:9px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#facc15;margin-bottom:5px;">
+              <span>⏱️ Segmento seleccionado:</span>
               <span id="sv-trim-lbl">0.0s → 0.0s (0.0s)</span>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
               <label style="flex:1;font-size:10.5px;color:#9ca3af;">Inicio (s)
-                <input id="sv-trim-start" type="number" step="0.5" min="0" value="0" oninput="onEditorTrimChange()" style="width:100%;margin-top:2px;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:7px;padding:5px;font-size:11.5px;" />
+                <input id="sv-trim-start" type="number" step="0.5" min="0" value="0" oninput="onEditorTrimChange()" style="width:100%;margin-top:2px;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:7px;padding:6px;font-size:12px;" />
               </label>
               <label style="flex:1;font-size:10.5px;color:#9ca3af;">Fin (s)
-                <input id="sv-trim-end" type="number" step="0.5" min="0.5" value="0" oninput="onEditorTrimChange()" style="width:100%;margin-top:2px;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:7px;padding:5px;font-size:11.5px;" />
+                <input id="sv-trim-end" type="number" step="0.5" min="0.5" value="0" oninput="onEditorTrimChange()" style="width:100%;margin-top:2px;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:7px;padding:6px;font-size:12px;" />
               </label>
-              <button type="button" class="pill-btn" onclick="previewTrimSegment()" style="margin-top:14px;padding:6px 9px;font-size:11px;">▶️ Ver</button>
+              <button type="button" class="pill-btn" onclick="previewTrimSegment()" style="margin-top:14px;padding:7px 10px;font-size:11px;">▶️ Probar</button>
             </div>
           </div>
 
-          <!-- 3. Texto en Pantalla + Leyendas Automáticas -->
-          <div style="background:#131620;border-radius:10px;padding:8px;margin-bottom:8px;">
-            <div style="font-size:11px;color:#93c5fd;font-weight:700;margin-bottom:5px;">🔤 Texto en Video y Leyendas Automáticas</div>
+          <!-- PANEL 3: FILTROS VISUALES Y VELOCIDAD -->
+          <div id="sv-panel-style" class="sv-editor-panel hidden" style="background:#131620;border-radius:10px;padding:9px;margin-bottom:9px;">
+            <div style="display:flex;gap:6px;margin-bottom:7px;align-items:center;font-size:11px;color:#d1d5db;">
+              <span>Filtro:</span>
+              <select id="sv-filter-preset" onchange="renderEditorPreviewFrame()" style="flex:1;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:6px;font-size:11px;">
+                <option value="none">✨ Normal (Original)</option>
+                <option value="contrast(1.18) saturate(1.25)">🔥 Vívido / Gamer HDR</option>
+                <option value="contrast(1.22) brightness(0.92) saturate(0.85)">🎬 Cine Oscuro</option>
+                <option value="sepia(0.28) contrast(1.1) saturate(1.2)">🌅 Dorado Cálido</option>
+                <option value="grayscale(1) contrast(1.25)">🖤 Blanco y Negro</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:#d1d5db;">
+              <span>Velocidad:</span>
+              <select id="sv-playback-rate" onchange="onEditorSpeedChange()" style="flex:1;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:6px;font-size:11px;">
+                <option value="1">1.0x Normal</option>
+                <option value="0.75">0.75x Cámara Lenta</option>
+                <option value="1.25">1.25x Dinámico</option>
+                <option value="1.5">1.5x Rápido</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- PANEL 4: TEXTO Y LEYENDAS AUTOMÁTICAS -->
+          <div id="sv-panel-text" class="sv-editor-panel hidden" style="background:#131620;border-radius:10px;padding:9px;margin-bottom:9px;">
             <div style="display:flex;gap:6px;margin-bottom:6px;">
-              <input id="sv-overlay-text" type="text" maxlength="70" placeholder="Escribe texto o título encima del video..." oninput="renderEditorPreviewFrame()" style="flex:1;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:6px 8px;font-size:11.5px;" />
+              <input id="sv-overlay-text" type="text" maxlength="70" placeholder="Título o texto en pantalla..." oninput="renderEditorPreviewFrame()" style="flex:1;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:6px 8px;font-size:11.5px;" />
               <select id="sv-text-pos" onchange="renderEditorPreviewFrame()" style="background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:5px;font-size:11px;">
                 <option value="bottom">Abajo</option>
                 <option value="center">Centro</option>
@@ -883,20 +937,20 @@
               </select>
             </div>
             <div style="display:flex;gap:6px;align-items:center;">
-              <button type="button" id="sv-auto-cap-btn" class="pill-btn" onclick="generateAutoCaptionsForEditor()" style="flex:1;padding:6px 8px;font-size:11px;border-color:#60a5fa;color:#93c5fd;">🎙️ Generar Leyendas Automáticas</button>
+              <button type="button" id="sv-auto-cap-btn" class="pill-btn" onclick="generateAutoCaptionsForEditor()" style="flex:1;padding:6px 8px;font-size:11px;border-color:#60a5fa;color:#93c5fd;">🎙️ Leyendas Automáticas</button>
               <button type="button" class="pill-btn" onclick="clearEditorCaptions()" style="padding:6px 8px;font-size:11px;">🗑️ Limpiar</button>
             </div>
             <div id="sv-captions-preview" style="font-size:10.5px;color:#a7f3d0;margin-top:5px;display:none;"></div>
           </div>
 
-          <!-- 4. Renderizar / Aplicar Edición antes de Publicar -->
+          <!-- Acciones Finales del Editor -->
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button type="button" id="sv-render-edit-btn" class="pill-btn gold" onclick="renderEditedVideoBlob()" style="flex:1;padding:8px;font-size:11.5px;font-weight:800;">✨ Aplicar Edición</button>
             <button type="button" class="pill-btn" onclick="resetEditedVideoBlob()" style="padding:8px 10px;font-size:11px;">↩️ Original</button>
             <button type="button" class="pill-btn" onclick="cancelEditorRender()" style="padding:8px 10px;font-size:11px;border-color:#ef4444;color:#fca5a5;">⏹️ Detener</button>
           </div>
           <div id="sv-render-prog-wrap" class="hidden" style="margin-top:6px;">
-            <div style="font-size:10.5px;color:#fde68a;margin-bottom:3px;" id="sv-render-prog-lbl">Procesando edición en tiempo real... 0%</div>
+            <div style="font-size:10.5px;color:#fde68a;margin-bottom:3px;" id="sv-render-prog-lbl">Procesando edición... 0%</div>
             <div style="width:100%;height:6px;background:#1f2430;border-radius:999px;overflow:hidden;">
               <div id="sv-render-prog-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#facc15,#10b981);"></div>
             </div>
@@ -2441,8 +2495,42 @@
       } catch (e) {}
     };
 
+    function getBlockedSet() {
+      try {
+        return new Set(JSON.parse(localStorage.getItem('sv_blocked_users') || '[]'));
+      } catch {
+        return new Set();
+      }
+    }
+
+    window.blockCreatorUser = (targetKey, targetName) => {
+      if (!targetKey) return;
+      const myUid = getActiveUserId();
+      if (targetKey === myUid) return toast('No puedes bloquear tu propia cuenta');
+      const blocked = getBlockedSet();
+      blocked.add(targetKey);
+      localStorage.setItem('sv_blocked_users', JSON.stringify([...blocked]));
+      toast('🚫 Usuario @' + (targetName || 'Creador') + ' bloqueado. Ya no verás su contenido.');
+      renderFeed();
+    };
+
+    window.blockActiveLiveCreator = () => {
+      if (!activeLiveRoom) return;
+      const key = activeLiveRoom.uid || activeLiveRoom.user;
+      const name = activeLiveRoom.user || 'Creador';
+      closeLiveRoom();
+      window.blockCreatorUser(key, name);
+    };
+
+    window.unblockAllUsers = () => {
+      localStorage.removeItem('sv_blocked_users');
+      toast('✅ Lista de usuarios bloqueados restablecida');
+      renderFeed();
+    };
+
     function getFilteredVideos() {
-      let list = [...allVideosCache];
+      const blocked = getBlockedSet();
+      let list = allVideosCache.filter((v) => !blocked.has(v.uid || '') && !blocked.has(v.user || ''));
       const following = getFollowingSet();
 
       if (feedMode === 'following') {
@@ -2533,6 +2621,10 @@
             <div class="act-item">
               <button onclick="openReportModal('${v.id}')" class="act-btn" style="width:36px;height:36px;font-size:14px;">🚩</button>
               <div class="act-count">${t('report_act')}</div>
+            </div>
+            <div class="act-item">
+              <button onclick="blockCreatorUser('${(v.uid || v.user || '').replace(/'/g, '')}', '${(v.user || 'Usuario').replace(/'/g, '')}')" class="act-btn" style="width:36px;height:36px;font-size:14px;" title="Bloquear usuario">🚫</button>
+              <div class="act-count">Bloquear</div>
             </div>
           </div>
 
@@ -3307,6 +3399,7 @@
       ctx.fillRect(0, 0, cw, ch);
 
       const fitMode = document.getElementById('sv-fit-mode')?.value || 'cover';
+      const filterPreset = document.getElementById('sv-filter-preset')?.value || 'none';
       const vw = vid.videoWidth;
       const vh = vid.videoHeight;
 
@@ -3319,15 +3412,29 @@
         ctx.drawImage(vid, (cw - bw) / 2, (ch - bh) / 2, bw, bh);
         ctx.restore();
 
+        ctx.save();
+        if (filterPreset !== 'none') ctx.filter = filterPreset;
         const fgScale = Math.min(cw / vw, ch / vh);
         const fw = vw * fgScale;
         const fh = vh * fgScale;
         ctx.drawImage(vid, (cw - fw) / 2, (ch - fh) / 2, fw, fh);
+        ctx.restore();
       } else {
+        ctx.save();
+        if (filterPreset !== 'none') ctx.filter = filterPreset;
         const scale = Math.max(cw / vw, ch / vh);
         const dw = vw * scale;
         const dh = vh * scale;
         ctx.drawImage(vid, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+        ctx.restore();
+      }
+
+      const hud = document.getElementById('sv-editor-time-hud');
+      if (hud) {
+        const curS = Math.floor(currentSec ?? vid.currentTime ?? 0);
+        const mm = String(Math.floor(curS / 60)).padStart(2, '0');
+        const ss = String(curS % 60).padStart(2, '0');
+        hud.textContent = mm + ':' + ss + ' • ' + editorAspect;
       }
 
       const customTxt = (document.getElementById('sv-overlay-text')?.value || '').trim();
@@ -3353,6 +3460,57 @@
       drawEditorFrameToCanvas(vid, canvas, vid.currentTime || 0);
     };
 
+    window.switchEditorToolPanel = (panelName, btn) => {
+      document.querySelectorAll('.sv-tool-tab').forEach(b => b.classList.remove('gold'));
+      if (btn) btn.classList.add('gold');
+      document.querySelectorAll('.sv-editor-panel').forEach(p => p.classList.add('hidden'));
+      const target = document.getElementById('sv-panel-' + panelName);
+      if (target) target.classList.remove('hidden');
+    };
+
+    window.onEditorSpeedChange = () => {
+      const vid = document.getElementById('sv-editor-src-vid');
+      const rate = Number(document.getElementById('sv-playback-rate')?.value || 1);
+      if (vid) vid.playbackRate = rate;
+      onEditorTrimChange();
+    };
+
+    window.onScrubEditorTimeline = (pctVal) => {
+      const vid = document.getElementById('sv-editor-src-vid');
+      if (!vid || !editorRawDuration) return;
+      const tSec = (Number(pctVal || 0) / 100) * editorRawDuration;
+      vid.currentTime = Math.min(editorRawDuration, Math.max(0, tSec));
+    };
+
+    window.toggleEditorPlayPause = () => {
+      const vid = document.getElementById('sv-editor-src-vid');
+      const btn = document.getElementById('sv-play-toggle-btn');
+      if (!vid || !vid.src) return;
+      if (!vid.paused) {
+        vid.pause();
+        if (btn) btn.textContent = '▶️ Play';
+        return;
+      }
+      vid.muted = false;
+      vid.playbackRate = Number(document.getElementById('sv-playback-rate')?.value || 1);
+      vid.play().then(() => {
+        if (btn) btn.textContent = '⏸️ Pausa';
+        const tick = () => {
+          if (vid.paused || editorRendering) {
+            if (btn && !editorRendering) btn.textContent = '▶️ Play';
+            return;
+          }
+          renderEditorPreviewFrame();
+          const scrub = document.getElementById('sv-timeline-scrubber');
+          if (scrub && editorRawDuration > 0) {
+            scrub.value = String((vid.currentTime / editorRawDuration) * 100);
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }).catch(() => {});
+    };
+
     window.setEditorAspect = (ratio, btn) => {
       editorAspect = ratio;
       document.querySelectorAll('.sv-aspect-btn').forEach(b => b.classList.remove('gold'));
@@ -3373,7 +3531,8 @@
       let st = Math.max(0, Number(sInp?.value || 0));
       let en = Math.min(editorRawDuration || 9999, Number(eInp?.value || editorRawDuration || 0));
       if (en <= st) en = Math.min(editorRawDuration || (st + 1), st + 1);
-      const dur = Math.max(0.5, +(en - st).toFixed(1));
+      const rate = Number(document.getElementById('sv-playback-rate')?.value || 1);
+      const dur = Math.max(0.5, +((en - st) / rate).toFixed(1));
       if (lbl) lbl.textContent = st.toFixed(1) + 's → ' + en.toFixed(1) + 's (' + dur + 's)';
       selectedVideoDurationSec = Math.round(dur);
       updateDurationBadgeUI(dur);

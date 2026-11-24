@@ -726,6 +726,19 @@ app.post('/api/mercadopago/verify-payment', handleVerifyPayment);
 app.get('/api/mercadopago/verify-payment', handleVerifyPayment);
 
 // Fallback universal
+// Rutas Públicas Legales (Política de Privacidad LGPD, Términos y Eliminación de Cuenta para Stores/Play Store)
+app.get('/privacy', (req, res) => {
+  res.type('text/html').send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Política de Privacidad - StarVibe</title><style>body{font-family:system-ui,sans-serif;background:#090b10;color:#e5e7eb;max-width:760px;margin:0 auto;padding:24px;line-height:1.6}h1,h2{color:#facc15}a{color:#60a5fa}</style></head><body><h1>Política de Privacidad y Protección de Datos (LGPD) — StarVibe</h1><p><strong>Última actualización:</strong> Noviembre 2026 • <strong>Contacto oficial:</strong> suporte@starvibeapp.sbs</p><h2>1. Datos recopilados</h2><p>StarVibe recopila únicamente los datos necesarios para operar cuentas de creadores y espectadores: identificador de sesión, nombre de usuario, videos/salas publicados y, cuando el creador solicita formalización o retiros, nombre completo, documento de identidad y método de cobro elegido (PIX, PayPal o Binance USDC/USDT red Solana).</p><h2>2. Uso y seguridad</h2><p>Los datos se emplean exclusivamente para autenticación, prevención de fraude, moderación de contenido y liquidación de retiros desde R$ 50,00. No vendemos datos personales a terceros.</p><h2>3. Derechos y eliminación</h2><p>Puedes eliminar tu cuenta y todos tus datos en cualquier momento desde la app en <strong>Perfil → Eliminar mi cuenta y mis datos (LGPD)</strong> o escribiendo a <strong>suporte@starvibeapp.sbs</strong>.</p><p><a href="/">← Volver a StarVibe</a></p></body></html>`);
+});
+
+app.get('/terms', (req, res) => {
+  res.type('text/html').send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Términos de Uso - StarVibe</title><style>body{font-family:system-ui,sans-serif;background:#090b10;color:#e5e7eb;max-width:760px;margin:0 auto;padding:24px;line-height:1.6}h1,h2{color:#facc15}a{color:#60a5fa}</style></head><body><h1>Términos y Normas de la Comunidad — StarVibe</h1><p><strong>Contacto oficial:</strong> suporte@starvibeapp.sbs</p><h2>1. Contenido propio y derechos de autor</h2><p>Solo se permite publicar videos y transmisiones en vivo propias o con autorización expresa de sus titulares. El contenido de terceros sin derechos, explícito, violento o fraudulento será eliminado.</p><h2>2. Monetización y retiros</h2><p>Los videos originales de +45 segundos generan R$ 0,50 por cada 1.000 vistas válidas y los regalos en salas En Vivo se reparten 35% para el creador y 65% para StarVibe, con retiro mínimo de R$ 50,00.</p><p><a href="/">← Volver a StarVibe</a></p></body></html>`);
+});
+
+app.get('/account-deletion', (req, res) => {
+  res.type('text/html').send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Eliminación de Cuenta - StarVibe</title><style>body{font-family:system-ui,sans-serif;background:#090b10;color:#e5e7eb;max-width:760px;margin:0 auto;padding:24px;line-height:1.6}h1{color:#facc15}a{color:#60a5fa}</style></head><body><h1>Solicitud de Eliminación de Cuenta y Datos — StarVibe</h1><p>Para eliminar permanentemente tu perfil, videos y datos asociados en StarVibe:</p><ol><li>Abre la app StarVibe y entra en <strong>Perfil</strong>.</li><li>Baja hasta el pie de página y pulsa <strong>Eliminar mi cuenta y mis datos (LGPD)</strong>.</li><li>También puedes solicitar la baja escribiendo desde tu correo registrado a <strong>suporte@starvibeapp.sbs</strong>.</li></ol><p><a href="/">← Volver a StarVibe</a></p></body></html>`);
+});
+
 // Rutas SEO para indexación en Google Search
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
