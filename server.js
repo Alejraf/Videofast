@@ -54,9 +54,11 @@ const mpClient = mpAccessToken ? new MercadoPagoConfig({ accessToken: mpAccessTo
 
 const COIN_PACKAGES = {
   pack_50: { id: 'pack_50', title: '50 Monedas StarVibe', coins: 50, price: 5.0 },
-  pack_150: { id: 'pack_150', title: '150 Monedas StarVibe', coins: 150, price: 15.0 },
-  pack_500: { id: 'pack_500', title: '500 Monedas StarVibe', coins: 500, price: 50.0 },
-  pack_1000: { id: 'pack_1000', title: '1000 Monedas StarVibe', coins: 1000, price: 100.0 }
+  pack_250: { id: 'pack_250', title: '250 Monedas StarVibe', coins: 250, price: 25.0 },
+  pack_1000: { id: 'pack_1000', title: '1.000 Monedas StarVibe', coins: 1000, price: 100.0 },
+  pack_2500: { id: 'pack_2500', title: '2.500 Monedas StarVibe VIP', coins: 2500, price: 250.0 },
+  pack_5000: { id: 'pack_5000', title: '5.000 Monedas StarVibe Legend', coins: 5000, price: 500.0 },
+  pack_10000: { id: 'pack_10000', title: '10.000 Monedas StarVibe Supremo', coins: 10000, price: 1000.0 }
 };
 
 const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';

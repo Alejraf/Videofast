@@ -198,35 +198,120 @@
     }
     .live-player-box { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; border-bottom: 1px solid #1f2937; }
     .live-player-box iframe { width: 100%; height: 100%; border: none; }
+    /* Tiered Virtual Gifts & Spectacle Notifications */
     .live-gift-burst {
       position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; background: rgba(0,0,0,0.45);
-      opacity: 0; transition: opacity 0.3s ease; text-align: center; padding: 16px;
+      align-items: center; justify-content: center; background: rgba(0,0,0,0.48);
+      opacity: 0; transition: opacity 0.28s ease; text-align: center; padding: 16px; z-index: 25;
+      overflow: hidden;
     }
     .live-gift-burst.show { opacity: 1; }
-    .live-gift-burst .big-emoji { font-size: 64px; animation: popGift 0.5s ease; }
-    @keyframes popGift { 0% { transform: scale(0.3); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
-    .live-chat-area {
-      flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px;
-      background: #07080c;
+    .live-gift-burst.tier-rare { background: radial-gradient(circle, rgba(59,130,246,0.38), rgba(5,5,7,0.78)); }
+    .live-gift-burst.tier-epic { background: radial-gradient(circle, rgba(168,85,247,0.45), rgba(5,5,7,0.82)); }
+    .live-gift-burst.tier-legendary { background: radial-gradient(circle, rgba(250,204,21,0.52), rgba(5,5,7,0.86)); }
+    .live-gift-burst.tier-mythic {
+      background: radial-gradient(circle, rgba(244,63,94,0.55) 0%, rgba(250,204,21,0.42) 45%, rgba(5,5,7,0.92) 85%);
+      animation: mythicFlash 0.65s ease-in-out infinite alternate;
     }
-    .live-msg { font-size: 12.5px; background: #11141d; padding: 7px 10px; border-radius: 10px; border: 1px solid #1f2937; }
-    .live-msg.gift-msg {
-      background: linear-gradient(135deg, rgba(250,204,21,0.22), rgba(217,119,6,0.18));
-      border-color: var(--gold-2); color: #fef9c3; font-weight: 700;
+    @keyframes mythicFlash {
+      0% { box-shadow: inset 0 0 35px rgba(250,204,21,0.65); }
+      100% { box-shadow: inset 0 0 75px rgba(244,63,94,0.95); }
     }
-    .live-gift-bar {
-      display: flex; gap: 7px; overflow-x: auto; padding: 8px 12px;
-      background: #0f1117; border-top: 1px solid #1f2937; scrollbar-width: none;
+    .gift-stage-card {
+      padding: 14px 20px; border-radius: 22px; border: 2px solid rgba(255,255,255,0.25);
+      background: rgba(15,17,23,0.88); backdrop-filter: blur(10px);
+      transform: scale(0.5); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      max-width: 92%;
     }
-    .live-gift-bar::-webkit-scrollbar { display: none; }
+    .live-gift-burst.show .gift-stage-card { transform: scale(1); }
+    .tier-rare .gift-stage-card { border-color: #60a5fa; box-shadow: 0 0 28px rgba(59,130,246,0.65); }
+    .tier-epic .gift-stage-card { border-color: #c084fc; box-shadow: 0 0 36px rgba(168,85,247,0.8); }
+    .tier-legendary .gift-stage-card { border-color: #facc15; box-shadow: 0 0 48px rgba(250,204,21,0.95); }
+    .tier-mythic .gift-stage-card {
+      border: 2px solid #fef08a;
+      background: linear-gradient(135deg, rgba(35,10,20,0.95), rgba(45,30,5,0.95));
+      box-shadow: 0 0 65px rgba(250,204,21,1), 0 0 110px rgba(244,63,94,0.85);
+    }
+    .gift-tier-pill {
+      display: inline-block; font-size: 10px; font-weight: 900; letter-spacing: 1px;
+      padding: 3px 10px; border-radius: 999px; margin-bottom: 6px; text-transform: uppercase;
+    }
+    .tier-basic .gift-tier-pill { background: rgba(255,255,255,0.14); color: #e5e7eb; }
+    .tier-rare .gift-tier-pill { background: rgba(59,130,246,0.28); color: #93c5fd; border: 1px solid #60a5fa; }
+    .tier-epic .gift-tier-pill { background: rgba(168,85,247,0.3); color: #e9d5ff; border: 1px solid #c084fc; }
+    .tier-legendary .gift-tier-pill { background: rgba(250,204,21,0.28); color: #fef08a; border: 1px solid #facc15; }
+    .tier-mythic .gift-tier-pill { background: linear-gradient(90deg, #f43f5e, #facc15); color: #000; }
+
+    .live-gift-burst .big-emoji { font-size: 62px; line-height: 1.1; animation: popGift 0.55s ease; }
+    .tier-epic .big-emoji { font-size: 76px; filter: drop-shadow(0 0 18px #c084fc); animation: floatSpin 1.2s ease infinite alternate; }
+    .tier-legendary .big-emoji { font-size: 88px; filter: drop-shadow(0 0 24px #facc15); animation: floatSpin 0.9s ease infinite alternate; }
+    .tier-mythic .big-emoji { font-size: 102px; filter: drop-shadow(0 0 32px #fef08a); animation: mythicPulse 0.7s ease infinite alternate; }
+    @keyframes popGift { 0% { transform: scale(0.3); } 70% { transform: scale(1.22); } 100% { transform: scale(1); } }
+    @keyframes floatSpin { 0% { transform: scale(0.95) rotate(-5deg); } 100% { transform: scale(1.14) rotate(5deg); } }
+    @keyframes mythicPulse { 0% { transform: scale(0.95) translateY(4px); } 100% { transform: scale(1.18) translateY(-6px); } }
+
+    .gift-particles { position: absolute; inset: 0; pointer-events: none; font-size: 24px; }
+    .gift-particle {
+      position: absolute; animation: riseParticle 1.8s ease-out forwards; opacity: 0;
+    }
+    @keyframes riseParticle {
+      0% { transform: translateY(40px) scale(0.5); opacity: 1; }
+      100% { transform: translateY(-140px) scale(1.3); opacity: 0; }
+    }
+
+    /* Creator VIP Banner Notification inside Live Room */
+    .creator-vip-alert {
+      position: absolute; top: 10px; left: 10px; right: 10px; z-index: 26;
+      background: linear-gradient(90deg, #7f1d1d, #b45309, #7f1d1d);
+      border: 1.5px solid #fef08a; border-radius: 14px; padding: 9px 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.85);
+      transform: translateY(-130%); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .creator-vip-alert.show { transform: translateY(0); }
+
+    /* Tiered Gift Chips in Bottom Bar */
     .gift-chip {
-      flex: 0 0 auto; background: #181b24; border: 1px solid rgba(250,204,21,0.38);
-      border-radius: 12px; padding: 6px 10px; color: #fff; cursor: pointer; text-align: center; min-width: 78px;
+      flex: 0 0 auto; background: #181b24; border: 1px solid rgba(250,204,21,0.32);
+      border-radius: 13px; padding: 7px 11px; color: #fff; cursor: pointer; text-align: center; min-width: 86px;
+      position: relative; transition: transform 0.12s;
     }
-    .gift-chip:active { background: var(--gold-2); color: #000; }
-    .gift-chip strong { display: block; font-size: 11px; color: var(--gold-2); }
-    .gift-chip span { font-size: 10px; color: #9ca3af; }
+    .gift-chip:active { transform: scale(0.95); }
+    .gift-chip.chip-rare { border-color: #60a5fa; background: linear-gradient(180deg, #131c2e, #0f1420); }
+    .gift-chip.chip-epic { border-color: #c084fc; background: linear-gradient(180deg, #211433, #120d1c); box-shadow: 0 0 10px rgba(168,85,247,0.28); }
+    .gift-chip.chip-legendary { border-color: #facc15; background: linear-gradient(180deg, #2b2109, #141006); box-shadow: 0 0 12px rgba(250,204,21,0.35); }
+    .gift-chip.chip-mythic {
+      border: 1.5px solid #fef08a;
+      background: linear-gradient(135deg, #3b0d1e, #332205);
+      box-shadow: 0 0 15px rgba(244,63,94,0.45);
+    }
+    .gift-chip .g-icon { font-size: 20px; line-height: 1.15; margin-bottom: 2px; }
+    .gift-chip .g-name { font-size: 11px; font-weight: 800; color: #f3f4f6; }
+    .gift-chip strong { display: block; font-size: 11.5px; color: var(--gold-2); margin-top: 1px; }
+    .gift-chip span { font-size: 9.5px; color: #9ca3af; }
+
+    /* Highlighted Chat Messages per Gift Tier */
+    .live-msg.gift-msg {
+      background: linear-gradient(135deg, rgba(250,204,21,0.18), rgba(217,119,6,0.14));
+      border-color: rgba(250,204,21,0.65); color: #fef9c3; font-weight: 700;
+    }
+    .live-msg.gift-rare {
+      background: linear-gradient(135deg, rgba(59,130,246,0.26), rgba(29,78,216,0.18));
+      border-color: #60a5fa; color: #dbeafe;
+    }
+    .live-msg.gift-epic {
+      background: linear-gradient(135deg, rgba(168,85,247,0.32), rgba(107,33,168,0.22));
+      border-color: #c084fc; color: #f3e8ff;
+    }
+    .live-msg.gift-legendary {
+      background: linear-gradient(135deg, rgba(250,204,21,0.35), rgba(180,83,9,0.28));
+      border: 1.5px solid #facc15; color: #fef08a;
+    }
+    .live-msg.gift-mythic {
+      background: linear-gradient(90deg, rgba(244,63,94,0.42), rgba(250,204,21,0.36), rgba(244,63,94,0.42));
+      border: 1.5px solid #fef08a; color: #fff; font-size: 13px;
+      box-shadow: 0 0 14px rgba(250,204,21,0.35);
+    }
     .live-chat-form {
       display: flex; gap: 8px; padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
       background: #0f1117; border-top: 1px solid #1f2937;
@@ -394,9 +479,9 @@
     <div id="view-live" class="view">
       <div class="live-wrap">
         <div class="live-banner">
-          <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE • 60% / 40%</div>
+          <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE • 65% / 35%</div>
           <h3 style="font-size:17px;margin:8px 0 4px;color:#fff;" data-i18n="live_banner_title">Transmisiones en Vivo y Regalos Virtuales</h3>
-          <p style="font-size:12.5px;color:#d1d5db;line-height:1.4;" data-i18n="live_banner_desc">Mira directos integrados dentro de StarVibe, envía regalos virtuales al creador (40% para quien transmite / 60% plataforma) y compra ofertas en vivo.</p>
+          <p style="font-size:12.5px;color:#d1d5db;line-height:1.4;" data-i18n="live_banner_desc">Mira directos integrados dentro de StarVibe, envía regalos virtuales al creador (35% para quien transmite / 65% plataforma) y compra ofertas en vivo.</p>
           <button class="btn-primary" style="padding:10px 18px;font-size:12.5px;" onclick="openLiveModal()" data-i18n="start_live_btn">📡 Iniciar / Publicar Sala Live</button>
         </div>
         <div id="live-rooms-list"></div>
@@ -409,8 +494,8 @@
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="live-badge"><span class="live-dot"></span> LIVE</span>
           <div>
-            <strong id="room-creator" style="font-size:13px;color:var(--gold-2);display:block;">@Creador</strong>
-            <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala en directo</span>
+            <strong id="room-creator" style="font-size:13px;color:var(--gold-2);display:block;">@Creador ✅</strong>
+            <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala oficial • Regalos: 35% creador / 65% app</span>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
@@ -422,9 +507,24 @@
 
       <div class="live-player-box">
         <iframe id="live-iframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
-        <div id="live-gift-burst" class="live-gift-burst">
-          <div class="big-emoji" id="burst-gift-emoji">🌟</div>
-          <div id="burst-gift-text" style="font-size:14px;font-weight:900;color:#fef08a;margin-top:6px;"></div>
+        <div id="creator-vip-alert" class="creator-vip-alert">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="vip-alert-icon" style="font-size:26px;">👑</span>
+            <div>
+              <div id="vip-alert-title" style="font-size:11.5px;font-weight:900;color:#fef08a;">¡REGALO DESTACADO PARA EL CREADOR!</div>
+              <div id="vip-alert-sub" style="font-size:11px;color:#fff;">@Usuario envió un regalo</div>
+            </div>
+          </div>
+          <span id="vip-alert-earn" style="background:#000;color:#6ee7b7;font-size:11px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid #10b981;">+R$ 0,00</span>
+        </div>
+        <div id="live-gift-burst" class="live-gift-burst tier-basic">
+          <div id="gift-particles" class="gift-particles"></div>
+          <div class="gift-stage-card">
+            <div id="burst-tier-pill" class="gift-tier-pill">REGALO EN VIVO</div>
+            <div class="big-emoji" id="burst-gift-emoji">🌟</div>
+            <div id="burst-gift-text" style="font-size:14.5px;font-weight:900;color:#fef08a;margin-top:6px;"></div>
+            <div id="burst-gift-sub" style="font-size:11.5px;color:#d1d5db;margin-top:3px;"></div>
+          </div>
         </div>
       </div>
 
@@ -436,12 +536,36 @@
       <div id="live-chat-messages" class="live-chat-area"></div>
 
       <div class="live-gift-bar">
-        <button class="gift-chip" onclick="sendVirtualGift('✨ Chispa', 10, 1.00)"><div>✨ Chispa</div><strong>10 🪙</strong><span>R$ 1,00</span></button>
-        <button class="gift-chip" onclick="sendVirtualGift('🌹 Rosa', 25, 2.50)"><div>🌹 Rosa</div><strong>25 🪙</strong><span>R$ 2,50</span></button>
-        <button class="gift-chip" onclick="sendVirtualGift('🔥 Fuego', 50, 5.00)"><div>🔥 Fuego</div><strong>50 🪙</strong><span>R$ 5,00</span></button>
-        <button class="gift-chip" onclick="sendVirtualGift('👑 Corona', 150, 15.00)"><div>👑 Corona</div><strong>150 🪙</strong><span>R$ 15,00</span></button>
-        <button class="gift-chip" onclick="sendVirtualGift('🚀 Nave', 500, 50.00)"><div>🚀 Nave</div><strong>500 🪙</strong><span>R$ 50,00</span></button>
-        <button class="gift-chip" onclick="sendVirtualGift('💎 Diamante', 1000, 100.00)"><div>💎 Diamante</div><strong>1000 🪙</strong><span>R$ 100,00</span></button>
+        <button class="gift-chip" onclick="sendVirtualGift('✨ Chispa', 10, 1.00, 'basic', 'REGALO BÁSICO')">
+          <div class="g-icon">✨</div><div class="g-name">Chispa</div><strong>10 🪙</strong><span>R$ 1,00</span>
+        </button>
+        <button class="gift-chip" onclick="sendVirtualGift('🌹 Rosa', 25, 2.50, 'basic', 'DETALLE ESPECIAL')">
+          <div class="g-icon">🌹</div><div class="g-name">Rosa</div><strong>25 🪙</strong><span>R$ 2,50</span>
+        </button>
+        <button class="gift-chip chip-rare" onclick="sendVirtualGift('🔥 Fuego', 50, 5.00, 'rare', 'REGALO RARO')">
+          <div class="g-icon">🔥</div><div class="g-name">Fuego</div><strong>50 🪙</strong><span>R$ 5,00</span>
+        </button>
+        <button class="gift-chip chip-rare" onclick="sendVirtualGift('⚡ Rayo Dorado', 100, 10.00, 'rare', 'IMPULSO RARO')">
+          <div class="g-icon">⚡</div><div class="g-name">Rayo</div><strong>100 🪙</strong><span>R$ 10,00</span>
+        </button>
+        <button class="gift-chip chip-epic" onclick="sendVirtualGift('👑 Corona Imperial', 250, 25.00, 'epic', 'REGALO ÉPICO')">
+          <div class="g-icon">👑</div><div class="g-name">Corona</div><strong>250 🪙</strong><span>R$ 25,00</span>
+        </button>
+        <button class="gift-chip chip-epic" onclick="sendVirtualGift('🏎️ Superdeportivo', 500, 50.00, 'epic', 'ENTRADA ÉPICA')">
+          <div class="g-icon">🏎️</div><div class="g-name">Deportivo</div><strong>500 🪙</strong><span>R$ 50,00</span>
+        </button>
+        <button class="gift-chip chip-legendary" onclick="sendVirtualGift('🚀 Nave Estelar', 1000, 100.00, 'legendary', 'LEGENDARIO VIP')">
+          <div class="g-icon">🚀</div><div class="g-name">Nave VIP</div><strong>1.000 🪙</strong><span>R$ 100</span>
+        </button>
+        <button class="gift-chip chip-legendary" onclick="sendVirtualGift('💎 Diamante Real', 2500, 250.00, 'legendary', 'JOYA LEGENDARIA')">
+          <div class="g-icon">💎</div><div class="g-name">Diamante</div><strong>2.500 🪙</strong><span>R$ 250</span>
+        </button>
+        <button class="gift-chip chip-mythic" onclick="sendVirtualGift('🦁 León de Oro', 5000, 500.00, 'mythic', 'MÍTICO SUPREMO')">
+          <div class="g-icon">🦁</div><div class="g-name">León Oro</div><strong>5.000 🪙</strong><span>R$ 500</span>
+        </button>
+        <button class="gift-chip chip-mythic" onclick="sendVirtualGift('🏰 Castillo StarVibe', 10000, 1000.00, 'mythic', 'MÁXIMO PRESTIGIO')">
+          <div class="g-icon">🏰</div><div class="g-name">Castillo</div><strong>10.000 🪙</strong><span>R$ 1.000</span>
+        </button>
       </div>
 
       <form id="live-chat-form" class="live-chat-form">
@@ -487,10 +611,10 @@
         <div class="wallet-card">
           <div class="wallet-header">
             <strong style="font-size:14px;color:#6ee7b7;" data-i18n="wallet_title">💰 Billetera & Reparto de Ganancias</strong>
-            <span class="split-pill">60% App • 40% Creador</span>
+            <span class="split-pill">65% App • 35% Creador</span>
           </div>
           <p style="font-size:11.5px;color:#d1d5db;line-height:1.4;" data-i18n="wallet_desc">
-            Reparto transparente mejorado frente a TikTok: 40% directo para quien transmite en vivo y 60% para la plataforma StarVibe.
+            Reparto transparente mejorado frente a TikTok: 35% directo para quien transmite en vivo y 65% para la plataforma StarVibe.
           </p>
           <div class="wallet-grid">
             <div class="wallet-box">
@@ -499,7 +623,7 @@
             </div>
             <div class="wallet-box">
               <strong id="wallet-creator-earnings">R$ 0,00</strong>
-              <span data-i18n="wallet_earn_lbl">Ganancia Creador (40%)</span>
+              <span data-i18n="wallet_earn_lbl">Ganancia Creador (35%)</span>
             </div>
           </div>
           <div class="studio-btns">
@@ -590,19 +714,26 @@
     <!-- MODAL SALA EN VIVO -->
     <div id="live-modal" class="modal hidden">
       <div class="modal-header">
-        <div class="modal-title" data-i18n="live_modal_title">📡 Publicar Sala En Vivo</div>
+        <div class="modal-title" data-i18n="live_modal_title">📡 Publicar Mi Sala En Vivo</div>
         <button onclick="closeLiveModal()" class="close-btn">✕</button>
       </div>
-      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;" data-i18n="live_modal_desc">Tu transmisión se reproducirá integrada dentro de StarVibe con chat en vivo y regalos (40% creador / 60% StarVibe).</p>
+      <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);border-radius:12px;padding:10px;margin-bottom:10px;font-size:11.5px;color:#a7f3d0;line-height:1.4;">
+        ✅ <strong>Titular verificado:</strong> <span id="live-owner-verified-lbl">Creador Formalizado</span><br>
+        Los regalos enviados en esta sala se acreditan <strong>35% a tu cuenta PIX formalizada</strong> y <strong>65% a StarVibe</strong>.
+      </div>
       <form id="live-form">
-        <input id="live-title-input" type="text" maxlength="80" data-i18n-ph="live_title_ph" placeholder="Título de tu directo..." class="text-input" required />
-        <input id="live-url-input" type="url" placeholder="YouTube Live / Twitch URL (https://...)" class="text-input" required />
-        <input id="live-offer-url-input" type="url" data-i18n-ph="live_offer_ph" placeholder="🛍️ Enlace de venta en vivo opcional (https://...)" class="text-input" />
+        <input id="live-title-input" type="text" maxlength="80" data-i18n-ph="live_title_ph" placeholder="Título de tu transmisión propia..." class="text-input" required />
+        <input id="live-url-input" type="url" placeholder="Enlace de TU propio canal YouTube Live / Twitch (https://...)" class="text-input" required />
+        <input id="live-offer-url-input" type="url" data-i18n-ph="live_offer_ph" placeholder="🛍️ Enlace de venta propio opcional (https://...)" class="text-input" />
+        <label class="check-row">
+          <input id="live-own-check" type="checkbox" required />
+          <span>Declaro bajo responsabilidad legal que esta transmisión en vivo es mía (no de terceros) y tengo los derechos de imagen y audio.</span>
+        </label>
         <label class="check-row">
           <input type="checkbox" required />
-          <span data-i18n="live_terms_chk">Soy mayor de 18 años y acepto las normas de transmisión y reparto (60% StarVibe / 40% Creador).</span>
+          <span data-i18n="live_terms_chk">Soy mayor de 18 años y acepto las normas de transmisión y reparto (65% StarVibe / 35% Creador).</span>
         </label>
-        <button type="submit" class="submit-btn" data-i18n="activate_live_btn">Activar Sala En Vivo</button>
+        <button type="submit" class="submit-btn" data-i18n="activate_live_btn">Activar Mi Sala En Vivo</button>
       </form>
     </div>
 
@@ -612,11 +743,13 @@
         <div class="modal-title" data-i18n="recharge_title">🪙 Recargar Monedas StarVibe</div>
         <button onclick="closeRechargeModal()" class="close-btn">✕</button>
       </div>
-      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;" data-i18n="recharge_desc">Usa tus monedas para enviar regalos animados en vivo (40% creador / 60% StarVibe).</p>
-      <div class="pack-item"><div><strong>50 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Chispas & Rosas</div></div><button onclick="buyCoinPack(50, 'R$ 5,00')">R$ 5,00</button></div>
-      <div class="pack-item"><div><strong>150 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Fuegos & Coronas</div></div><button onclick="buyCoinPack(150, 'R$ 15,00')">R$ 15,00</button></div>
-      <div class="pack-item"><div><strong>500 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Naves Vibe</div></div><button onclick="buyCoinPack(500, 'R$ 50,00')">R$ 50,00</button></div>
-      <div class="pack-item"><div><strong>1.000 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Diamantes VIP</div></div><button onclick="buyCoinPack(1000, 'R$ 100,00')">R$ 100,00</button></div>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;" data-i18n="recharge_desc">Usa tus monedas para enviar regalos animados en vivo (35% creador / 60% StarVibe).</p>
+      <div class="pack-item"><div><strong>50 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Chispas, Rosas & Fuego</div></div><button onclick="buyCoinPack(50, 'R$ 5,00')">R$ 5,00</button></div>
+      <div class="pack-item"><div><strong>250 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Rayos & Corona Imperial</div></div><button onclick="buyCoinPack(250, 'R$ 25,00')">R$ 25,00</button></div>
+      <div class="pack-item"><div><strong>1.000 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Superdeportivo & Nave VIP</div></div><button onclick="buyCoinPack(1000, 'R$ 100,00')">R$ 100,00</button></div>
+      <div class="pack-item"><div><strong>2.500 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Diamante Real Legendario</div></div><button onclick="buyCoinPack(2500, 'R$ 250,00')">R$ 250,00</button></div>
+      <div class="pack-item"><div><strong>5.000 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">León de Oro Mítico</div></div><button onclick="buyCoinPack(5000, 'R$ 500,00')">R$ 500,00</button></div>
+      <div class="pack-item"><div><strong>10.000 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Castillo StarVibe Supremo</div></div><button onclick="buyCoinPack(10000, 'R$ 1.000,00')">R$ 1.000,00</button></div>
     </div>
 
     <!-- MODAL AJUSTES REPARTO -->
@@ -628,13 +761,13 @@
       <div class="wallet-card">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
           <span style="font-size:13px;color:#fff;" data-i18n="split_app_lbl">🏢 Plataforma StarVibe:</span>
-          <strong id="split-app-val" style="color:var(--gold-2);">60%</strong>
+          <strong id="split-app-val" style="color:var(--gold-2);">65%</strong>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
           <span style="font-size:13px;color:#fff;" data-i18n="split_creator_lbl">🎙️ Creador que transmite:</span>
-          <strong id="split-creator-val" style="color:#6ee7b7;">40%</strong>
+          <strong id="split-creator-val" style="color:#6ee7b7;">35%</strong>
         </div>
-        <input id="creator-share-range" type="range" min="30" max="50" step="5" value="40" style="width:100%;accent-color:#facc15;" oninput="previewSplitChange(this.value)" />
+        <input id="creator-share-range" type="range" min="25" max="45" step="5" value="35" style="width:100%;accent-color:#facc15;" oninput="previewSplitChange(this.value)" />
       </div>
       <button class="submit-btn" onclick="saveSplitSettings()" data-i18n="save_split_btn">Guardar Configuración</button>
     </div>
@@ -710,7 +843,7 @@
       </div>
       <div class="wallet-card" style="margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;">
-          <span style="font-size:12.5px;color:#d1d5db;">Saldo disponible (40% creador):</span>
+          <span style="font-size:12.5px;color:#d1d5db;">Saldo disponible (35% creador):</span>
           <strong id="withdraw-avail-lbl" style="color:#6ee7b7;font-size:15px;">R$ 0,00</strong>
         </div>
         <p style="font-size:11px;color:#9ca3af;margin-top:6px;">Retiro mínimo: R$ 20,00 • Procesamiento en hasta 7 días hábiles tras verificación.</p>
@@ -729,8 +862,8 @@
         <button onclick="closeCreatorRulesModal()" class="close-btn">✕</button>
       </div>
       <div style="background:#0f1117;border:1px solid rgba(250,204,21,0.35);border-radius:16px;padding:15px;font-size:12.5px;color:#e5e7eb;line-height:1.55;">
-        <p style="margin-bottom:8px;"><strong>1. Requisito para hacer Lives:</strong> Mínimo de <strong>10 seguidores</strong> en StarVibe y cuenta formalizada (+18 años).</p>
-        <p style="margin-bottom:8px;"><strong>2. Reparto de ganancias (60% / 40%):</strong> <strong>40%</strong> del valor de los regalos virtuales va para quien transmite y <strong>60%</strong> para la plataforma StarVibe.</p>
+        <p style="margin-bottom:8px;"><strong>1. Requisito para hacer Lives:</strong> Cuenta formalizada (+18 años, documento y clave PIX registrada) y transmisión propia del titular.</p>
+        <p style="margin-bottom:8px;"><strong>2. Reparto de ganancias (60% / 40%):</strong> <strong>35%</strong> del valor de los regalos virtuales va para quien transmite y <strong>65%</strong> para la plataforma StarVibe.</p>
         <p style="margin-bottom:8px;"><strong>3. Propiedad intelectual (DMCA):</strong> Solo puedes subir videos originales o con licencia. Prohibido robar o resubir contenido protegido.</p>
         <p style="margin-bottom:8px;"><strong>4. Conducta segura:</strong> Prohibido contenido sexual explícito, violencia, discurso de odio, estafas o exposición de menores.</p>
         <p><strong>5. Publicidad y enlaces:</strong> Cualquier promoción o enlace Shop debe ser real y marcarse como colaboración pagada cuando corresponda.</p>
@@ -772,7 +905,7 @@
         clear_btn: "Limpiar",
         loading_feed: "Cargando videos de StarVibe...",
         live_banner_title: "Transmisiones en Vivo y Regalos Virtuales",
-        live_banner_desc: "Mira directos integrados dentro de StarVibe, envía regalos virtuales al creador (40% para quien transmite / 60% plataforma) y compra ofertas en vivo.",
+        live_banner_desc: "Mira directos integrados dentro de StarVibe, envía regalos virtuales al creador (35% para quien transmite / 65% plataforma) y compra ofertas en vivo.",
         start_live_btn: "📡 Iniciar / Publicar Sala Live",
         live_offer_label: "🛍️ Oferta destacada en vivo",
         view_offer_btn: "Ver Oferta →",
@@ -786,9 +919,9 @@
         save_btn: "Guardar",
         lang_title: "🌐 Idioma de la App",
         wallet_title: "💰 Billetera & Reparto de Ganancias",
-        wallet_desc: "Reparto transparente mejorado frente a TikTok: 40% directo para quien transmite en vivo y 60% para la plataforma StarVibe.",
+        wallet_desc: "Reparto transparente mejorado frente a TikTok: 35% directo para quien transmite en vivo y 65% para la plataforma StarVibe.",
         wallet_coins_lbl: "Mis Monedas (Regalos)",
-        wallet_earn_lbl: "Ganancia Creador (40%)",
+        wallet_earn_lbl: "Ganancia Creador (35%)",
         recharge_btn: "➕ Recargar Monedas (PIX)",
         split_settings_btn: "⚙️ Ajustes de Reparto",
         studio_title: "🤝 StarVibe Creator & Brand Studio",
@@ -812,13 +945,13 @@
         rights_chk: "Confirmo que soy autor o tengo licencia de este video y cumple las normas legales.",
         publish_btn: "Publicar en StarVibe",
         live_modal_title: "📡 Publicar Sala En Vivo",
-        live_modal_desc: "Tu transmisión se reproducirá integrada dentro de StarVibe con chat en vivo y regalos (40% creador / 60% StarVibe).",
+        live_modal_desc: "Tu transmisión se reproducirá integrada dentro de StarVibe con chat en vivo y regalos (35% creador / 60% StarVibe).",
         live_title_ph: "Título de tu directo...",
         live_offer_ph: "🛍️ Enlace de venta en vivo opcional (https://...)",
-        live_terms_chk: "Soy mayor de 18 años y acepto las normas de transmisión y reparto (60% StarVibe / 40% Creador).",
+        live_terms_chk: "Soy mayor de 18 años y acepto las normas de transmisión y reparto (65% StarVibe / 35% Creador).",
         activate_live_btn: "Activar Sala En Vivo",
         recharge_title: "🪙 Recargar Monedas StarVibe",
-        recharge_desc: "Usa tus monedas para enviar regalos animados en vivo (40% creador / 60% StarVibe).",
+        recharge_desc: "Usa tus monedas para enviar regalos animados en vivo (35% creador / 60% StarVibe).",
         split_title: "⚙️ Ajustes de Reparto de Ganancias",
         split_app_lbl: "🏢 Plataforma StarVibe:",
         split_creator_lbl: "🎙️ Creador que transmite:",
@@ -861,7 +994,7 @@
         clear_btn: "Limpar",
         loading_feed: "Carregando vídeos do StarVibe...",
         live_banner_title: "Transmissões Ao Vivo e Presentes Virtuais",
-        live_banner_desc: "Assista lives integradas no StarVibe, envie presentes virtuais ao criador (40% para quem transmite / 60% plataforma) e aproveite ofertas ao vivo.",
+        live_banner_desc: "Assista lives integradas no StarVibe, envie presentes virtuais ao criador (35% para quem transmite / 65% plataforma) e aproveite ofertas ao vivo.",
         start_live_btn: "📡 Iniciar / Publicar Sala Live",
         live_offer_label: "🛍️ Oferta em destaque na live",
         view_offer_btn: "Ver Oferta →",
@@ -875,9 +1008,9 @@
         save_btn: "Salvar",
         lang_title: "🌐 Idioma do Aplicativo",
         wallet_title: "💰 Carteira & Divisão de Ganhos",
-        wallet_desc: "Divisão transparente melhor que o TikTok: 40% direto para quem transmite ao vivo e 60% para a plataforma StarVibe.",
+        wallet_desc: "Divisão transparente melhor que o TikTok: 35% direto para quem transmite ao vivo e 65% para a plataforma StarVibe.",
         wallet_coins_lbl: "Minhas Moedas (Presentes)",
-        wallet_earn_lbl: "Ganho Criador (40%)",
+        wallet_earn_lbl: "Ganho Criador (35%)",
         recharge_btn: "➕ Recarregar Moedas (PIX)",
         split_settings_btn: "⚙️ Ajustes de Divisão",
         studio_title: "🤝 StarVibe Creator & Brand Studio",
@@ -901,13 +1034,13 @@
         rights_chk: "Confirmo que sou autor ou tenho licença deste vídeo e cumpro as normas legais.",
         publish_btn: "Publicar no StarVibe",
         live_modal_title: "📡 Publicar Sala Ao Vivo",
-        live_modal_desc: "Sua transmissão será exibida integrada no StarVibe com chat ao vivo e presentes (40% criador / 60% StarVibe).",
+        live_modal_desc: "Sua transmissão será exibida integrada no StarVibe com chat ao vivo e presentes (35% criador / 65% StarVibe).",
         live_title_ph: "Título da sua live...",
         live_offer_ph: "🛍️ Link de venda ao vivo opcional (https://...)",
-        live_terms_chk: "Sou maior de 18 anos e aceito as regras de transmissão e divisão (60% StarVibe / 40% Criador).",
+        live_terms_chk: "Sou maior de 18 anos e aceito as regras de transmissão e divisão (65% StarVibe / 35% Criador).",
         activate_live_btn: "Ativar Sala Ao Vivo",
         recharge_title: "🪙 Recarregar Moedas StarVibe",
-        recharge_desc: "Use suas moedas para enviar presentes animados ao vivo (40% criador / 60% StarVibe).",
+        recharge_desc: "Use suas moedas para enviar presentes animados ao vivo (35% criador / 65% StarVibe).",
         split_title: "⚙️ Ajustes de Divisão de Ganhos",
         split_app_lbl: "🏢 Plataforma StarVibe:",
         split_creator_lbl: "🎙️ Criador que transmite:",
@@ -950,7 +1083,7 @@
         clear_btn: "Clear",
         loading_feed: "Loading StarVibe videos...",
         live_banner_title: "Verified Live Streams & Virtual Gifts",
-        live_banner_desc: "Watch live streams directly inside StarVibe, send virtual gifts to creators (40% creator / 60% platform), and shop live deals.",
+        live_banner_desc: "Watch live streams directly inside StarVibe, send virtual gifts to creators (35% creator / 65% platform), and shop live deals.",
         start_live_btn: "📡 Start / Publish Live Room",
         live_offer_label: "🛍️ Featured live offer",
         view_offer_btn: "View Offer →",
@@ -964,9 +1097,9 @@
         save_btn: "Save",
         lang_title: "🌐 App Language",
         wallet_title: "💰 Wallet & Revenue Split",
-        wallet_desc: "Creator-friendly revenue split better than TikTok: 40% goes directly to the live streamer and 60% to StarVibe platform.",
+        wallet_desc: "Creator-friendly revenue split better than TikTok: 35% goes directly to the live streamer and 65% to StarVibe platform.",
         wallet_coins_lbl: "My Coins (Gifts)",
-        wallet_earn_lbl: "Creator Earnings (40%)",
+        wallet_earn_lbl: "Creator Earnings (35%)",
         recharge_btn: "➕ Top Up Coins (PIX)",
         split_settings_btn: "⚙️ Split Settings",
         studio_title: "🤝 StarVibe Creator & Brand Studio",
@@ -990,13 +1123,13 @@
         rights_chk: "I confirm I own or have rights to this video and comply with community rules.",
         publish_btn: "Publish on StarVibe",
         live_modal_title: "📡 Publish Live Room",
-        live_modal_desc: "Your stream plays embedded inside StarVibe with live chat and virtual gifts (40% creator / 60% StarVibe).",
+        live_modal_desc: "Your stream plays embedded inside StarVibe with live chat and virtual gifts (35% creator / 65% StarVibe).",
         live_title_ph: "Your live stream title...",
         live_offer_ph: "🛍️ Optional live shopping link (https://...)",
-        live_terms_chk: "I am 18+ and agree to live streaming rules and 60% StarVibe / 40% Creator revenue split.",
+        live_terms_chk: "I am 18+ and agree to live streaming rules and 65% StarVibe / 35% Creator revenue split.",
         activate_live_btn: "Go Live Now",
         recharge_title: "🪙 Top Up StarVibe Coins",
-        recharge_desc: "Use coins to send animated live gifts (40% creator / 60% StarVibe).",
+        recharge_desc: "Use coins to send animated live gifts (35% creator / 65% StarVibe).",
         split_title: "⚙️ Revenue Split Settings",
         split_app_lbl: "🏢 StarVibe Platform:",
         split_creator_lbl: "🎙️ Live Streamer:",
@@ -1088,6 +1221,7 @@
     function setCoinsBalance(n) {
       localStorage.setItem('sv_coins', String(Math.max(0, n)));
       updateWalletUI();
+    refreshFormalStatusUI();
       refreshFormalStatusUI();
     }
     function getCreatorEarnings() {
@@ -1099,7 +1233,7 @@
       updateWalletUI();
     }
     function getCreatorSplitPct() {
-      return Number(localStorage.getItem('sv_creator_split') || '40');
+      return Number(localStorage.getItem('sv_creator_split') || '35');
     }
     function updateWalletUI() {
       const coins = getCoinsBalance();
@@ -1491,8 +1625,8 @@
 
     window.openLiveRoom = (liveObj) => {
       activeLiveRoom = liveObj;
-      document.getElementById('room-creator').textContent = '@' + (liveObj.user || 'Creador');
-      document.getElementById('room-title').textContent = liveObj.title || 'Live';
+      document.getElementById('room-creator').textContent = '@' + (liveObj.user || 'Creador') + ' ✅';
+      document.getElementById('room-title').textContent = (liveObj.title || 'Live') + ' • 35% creador / 65% app';
       document.getElementById('live-iframe').src = toEmbedStreamUrl(liveObj.streamUrl);
 
       const offerBar = document.getElementById('room-offer-bar');
@@ -1508,7 +1642,7 @@
       document.getElementById('live-room-overlay').classList.remove('hidden');
 
       const chatList = document.getElementById('live-chat-messages');
-      chatList.innerHTML = '<div class="live-msg">StarVibe Live Chat (40% Creator / 60% StarVibe)</div>';
+      chatList.innerHTML = '<div class="live-msg">StarVibe Live Chat (35% Creator / 65% StarVibe)</div>';
 
       if (unsubLiveChat) unsubLiveChat();
       const cq = query(collection(db, 'lives', liveObj.id, 'messages'), orderBy('createdAt', 'asc'));
@@ -1518,8 +1652,10 @@
         snap.forEach((mDoc) => {
           const m = mDoc.data();
           const div = document.createElement('div');
-          div.className = 'live-msg' + (m.isGift ? ' gift-msg' : '');
-          div.innerHTML = `<strong style="color:#facc15;">@${m.user || 'User'}:</strong> ${m.text}`;
+          const tierClass = m.isGift ? (' gift-msg gift-' + (m.tier || 'basic')) : '';
+          div.className = 'live-msg' + tierClass;
+          const badge = m.isGift && m.tierLabel ? `<span style="background:rgba(0,0,0,0.45);padding:1px 6px;border-radius:6px;font-size:10px;margin-right:5px;border:1px solid rgba(255,255,255,0.25);">${m.tierLabel}</span>` : '';
+          div.innerHTML = `${badge}<strong style="color:#facc15;">@${m.user || 'User'}:</strong> ${m.text}`;
           chatList.appendChild(div);
         });
         chatList.scrollTop = chatList.scrollHeight;
@@ -1560,10 +1696,26 @@
       } catch (err) {}
     });
 
-    window.sendVirtualGift = async (giftName, coinCost, brlValue) => {
+    function spawnGiftParticles(emoji, count) {
+      const box = document.getElementById('gift-particles');
+      if (!box) return;
+      box.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const sp = document.createElement('span');
+        sp.className = 'gift-particle';
+        sp.textContent = emoji;
+        sp.style.left = (8 + Math.random() * 84) + '%';
+        sp.style.top = (45 + Math.random() * 40) + '%';
+        sp.style.animationDelay = (Math.random() * 0.45) + 's';
+        box.appendChild(sp);
+      }
+    }
+
+    window.sendVirtualGift = async (giftName, coinCost, brlValue, tier = 'basic', tierLabel = 'REGALO EN VIVO') => {
       if (!activeLiveRoom) return;
       const currentCoins = getCoinsBalance();
       if (currentCoins < coinCost) {
+        toast('🪙 Necesitas ' + coinCost + ' monedas para enviar ' + giftName);
         return openRechargeModal();
       }
       setCoinsBalance(currentCoins - coinCost);
@@ -1573,7 +1725,7 @@
       const creatorShare = +(brlValue * (creatorPct / 100)).toFixed(2);
       const appShare = +(brlValue * (appPct / 100)).toFixed(2);
 
-      if (currentUser && activeLiveRoom.uid === currentUser.uid) {
+      if (activeLiveRoom.uid === getActiveUserId() || (currentUser && activeLiveRoom.uid === currentUser.uid)) {
         addCreatorEarnings(creatorShare);
       }
 
@@ -1590,17 +1742,44 @@
 
       const emoji = giftName.split(' ')[0];
       const burst = document.getElementById('live-gift-burst');
+      burst.className = 'live-gift-burst tier-' + tier + ' show';
+      document.getElementById('burst-tier-pill').textContent = '★ ' + tierLabel + ' • ' + coinCost.toLocaleString('es-ES') + ' 🪙';
       document.getElementById('burst-gift-emoji').textContent = emoji;
-      document.getElementById('burst-gift-text').textContent = getUserName() + ' → ' + giftName + ' (' + coinCost + ' 🪙)';
-      burst.classList.add('show');
+      document.getElementById('burst-gift-text').textContent = '@' + getUserName() + ' envió ' + giftName;
+      document.getElementById('burst-gift-sub').textContent = 'Valor: R$ ' + brlValue.toFixed(2).replace('.', ',') + ' • Creador recibe R$ ' + creatorShare.toFixed(2).replace('.', ',') + ' (' + creatorPct + '%)';
+
+      const particleCount = tier === 'mythic' ? 18 : tier === 'legendary' ? 12 : tier === 'epic' ? 8 : tier === 'rare' ? 5 : 2;
+      spawnGiftParticles(emoji, particleCount);
+
+      if (navigator.vibrate) {
+        navigator.vibrate(tier === 'mythic' || tier === 'legendary' ? [80, 40, 120] : 50);
+      }
+
+      const durationMs = tier === 'mythic' ? 3800 : tier === 'legendary' ? 3000 : tier === 'epic' ? 2400 : 1800;
       clearTimeout(window._gTimer);
-      window._gTimer = setTimeout(() => burst.classList.remove('show'), 1800);
+      window._gTimer = setTimeout(() => {
+        burst.classList.remove('show');
+      }, durationMs);
+
+      // Creator VIP Notification Banner for high-tier gifts (rare, epic, legendary, mythic)
+      if (tier !== 'basic') {
+        const vipAlert = document.getElementById('creator-vip-alert');
+        document.getElementById('vip-alert-icon').textContent = emoji;
+        document.getElementById('vip-alert-title').textContent = '🔔 NOTIFICACIÓN AL CREADOR • ' + tierLabel;
+        document.getElementById('vip-alert-sub').textContent = '@' + getUserName() + ' te envió ' + giftName + ' (' + coinCost + ' 🪙)';
+        document.getElementById('vip-alert-earn').textContent = '+R$ ' + creatorShare.toFixed(2).replace('.', ',');
+        vipAlert.classList.add('show');
+        clearTimeout(window._vipTimer);
+        window._vipTimer = setTimeout(() => vipAlert.classList.remove('show'), durationMs + 1200);
+      }
 
       try {
         await addDoc(collection(db, 'lives', activeLiveRoom.id, 'messages'), {
           user: getUserName(),
           text: giftName + ' (' + coinCost + ' 🪙 • R$ ' + brlValue.toFixed(2) + ')',
           isGift: true,
+          tier,
+          tierLabel,
           giftName,
           coinCost,
           brlValue,
@@ -2096,11 +2275,13 @@
     });
 
     window.openLiveModal = () => {
-      const followers = getFollowersCount();
-      if (followers < MIN_FOLLOWERS_FOR_LIVE) {
-        toast('🔒 Necesitas al menos ' + MIN_FOLLOWERS_FOR_LIVE + ' seguidores para hacer Lives (' + followers + '/' + MIN_FOLLOWERS_FOR_LIVE + ')');
-        return openCreatorRulesModal();
+      const f = getFormalData();
+      if (!f || !f.fullName || !f.pixKey) {
+        toast('🪪 Formaliza tu cuenta (+18 y PIX) antes de abrir tu sala en vivo');
+        return openFormalizeModal();
       }
+      const lbl = document.getElementById('live-owner-verified-lbl');
+      if (lbl) lbl.textContent = f.fullName + ' (@' + getUserName() + ')';
       document.getElementById('live-modal').classList.remove('hidden');
     };
     window.closeLiveModal = () => document.getElementById('live-modal').classList.add('hidden');
@@ -2112,14 +2293,17 @@
       const title = document.getElementById('live-title-input').value.trim();
       const streamUrl = document.getElementById('live-url-input').value.trim();
       const offerUrl = document.getElementById('live-offer-url-input').value.trim();
-      if (!/^https:\/\//i.test(streamUrl)) return toast('HTTPS URL');
+      if (!/^https:\/\//i.test(streamUrl)) return toast('Ingresa una URL válida con https://');
+      const f = getFormalData() || {};
+      const stableCreatorId = getActiveUserId();
       try {
         const docRef = await addDoc(collection(db, 'lives'), {
           title,
           streamUrl,
           offerUrl,
           user: getUserName(),
-          uid: currentUser ? currentUser.uid : 'guest',
+          verifiedOwnerName: f.fullName || getUserName(),
+          uid: stableCreatorId,
           totalGiftsCoins: 0,
           totalCreatorBRL: 0,
           totalAppBRL: 0,
@@ -2128,16 +2312,19 @@
         });
         document.getElementById('live-form').reset();
         closeLiveModal();
-        toast('📡 LIVE!');
+        toast('📡 ¡Tu sala oficial en vivo está activa!');
         openLiveRoom({
           id: docRef.id,
           title,
           streamUrl,
           offerUrl,
           user: getUserName(),
-          uid: currentUser ? currentUser.uid : 'guest'
+          verifiedOwnerName: f.fullName || getUserName(),
+          uid: stableCreatorId
         });
-      } catch (err) {}
+      } catch (err) {
+        toast('Error al crear la sala en vivo');
+      }
     });
 
     document.getElementById('brand-form').addEventListener('submit', async (e) => {
