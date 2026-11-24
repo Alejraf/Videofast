@@ -1119,45 +1119,82 @@
 
     window.openRechargeModal = () => document.getElementById('recharge-modal').classList.remove('hidden');
     window.closeRechargeModal = () => document.getElementById('recharge-modal').classList.add('hidden');
+    function getActiveUserId() {
+      return (currentUser && currentUser.uid) ? currentUser.uid : 'guest';
+    }
+
+    async function syncWalletFromServer() {
+      try {
+        const uid = getActiveUserId();
+        const resp = await fetch('/api/wallet/' + encodeURIComponent(uid));
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data && data.ok) {
+          localStorage.setItem('sv_coins', String(Number(data.coins ?? 100)));
+          if (typeof data.creatorEarnings === 'number') {
+            localStorage.setItem('sv_creator_brl', Number(data.creatorEarnings).toFixed(2));
+          }
+          updateWalletUI();
+        }
+      } catch (e) {}
+    }
+
     window.buyCoinPack = async (coins, priceLabel) => {
       try {
-        toast('⏳ Mercado Pago (' + priceLabel + ')...');
-        const resp = await fetch('/api/mercadopago/create-order', {
+        toast('⏳ Abriendo Mercado Pago (' + priceLabel + ')...');
+        const numericPrice = Number(String(priceLabel).replace(/[^0-9,\.]/g, '').replace(',', '.')) || 5.0;
+        const resp = await fetch('/api/mercadopago/create-preference', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            packCoins: coins,
-            userId: currentUser ? currentUser.uid : 'guest'
+            packageId: 'pack_' + coins,
+            coins: Number(coins),
+            price: numericPrice,
+            title: coins + ' Monedas StarVibe',
+            userId: getActiveUserId()
           })
         });
         const data = await resp.json();
-        if (!resp.ok || !data.checkoutUrl) {
-          return toast('⚠️ ' + (data.error || 'MP_ACCESS_TOKEN'));
+        const checkoutUrl = data.init_point || data.sandbox_init_point;
+        if (!resp.ok || !data.ok || !checkoutUrl) {
+          return toast('⚠️ ' + (data.error || 'Error configurando Mercado Pago'));
         }
-        localStorage.setItem('sv_pending_mp_ref', data.ref);
-        window.open(data.checkoutUrl, '_blank', 'noopener');
+        closeRechargeModal();
+        window.location.href = checkoutUrl;
       } catch (err) {
-        toast('Error Mercado Pago');
+        toast('Error de conexión con Mercado Pago');
       }
     };
 
     async function checkMercadoPagoReturn() {
       const params = new URLSearchParams(location.search);
-      const ref = params.get('ref') || localStorage.getItem('sv_pending_mp_ref');
-      if (!ref) return;
-      try {
-        const resp = await fetch('/api/mercadopago/status?ref=' + encodeURIComponent(ref));
-        if (!resp.ok) return;
-        const st = await resp.json();
-        const creditedRefs = getSet('sv_credited_refs');
-        if (st.approved && !creditedRefs.has(ref)) {
-          creditedRefs.add(ref);
-          saveSet('sv_credited_refs', creditedRefs);
-          localStorage.removeItem('sv_pending_mp_ref');
-          setCoinsBalance(getCoinsBalance() + Number(st.coins || 0));
-          toast('🪙 +' + st.coins + ' OK!');
-        }
-      } catch (e) {}
+      const paymentStatus = params.get('payment');
+      const paymentId = params.get('payment_id') || params.get('collection_id');
+      const coinsParam = Number(params.get('coins') || 0);
+
+      if (paymentId) {
+        try {
+          await fetch('/api/mercadopago/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              paymentId: String(paymentId),
+              userId: getActiveUserId(),
+              coins: coinsParam || 50
+            })
+          });
+        } catch (e) {}
+      }
+
+      await syncWalletFromServer();
+
+      if (paymentStatus === 'success') {
+        toast('🪙 ¡Recarga acreditada en tu cuenta!');
+        history.replaceState({}, '', location.pathname);
+      } else if (paymentStatus === 'pending') {
+        toast('⏳ Pago pendiente de confirmación');
+        history.replaceState({}, '', location.pathname);
+      }
     }
     checkMercadoPagoReturn();
 
@@ -1244,6 +1281,7 @@
       currentUser = u;
       updateProfileHeader();
       renderProfileGrid();
+      syncWalletFromServer();
     });
 
     function getSet(key) {
@@ -1456,6 +1494,17 @@
       if (currentUser && activeLiveRoom.uid === currentUser.uid) {
         addCreatorEarnings(creatorShare);
       }
+
+      fetch('/api/wallet/gift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderUserId: getActiveUserId(),
+          creatorUserId: activeLiveRoom.uid || 'guest',
+          coinCost,
+          creatorShare
+        })
+      }).catch(() => {});
 
       const emoji = giftName.split(' ')[0];
       const burst = document.getElementById('live-gift-burst');

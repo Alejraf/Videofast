@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
 const admin = require('firebase-admin');
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
@@ -10,7 +11,13 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Servir archivos estáticos tanto desde la raíz como desde /public (evita Cannot GET / o pantalla negra)
+const publicDir = path.join(__dirname, 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
+app.use(express.static(__dirname));
 
 // 1. Inicializar Firebase Admin (Firestore)
 let db = null;
@@ -37,7 +44,6 @@ if (hasFirebaseEnv) {
   console.warn('⚠️ Variables de Firebase no configuradas. Usando respaldo temporal en memoria.');
 }
 
-// Respaldo en memoria por si aún no se cargan las variables de Firebase
 const memoryBalances = new Map();
 const processedPayments = new Set();
 
@@ -46,27 +52,33 @@ const mpAccessToken = process.env.MP_ACCESS_TOKEN || '';
 const publicAppUrl = (process.env.PUBLIC_APP_URL || '').replace(/\/$/, '');
 const mpClient = mpAccessToken ? new MercadoPagoConfig({ accessToken: mpAccessToken }) : null;
 
-// Paquetes oficiales de monedas StarVibe
 const COIN_PACKAGES = {
   pack_50: { id: 'pack_50', title: '50 Monedas StarVibe', coins: 50, price: 5.0 },
-  pack_150: { id: 'pack_150', title: '150 Monedas StarVibe', coins: 150, price: 14.0 },
-  pack_500: { id: 'pack_500', title: '500 Monedas StarVibe', coins: 500, price: 45.0 },
-  pack_1200: { id: 'pack_1200', title: '1200 Monedas StarVibe', coins: 1200, price: 99.0 }
+  pack_150: { id: 'pack_150', title: '150 Monedas StarVibe', coins: 150, price: 15.0 },
+  pack_500: { id: 'pack_500', title: '500 Monedas StarVibe', coins: 500, price: 50.0 },
+  pack_1000: { id: 'pack_1000', title: '1000 Monedas StarVibe', coins: 1000, price: 100.0 }
 };
 
-// Funciones auxiliares para leer y sumar monedas en Firestore
 async function getUserBalance(userId) {
   const safeUserId = String(userId || 'guest').trim();
   if (db) {
     const userRef = db.collection('starvibe_users').doc(safeUserId);
     const snap = await userRef.get();
     if (!snap.exists) {
+      // Si existe saldo en 'guest' (ej. recarga acreditada antes de iniciar sesión), migrarlo
+      let initialCoins = 100;
+      if (safeUserId !== 'guest') {
+        const guestSnap = await db.collection('starvibe_users').doc('guest').get();
+        if (guestSnap.exists && Number(guestSnap.data()?.coins || 0) > 100) {
+          initialCoins = Number(guestSnap.data().coins);
+        }
+      }
       await userRef.set({
-        coins: 100,
+        coins: initialCoins,
         creatorEarnings: 0,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
-      return { coins: 100, creatorEarnings: 0 };
+      return { coins: initialCoins, creatorEarnings: 0 };
     }
     const data = snap.data() || {};
     return {
@@ -123,7 +135,6 @@ async function creditCoinsOnce({ paymentId, userId, coins, amountBRL }) {
     });
   }
 
-  // Respaldo en memoria si no hay Firestore
   if (processedPayments.has(safePaymentId)) {
     return { credited: false, reason: 'already_processed' };
   }
@@ -152,6 +163,65 @@ app.get('/api/wallet/:userId', async (req, res) => {
   } catch (error) {
     console.error('Error consultando saldo:', error);
     res.status(500).json({ ok: false, error: 'Error consultando saldo' });
+  }
+});
+
+// 4b. Registrar envío de regalo virtual en Firestore
+app.post('/api/wallet/gift', async (req, res) => {
+  try {
+    const { senderUserId = 'guest', creatorUserId = 'guest', coinCost = 0, creatorShare = 0 } = req.body || {};
+    const cost = Number(coinCost || 0);
+    const share = Number(creatorShare || 0);
+    if (!db || cost <= 0) return res.json({ ok: true });
+
+    const senderRef = db.collection('starvibe_users').doc(String(senderUserId));
+    const creatorRef = db.collection('starvibe_users').doc(String(creatorUserId));
+
+    await db.runTransaction(async (tx) => {
+      const sDoc = await tx.get(senderRef);
+      const cur = sDoc.exists ? Number(sDoc.data()?.coins ?? 100) : 100;
+      tx.set(senderRef, { coins: Math.max(0, cur - cost), updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+
+      if (share > 0) {
+        const cDoc = await tx.get(creatorRef);
+        const curEarn = cDoc.exists ? Number(cDoc.data()?.creatorEarnings ?? 0) : 0;
+        tx.set(creatorRef, { creatorEarnings: +(curEarn + share).toFixed(2), updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      }
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 4c. Solicitud de retiro PIX del creador
+app.post('/api/payouts/request', async (req, res) => {
+  try {
+    const { amountBRL, pixKey, fullName, uid = 'guest' } = req.body || {};
+    const amount = Number(amountBRL || 0);
+    if (amount < 20 || !pixKey) {
+      return res.status(400).json({ ok: false, error: 'Monto mínimo R$ 20,00 y clave PIX requerida.' });
+    }
+    if (db) {
+      await db.collection('starvibe_payouts').add({
+        uid: String(uid),
+        fullName: String(fullName || ''),
+        pixKey: String(pixKey),
+        amountBRL: amount,
+        status: 'pending',
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      const userRef = db.collection('starvibe_users').doc(String(uid));
+      const snap = await userRef.get();
+      if (snap.exists) {
+        const curEarn = Number(snap.data()?.creatorEarnings || 0);
+        await userRef.set({ creatorEarnings: Math.max(0, +(curEarn - amount).toFixed(2)) }, { merge: true });
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -214,9 +284,8 @@ app.post('/api/mercadopago/create-preference', async (req, res) => {
   }
 });
 
-// 6. Webhook de Mercado Pago (acredita monedas automáticamente al aprobarse el pago)
+// 6. Webhook de Mercado Pago
 app.post('/api/mercadopago/webhook', async (req, res) => {
-  // Responder 200 inmediato para evitar reintentos innecesarios
   res.status(200).json({ received: true });
 
   try {
@@ -254,7 +323,7 @@ app.post('/api/mercadopago/webhook', async (req, res) => {
   }
 });
 
-// 7. Endpoint manual para acreditar un pago aprobado por ID (útil para recuperar pagos anteriores)
+// 7. Endpoint manual para acreditar un pago aprobado por ID
 app.post('/api/mercadopago/verify-payment', async (req, res) => {
   try {
     const { paymentId, userId = 'guest', coins = 50 } = req.body || {};
@@ -295,9 +364,14 @@ app.post('/api/mercadopago/verify-payment', async (req, res) => {
   }
 });
 
-// Fallback para servir el frontend
+// Fallback universal: busca index.html en /public o en la raíz
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const pubIndex = path.join(__dirname, 'public', 'index.html');
+  const rootIndex = path.join(__dirname, 'index.html');
+  if (fs.existsSync(pubIndex)) {
+    return res.sendFile(pubIndex);
+  }
+  return res.sendFile(rootIndex);
 });
 
 app.listen(PORT, () => {
