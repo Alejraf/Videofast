@@ -1053,11 +1053,47 @@
 
     window.openRechargeModal = () => document.getElementById('recharge-modal').classList.remove('hidden');
     window.closeRechargeModal = () => document.getElementById('recharge-modal').classList.add('hidden');
-    window.buyCoinPack = (coins, priceLabel) => {
-      setCoinsBalance(getCoinsBalance() + coins);
-      closeRechargeModal();
-      toast('🪙 +' + coins + ' (' + priceLabel + ')');
+    window.buyCoinPack = async (coins, priceLabel) => {
+      try {
+        toast('⏳ Mercado Pago (' + priceLabel + ')...');
+        const resp = await fetch('/api/mercadopago/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            packCoins: coins,
+            userId: currentUser ? currentUser.uid : 'guest'
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.checkoutUrl) {
+          return toast('⚠️ ' + (data.error || 'MP_ACCESS_TOKEN'));
+        }
+        localStorage.setItem('sv_pending_mp_ref', data.ref);
+        window.open(data.checkoutUrl, '_blank', 'noopener');
+      } catch (err) {
+        toast('Error Mercado Pago');
+      }
     };
+
+    async function checkMercadoPagoReturn() {
+      const params = new URLSearchParams(location.search);
+      const ref = params.get('ref') || localStorage.getItem('sv_pending_mp_ref');
+      if (!ref) return;
+      try {
+        const resp = await fetch('/api/mercadopago/status?ref=' + encodeURIComponent(ref));
+        if (!resp.ok) return;
+        const st = await resp.json();
+        const creditedRefs = getSet('sv_credited_refs');
+        if (st.approved && !creditedRefs.has(ref)) {
+          creditedRefs.add(ref);
+          saveSet('sv_credited_refs', creditedRefs);
+          localStorage.removeItem('sv_pending_mp_ref');
+          setCoinsBalance(getCoinsBalance() + Number(st.coins || 0));
+          toast('🪙 +' + st.coins + ' OK!');
+        }
+      } catch (e) {}
+    }
+    checkMercadoPagoReturn();
 
     window.openSplitSettingsModal = () => {
       const cSplit = getCreatorSplitPct();

@@ -1,0 +1,12 @@
+{
+  "name": "starvibe-server",
+  "version": "4.5.0",
+  "description": "StarVibe PWA & Mercado Pago Checkout Pro backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}
