@@ -281,7 +281,7 @@ app.post('/api/videos/track-view', async (req, res) => {
 });
 
 // 4e. Configuración dinámica de Monetag Direct Link / Zone URL
-let cachedMonetagUrl = process.env.MONETAG_DIRECT_LINK || 'https://uplcm.com/4/12319298';
+let cachedMonetagUrl = process.env.MONETAG_DIRECT_LINK || 'https://uplcm.com/4/12342382';
 app.get('/api/config/monetag', async (req, res) => {
   try {
     if (db) {
@@ -448,6 +448,91 @@ app.post('/api/referrals/validate', async (req, res) => {
     });
 
     res.json({ ok: true, ...out });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// 4g. Panel Exclusivo de Administrador (Denuncias, Moderación y Retiros PIX)
+app.get('/api/admin/overview', async (req, res) => {
+  try {
+    const userId = String(req.query.userId || '').trim();
+    if (userId !== OWNER_USER_ID) {
+      return res.status(403).json({ ok: false, error: 'Acceso denegado' });
+    }
+    if (!db) return res.json({ ok: true, reportedItems: [], payouts: [] });
+
+    const reportedItems = [];
+    const vidSnap = await db.collection('videos').where('reports', '>', 0).limit(30).get();
+    vidSnap.forEach((docSnap) => {
+      const v = docSnap.data() || {};
+      reportedItems.push({
+        id: docSnap.id,
+        type: 'video',
+        user: v.user || 'Usuario',
+        title: v.caption || 'Video sin descripción',
+        reports: Number(v.reports || 1),
+        lastReportReason: v.lastReportReason || 'Reporte'
+      });
+    });
+
+    const liveSnap = await db.collection('lives').where('reports', '>', 0).limit(30).get();
+    liveSnap.forEach((docSnap) => {
+      const l = docSnap.data() || {};
+      reportedItems.push({
+        id: docSnap.id,
+        type: 'live',
+        user: l.user || 'Creador',
+        title: l.title || 'Sala En Vivo',
+        reports: Number(l.reports || 1),
+        lastReportReason: l.lastReportReason || 'Reporte en vivo'
+      });
+    });
+
+    const payouts = [];
+    const paySnap = await db.collection('starvibe_payouts').orderBy('createdAt', 'desc').limit(30).get();
+    paySnap.forEach((docSnap) => {
+      payouts.push({ id: docSnap.id, ...(docSnap.data() || {}) });
+    });
+
+    res.json({ ok: true, reportedItems, payouts });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/api/admin/moderate', async (req, res) => {
+  try {
+    const { userId, action, type, id } = req.body || {};
+    if (userId !== OWNER_USER_ID) {
+      return res.status(403).json({ ok: false, error: 'Acceso denegado' });
+    }
+    if (!db || !id) return res.status(400).json({ ok: false, error: 'ID requerido' });
+    const colName = type === 'live' ? 'lives' : 'videos';
+    const ref = db.collection(colName).doc(String(id));
+    if (action === 'delete') {
+      await ref.delete();
+    } else if (action === 'dismiss') {
+      await ref.set({ reports: 0, lastReportReason: '' }, { merge: true });
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/api/admin/payout-paid', async (req, res) => {
+  try {
+    const { userId, payoutId } = req.body || {};
+    if (userId !== OWNER_USER_ID) {
+      return res.status(403).json({ ok: false, error: 'Acceso denegado' });
+    }
+    if (!db || !payoutId) return res.status(400).json({ ok: false, error: 'ID requerido' });
+    await db.collection('starvibe_payouts').doc(String(payoutId)).set({
+      status: 'paid',
+      paidAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

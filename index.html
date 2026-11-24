@@ -435,40 +435,58 @@
     .comment-form button { background: var(--gold-2); color: #000; border: none; border-radius: 10px; padding: 0 16px; font-weight: 900; cursor: pointer; }
 
     #toast { position: fixed; top: 88px; left: 50%; transform: translateX(-50%); background: rgba(15,17,23,0.97); border: 1px solid var(--gold-2); color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700; z-index: 99; display: none; text-align: center; max-width: 90%; }
-    /* Splash Entry Promo Ad (TikTok-style with Skip button, 1x per 45 mins) */
+    /* Full-Screen TikTok-Style Entry Ad Player with Instant Skip & Auto-End */
     #entry-promo-overlay {
       position: fixed; inset: 0; z-index: 9999;
-      background: radial-gradient(circle at top, #1f1b10 0%, #050507 82%);
-      display: flex; flex-direction: column; justify-content: space-between;
-      padding: 20px 18px 26px; color: #fff;
+      background: #000;
+      display: flex; flex-direction: column;
+      color: #fff;
     }
     #entry-promo-overlay.hidden { display: none !important; }
     .promo-top-bar {
+      position: absolute; top: 14px; left: 14px; right: 14px; z-index: 10002;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      pointer-events: none;
     }
     .promo-badge {
-      background: rgba(250,204,21,0.16); border: 1px solid rgba(250,204,21,0.5);
-      color: #fef08a; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
+      background: rgba(0,0,0,0.72); border: 1px solid rgba(250,204,21,0.65);
+      color: #fef08a; font-size: 11px; font-weight: 800; padding: 6px 12px; border-radius: 999px;
+      backdrop-filter: blur(6px);
     }
     .promo-skip-btn {
-      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
-      color: #fff; font-size: 12px; font-weight: 800; padding: 7px 14px; border-radius: 999px;
-      cursor: pointer;
+      pointer-events: auto;
+      background: rgba(0,0,0,0.78); border: 1.5px solid #facc15;
+      color: #fef08a; font-size: 12.5px; font-weight: 900; padding: 8px 15px; border-radius: 999px;
+      cursor: pointer; backdrop-filter: blur(6px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.7);
     }
     .promo-skip-btn.ready {
-      background: linear-gradient(135deg, #facc15, #d97706); color: #000; border-color: #fef08a;
+      background: linear-gradient(135deg, #facc15, #d97706); color: #000; border-color: #fff;
     }
-    .promo-center-box {
-      background: linear-gradient(160deg, #151822, #0c0e14);
-      border: 1.5px solid rgba(250,204,21,0.45);
-      border-radius: 24px; padding: 24px 18px; text-align: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
-      max-width: 420px; width: 100%; margin: 0 auto;
+    .promo-ad-stage {
+      position: relative; flex: 1; width: 100%; height: 100%; overflow: hidden; background: #050507;
+    }
+    #entry-promo-frame {
+      width: 100%; height: 100%; border: 0; display: block; background: #050507;
+    }
+    .promo-bottom-bar {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 10002;
+      padding: 16px 16px 22px;
+      background: linear-gradient(to top, rgba(0,0,0,0.92) 55%, transparent);
+    }
+    .promo-progress-track {
+      width: 100%; height: 4px; background: rgba(255,255,255,0.22); border-radius: 999px;
+      overflow: hidden; margin-bottom: 10px;
+    }
+    #promo-progress-fill {
+      width: 0%; height: 100%; background: linear-gradient(90deg, #facc15, #f59e0b);
+      transition: width 0.25s linear;
     }
     .promo-cta-btn {
-      display: inline-block; width: 100%; margin-top: 16px; padding: 13px 16px;
+      display: block; width: 100%; text-align: center; padding: 13px 16px;
       border-radius: 14px; background: linear-gradient(135deg, #facc15, #d97706);
       color: #000; font-weight: 900; font-size: 14px; text-decoration: none;
+      box-shadow: 0 6px 20px rgba(250,204,21,0.35);
     }
     .monetize-pill {
       display: inline-flex; align-items: center; gap: 4px;
@@ -478,24 +496,21 @@
   </style>
 </head>
 <body>
-  <!-- PANTALLA PROMOCIONAL DE ENTRADA (ESTILO TIKTOK CON BOTÓN SALTAR) -->
+  <!-- ANUNCIO DE ENTRADA PANTALLA COMPLETA (ESTILO TIKTOK CON SALTAR Y CIERRE AUTOMÁTICO) -->
   <div id="entry-promo-overlay" class="hidden">
     <div class="promo-top-bar">
-      <span class="promo-badge">★ PATROCINADO • STARVIBE</span>
-      <button id="entry-promo-skip" class="promo-skip-btn" onclick="dismissEntryPromo()">Saltar en 4s</button>
+      <span class="promo-badge">📢 ANUNCIO • <span id="promo-sec-lbl">6s</span></span>
+      <button id="entry-promo-skip" class="promo-skip-btn ready" onclick="dismissEntryPromo()">Saltar anuncio ✕</button>
     </div>
-    <div class="promo-center-box">
-      <img src="/icon.svg" style="width:68px;height:68px;margin-bottom:12px;" alt="StarVibe" />
-      <h2 id="promo-card-title" style="font-size:20px;font-weight:900;color:#fef08a;margin-bottom:8px;">Bienvenido a StarVibe</h2>
-      <p id="promo-card-desc" style="font-size:13px;color:#d1d5db;line-height:1.5;">
-        Mira videos originales, envía regalos en vivo y gana dinero real por tus videos (+45s) y transmisiones.
-      </p>
-      <div id="monetag-slot-container" style="margin-top:12px;"></div>
-      <a id="entry-promo-cta" href="https://uplcm.com/4/12319298" target="_blank" rel="noopener sponsored" onclick="dismissEntryPromo()" class="promo-cta-btn">
-        🎁 Descubrir Oferta Patrocinada →
+    <div class="promo-ad-stage">
+      <iframe id="entry-promo-frame" src="about:blank" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    <div class="promo-bottom-bar">
+      <div class="promo-progress-track"><div id="promo-progress-fill"></div></div>
+      <a id="entry-promo-cta" href="https://uplcm.com/4/12342382" target="_blank" rel="noopener sponsored" onclick="dismissEntryPromo()" class="promo-cta-btn">
+        ↗️ Abrir Anuncio en Pantalla Completa
       </a>
     </div>
-    <p style="text-align:center;font-size:11px;color:#6b7280;">Publicidad ligera que financia los pagos a creadores en StarVibe</p>
   </div>
 
 
@@ -690,7 +705,7 @@
           <div class="studio-btns">
             <button class="pill-btn gold" onclick="openRechargeModal()" data-i18n="recharge_btn">➕ Recargar Monedas (PIX)</button>
             <button class="pill-btn gold" onclick="openWithdrawModal()">💸 Retirar Ganancias</button>
-            <button id="admin-split-btn" class="pill-btn hidden" onclick="openSplitSettingsModal()" data-i18n="split_settings_btn">⚙️ Ajustes Admin & Monetag</button>
+            <button id="admin-split-btn" class="pill-btn gold hidden" onclick="openSplitSettingsModal()">🛡️ Panel Admin (Denuncias, PIX y Monetag)</button>
           </div>
         </div>
 
@@ -855,13 +870,43 @@
       <div class="pack-item"><div><strong>10.000 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Castillo StarVibe Supremo</div></div><button onclick="buyCoinPack(10000, 'R$ 1.000,00')">R$ 1.000,00</button></div>
     </div>
 
-    <!-- MODAL AJUSTES REPARTO -->
-    <div id="split-modal" class="modal hidden">
+    <!-- PANEL DE CONTROL EXCLUSIVO DEL ADMINISTRADOR -->
+    <div id="split-modal" class="modal hidden" style="max-height:88vh;overflow-y:auto;">
       <div class="modal-header">
-        <div class="modal-title" data-i18n="split_title">⚙️ Ajustes de Reparto de Ganancias</div>
+        <div class="modal-title">🛡️ Panel de Control Administrador</div>
         <button onclick="closeSplitSettingsModal()" class="close-btn">✕</button>
       </div>
+
+      <!-- 1. Denuncias y Moderación (DMCA / Seguridad) -->
+      <div class="wallet-card" style="border-color:rgba(239,68,68,0.55);margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="font-size:13px;color:#fca5a5;">🚩 Denuncias Recibidas (Videos y Lives)</strong>
+          <button type="button" class="pill-btn" style="padding:4px 9px;font-size:11px;" onclick="loadAdminPanelData()">🔄 Actualizar</button>
+        </div>
+        <div id="admin-reports-list" style="font-size:11.5px;color:#d1d5db;display:flex;flex-direction:column;gap:8px;">
+          Cargando denuncias...
+        </div>
+      </div>
+
+      <!-- 2. Solicitudes de Retiro PIX de Creadores -->
+      <div class="wallet-card" style="border-color:rgba(16,185,129,0.5);margin-bottom:12px;">
+        <strong style="font-size:13px;color:#6ee7b7;display:block;margin-bottom:8px;">💸 Solicitudes de Retiro PIX (Mín. R$ 50,00)</strong>
+        <div id="admin-payouts-list" style="font-size:11.5px;color:#d1d5db;display:flex;flex-direction:column;gap:8px;">
+          Cargando solicitudes PIX...
+        </div>
+      </div>
+
+      <!-- 3. Configuración de Anuncios Monetag -->
+      <div id="admin-monetag-box" class="wallet-card hidden" style="margin-bottom:12px;">
+        <strong style="font-size:13px;color:#fef08a;display:block;margin-bottom:6px;">📢 Configuración de Anuncios Monetag</strong>
+        <p style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Pega tu Direct Link de Monetag para la pantalla de entrada y el feed (se guarda en el servidor).</p>
+        <input id="monetag-url-input" type="url" placeholder="https://... (Direct Link de Monetag)" class="text-input" />
+        <button type="button" class="pill-btn gold" style="width:100%;" onclick="saveMonetagConfig()">💾 Guardar Enlace Monetag</button>
+      </div>
+
+      <!-- 4. Ajustes de Reparto de Ganancias -->
       <div class="wallet-card">
+        <strong style="font-size:13px;color:#fff;display:block;margin-bottom:8px;">⚖️ Reparto de Ganancias En Vivo</strong>
         <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
           <span style="font-size:13px;color:#fff;" data-i18n="split_app_lbl">🏢 Plataforma StarVibe:</span>
           <strong id="split-app-val" style="color:var(--gold-2);">65%</strong>
@@ -871,13 +916,7 @@
           <strong id="split-creator-val" style="color:#6ee7b7;">35%</strong>
         </div>
         <input id="creator-share-range" type="range" min="25" max="45" step="5" value="35" style="width:100%;accent-color:#facc15;" oninput="previewSplitChange(this.value)" />
-      </div>
-      <button class="submit-btn" onclick="saveSplitSettings()" data-i18n="save_split_btn">Guardar Configuración</button>
-      <div id="admin-monetag-box" class="wallet-card hidden" style="margin-top:12px;">
-        <strong style="font-size:13px;color:#fef08a;display:block;margin-bottom:6px;">📢 Configuración de Anuncios Monetag</strong>
-        <p style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Pega tu Direct Link o Zone URL de Monetag para la pantalla de entrada y el feed (se guarda en el servidor).</p>
-        <input id="monetag-url-input" type="url" placeholder="https://... (Direct Link de Monetag)" class="text-input" />
-        <button type="button" class="pill-btn gold" style="width:100%;" onclick="saveMonetagConfig()">💾 Guardar Enlace Monetag</button>
+        <button class="submit-btn" style="margin-top:10px;" onclick="saveSplitSettings()" data-i18n="save_split_btn">Guardar Reparto</button>
       </div>
     </div>
 
@@ -1001,7 +1040,7 @@
 
     const CLOUDINARY_CLOUD_NAME = "wtua9l4u";
     const CLOUDINARY_UPLOAD_PRESET = "Videofast";
-    const MONETAG_DIRECT_LINK = "https://uplcm.com/4/12319298";
+    const MONETAG_DIRECT_LINK = "https://uplcm.com/4/12342382";
 
     const I18N = {
       es: {
@@ -1675,6 +1714,111 @@
       document.getElementById('creator-share-range').value = cSplit;
       previewSplitChange(cSplit);
       document.getElementById('split-modal').classList.remove('hidden');
+      loadAdminPanelData();
+    };
+
+    window.loadAdminPanelData = async () => {
+      if (getActiveUserId() !== OWNER_USER_ID) return;
+      const repBox = document.getElementById('admin-reports-list');
+      const payBox = document.getElementById('admin-payouts-list');
+      if (repBox) repBox.innerHTML = 'Cargando denuncias...';
+      if (payBox) payBox.innerHTML = 'Cargando solicitudes PIX...';
+      try {
+        const resp = await fetch('/api/admin/overview?userId=' + encodeURIComponent(getActiveUserId()));
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          if (repBox) repBox.innerHTML = 'Error al cargar datos de administrador.';
+          return;
+        }
+        // Render reported videos & lives
+        const items = data.reportedItems || [];
+        if (repBox) {
+          if (items.length === 0) {
+            repBox.innerHTML = '<div style="color:#6ee7b7;">✅ Sin denuncias pendientes. Todo limpio.</div>';
+          } else {
+            repBox.innerHTML = items.map((it) => `
+              <div style="background:#0f1117;border:1px solid rgba(239,68,68,0.4);border-radius:10px;padding:9px;">
+                <div style="display:flex;justify-content:space-between;gap:6px;">
+                  <strong style="color:#fca5a5;">${it.type === 'live' ? '📡 LIVE' : '🎬 VIDEO'} • ${it.reports} reporte(s)</strong>
+                  <span style="color:#fbbf24;">@${it.user || 'Usuario'}</span>
+                </div>
+                <div style="margin:4px 0;color:#e5e7eb;">${it.title || '(Sin título)'}</div>
+                <div style="font-size:10.5px;color:#9ca3af;margin-bottom:6px;">Motivo: <strong>${it.lastReportReason || 'Reporte de usuario'}</strong></div>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="pill-btn" style="background:#991b1b;color:#fff;border-color:#ef4444;flex:1;" onclick="adminDeleteContent('${it.type}', '${it.id}')">🗑️ Eliminar Definitivo</button>
+                  <button type="button" class="pill-btn" style="flex:1;" onclick="adminDismissReport('${it.type}', '${it.id}')">✅ Absolver</button>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+        // Render PIX payouts
+        const payouts = data.payouts || [];
+        if (payBox) {
+          if (payouts.length === 0) {
+            payBox.innerHTML = '<div style="color:#9ca3af;">No hay solicitudes de retiro PIX pendientes.</div>';
+          } else {
+            payBox.innerHTML = payouts.map((p) => `
+              <div style="background:#0f1117;border:1px solid rgba(16,185,129,0.4);border-radius:10px;padding:9px;">
+                <div style="display:flex;justify-content:space-between;">
+                  <strong style="color:#6ee7b7;">R$ ${Number(p.amountBRL || 0).toFixed(2).replace('.', ',')}</strong>
+                  <span style="font-size:10.5px;color:${p.status === 'paid' ? '#6ee7b7' : '#facc15'};">${p.status === 'paid' ? '✅ PAGADO' : '⏳ PENDIENTE'}</span>
+                </div>
+                <div style="margin-top:3px;color:#fff;">Titular: <strong>${p.fullName || p.uid}</strong></div>
+                <div style="font-size:11px;color:#93c5fd;word-break:break-all;margin:3px 0 6px;">PIX: <strong>${p.pixKey}</strong></div>
+                ${p.status !== 'paid' ? `<button type="button" class="pill-btn gold" style="width:100%;" onclick="adminMarkPayoutPaid('${p.id}')">✅ Marcar PIX como Pagado</button>` : ''}
+              </div>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        if (repBox) repBox.innerHTML = 'Error de red cargando panel.';
+      }
+    };
+
+    window.adminDeleteContent = async (type, id) => {
+      try {
+        const resp = await fetch('/api/admin/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: getActiveUserId(), action: 'delete', type, id })
+        });
+        const d = await resp.json();
+        if (d && d.ok) {
+          toast('🗑️ Contenido eliminado de la plataforma');
+          loadAdminPanelData();
+        }
+      } catch (e) {}
+    };
+
+    window.adminDismissReport = async (type, id) => {
+      try {
+        const resp = await fetch('/api/admin/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: getActiveUserId(), action: 'dismiss', type, id })
+        });
+        const d = await resp.json();
+        if (d && d.ok) {
+          toast('✅ Denuncia absuelta');
+          loadAdminPanelData();
+        }
+      } catch (e) {}
+    };
+
+    window.adminMarkPayoutPaid = async (payoutId) => {
+      try {
+        const resp = await fetch('/api/admin/payout-paid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: getActiveUserId(), payoutId })
+        });
+        const d = await resp.json();
+        if (d && d.ok) {
+          toast('✅ Retiro marcado como pagado');
+          loadAdminPanelData();
+        }
+      } catch (e) {}
     };
     window.closeSplitSettingsModal = () => document.getElementById('split-modal').classList.add('hidden');
     window.previewSplitChange = (creatorPct) => {
@@ -2278,12 +2422,12 @@
         if ((idx + 1) % 4 === 0) {
           const adSlide = document.createElement('div');
           adSlide.className = 'slide ad-slide';
+          const currentAdUrl = activeMonetagUrl || MONETAG_DIRECT_LINK;
           adSlide.innerHTML = `
-            <div class="ad-card">
-              <span class="ad-tag">${t('ad_tag')}</span>
-              <h3>${t('ad_title')}</h3>
-              <p>${t('ad_desc')}</p>
-              <a href="${MONETAG_DIRECT_LINK}" target="_blank" rel="noopener" class="ad-cta">${t('ad_cta')}</a>
+            <div style="position:relative;width:100%;height:100%;background:#000;display:flex;flex-direction:column;">
+              <div style="position:absolute;top:58px;left:14px;z-index:5;background:rgba(0,0,0,0.75);border:1px solid #facc15;color:#fef08a;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;">📢 PATROCINADO • DESLIZA PARA CONTINUAR</div>
+              <iframe src="${currentAdUrl}" style="width:100%;height:100%;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              <a href="${currentAdUrl}" target="_blank" rel="noopener sponsored" class="ad-cta" style="position:absolute;bottom:78px;left:16px;right:16px;text-align:center;z-index:5;">↗️ Ver Anuncio Completo</a>
             </div>
           `;
           feedEl.appendChild(adSlide);
@@ -2682,6 +2826,13 @@
       toast('🚩 ' + reason);
       try {
         await updateDoc(doc(db, 'videos', vid), { reports: increment(1), lastReportReason: reason });
+        await addDoc(collection(db, 'starvibe_reports'), {
+          targetId: vid,
+          targetType: 'video',
+          reason,
+          reporterId: getActiveUserId(),
+          createdAt: serverTimestamp()
+        });
       } catch (e) {}
     };
 
@@ -2870,33 +3021,45 @@
     let activeMonetagUrl = localStorage.getItem('sv_monetag_url') || MONETAG_DIRECT_LINK;
     window.dismissEntryPromo = () => {
       const ov = document.getElementById('entry-promo-overlay');
+      const frame = document.getElementById('entry-promo-frame');
+      if (frame) frame.src = 'about:blank';
       if (ov) ov.classList.add('hidden');
       clearInterval(window._promoTimer);
     };
 
     function initEntryPromo() {
       const lastShown = Number(localStorage.getItem('sv_last_entry_promo') || 0);
-      const fortyFiveMins = 45 * 60 * 1000;
-      if (Date.now() - lastShown < fortyFiveMins) return;
+      const twentyMins = 20 * 60 * 1000;
+      if (Date.now() - lastShown < twentyMins) return;
       localStorage.setItem('sv_last_entry_promo', String(Date.now()));
 
       const ov = document.getElementById('entry-promo-overlay');
+      const frame = document.getElementById('entry-promo-frame');
       const skipBtn = document.getElementById('entry-promo-skip');
+      const secLbl = document.getElementById('promo-sec-lbl');
+      const progFill = document.getElementById('promo-progress-fill');
       const ctaEl = document.getElementById('entry-promo-cta');
       if (!ov || !skipBtn) return;
-      if (ctaEl && activeMonetagUrl) ctaEl.href = activeMonetagUrl;
+
+      const adUrl = activeMonetagUrl || 'https://uplcm.com/4/12342382';
+      if (ctaEl) ctaEl.href = adUrl;
+      if (frame) frame.src = adUrl;
       ov.classList.remove('hidden');
 
-      let sec = 4;
-      skipBtn.textContent = 'Saltar en ' + sec + 's';
+      const totalSec = 6;
+      let sec = totalSec;
+      if (secLbl) secLbl.textContent = sec + 's';
+      if (progFill) progFill.style.width = '15%';
+      skipBtn.textContent = 'Saltar ✕';
+
       window._promoTimer = setInterval(() => {
         sec--;
+        const pct = Math.min(100, Math.round(((totalSec - sec) / totalSec) * 100));
+        if (progFill) progFill.style.width = pct + '%';
         if (sec > 0) {
-          skipBtn.textContent = 'Saltar en ' + sec + 's';
+          if (secLbl) secLbl.textContent = sec + 's';
         } else {
-          clearInterval(window._promoTimer);
-          skipBtn.classList.add('ready');
-          skipBtn.textContent = 'Saltar anuncio ✕';
+          dismissEntryPromo();
         }
       }, 1000);
     }
