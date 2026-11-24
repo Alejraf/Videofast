@@ -1,7 +1,7 @@
 {
-  "name": "starvibe-server",
-  "version": "4.5.0",
-  "description": "StarVibe PWA & Mercado Pago Checkout Pro backend",
+  "name": "starvibe-shielded-server",
+  "version": "5.0.0",
+  "description": "StarVibe Shielded Server with Keep-Alive, Persistent Payments, Payouts & Legal/Creator Compliance",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

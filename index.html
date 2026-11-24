@@ -466,6 +466,11 @@
             <input id="username-input" type="text" maxlength="20" data-i18n-ph="username_ph" placeholder="Tu nombre de usuario..." />
             <button onclick="saveUsername()" data-i18n="save_btn">Guardar</button>
           </div>
+          <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button id="formalize-btn" class="pill-btn gold" onclick="openFormalizeModal()">🪪 Formalizar Cuenta</button>
+            <button class="pill-btn" onclick="openCreatorRulesModal()">📜 Reglas de Creador</button>
+          </div>
+          <div id="formal-status-badge" style="margin-top:8px;font-size:11px;color:#9ca3af;">Estado: Cuenta básica (pendiente de formalización)</div>
         </div>
 
         <!-- Selector de Idioma Rápido -->
@@ -499,6 +504,7 @@
           </div>
           <div class="studio-btns">
             <button class="pill-btn gold" onclick="openRechargeModal()" data-i18n="recharge_btn">➕ Recargar Monedas (PIX)</button>
+            <button class="pill-btn gold" onclick="openWithdrawModal()">💸 Retirar Ganancias</button>
             <button class="pill-btn" onclick="openSplitSettingsModal()" data-i18n="split_settings_btn">⚙️ Ajustes de Reparto</button>
           </div>
         </div>
@@ -673,7 +679,66 @@
     </div>
   </div>
 
-  <div id="toast"></div>
+
+    <!-- MODAL FORMALIZACIÓN DE USUARIO / CREADOR -->
+    <div id="formalize-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">🪪 Formalización de Usuario y Creador</div>
+        <button onclick="closeFormalizeModal()" class="close-btn">✕</button>
+      </div>
+      <p style="font-size:12px;color:#9ca3af;margin-bottom:10px;line-height:1.4;">
+        Para activar retiros de ganancias y transmisiones en vivo con cumplimiento LGPD y prevención de fraude, registra tus datos formales:
+      </p>
+      <form id="formalize-form">
+        <input id="form-fullname" type="text" maxlength="80" placeholder="Nombre completo (igual que documento)..." class="text-input" required />
+        <input id="form-doc" type="text" maxlength="25" placeholder="CPF / DNI / Documento de identidad..." class="text-input" required />
+        <input id="form-email" type="email" maxlength="90" placeholder="Correo electrónico de contacto..." class="text-input" required />
+        <input id="form-pix" type="text" maxlength="90" placeholder="Clave PIX para recibir pagos (CPF, correo, celular o aleatoria)..." class="text-input" required />
+        <label class="check-row">
+          <input id="form-age18" type="checkbox" required />
+          <span>Declaro ser mayor de 18 años y acepto el tratamiento de mis datos bajo la LGPD para operaciones y pagos en StarVibe.</span>
+        </label>
+        <button type="submit" class="submit-btn">Guardar Formalización</button>
+      </form>
+    </div>
+
+    <!-- MODAL RETIRO DE GANANCIAS DEL CREADOR -->
+    <div id="withdraw-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">💸 Retirar Ganancias de Creador</div>
+        <button onclick="closeWithdrawModal()" class="close-btn">✕</button>
+      </div>
+      <div class="wallet-card" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:12.5px;color:#d1d5db;">Saldo disponible (40% creador):</span>
+          <strong id="withdraw-avail-lbl" style="color:#6ee7b7;font-size:15px;">R$ 0,00</strong>
+        </div>
+        <p style="font-size:11px;color:#9ca3af;margin-top:6px;">Retiro mínimo: R$ 20,00 • Procesamiento en hasta 7 días hábiles tras verificación.</p>
+      </div>
+      <form id="withdraw-form">
+        <input id="withdraw-amount" type="number" step="0.01" min="20" placeholder="Monto a retirar en R$ (mín. 20.00)..." class="text-input" required />
+        <input id="withdraw-pix" type="text" maxlength="90" placeholder="Tu clave PIX registrada..." class="text-input" required />
+        <button type="submit" class="submit-btn">Solicitar Retiro por PIX</button>
+      </form>
+    </div>
+
+    <!-- MODAL REGLAS EXPLÍCITAS PARA SER CREADOR -->
+    <div id="creator-rules-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">📜 Reglas Oficiales de Creador StarVibe</div>
+        <button onclick="closeCreatorRulesModal()" class="close-btn">✕</button>
+      </div>
+      <div style="background:#0f1117;border:1px solid rgba(250,204,21,0.35);border-radius:16px;padding:15px;font-size:12.5px;color:#e5e7eb;line-height:1.55;">
+        <p style="margin-bottom:8px;"><strong>1. Requisito para hacer Lives:</strong> Mínimo de <strong>10 seguidores</strong> en StarVibe y cuenta formalizada (+18 años).</p>
+        <p style="margin-bottom:8px;"><strong>2. Reparto de ganancias (60% / 40%):</strong> <strong>40%</strong> del valor de los regalos virtuales va para quien transmite y <strong>60%</strong> para la plataforma StarVibe.</p>
+        <p style="margin-bottom:8px;"><strong>3. Propiedad intelectual (DMCA):</strong> Solo puedes subir videos originales o con licencia. Prohibido robar o resubir contenido protegido.</p>
+        <p style="margin-bottom:8px;"><strong>4. Conducta segura:</strong> Prohibido contenido sexual explícito, violencia, discurso de odio, estafas o exposición de menores.</p>
+        <p><strong>5. Publicidad y enlaces:</strong> Cualquier promoción o enlace Shop debe ser real y marcarse como colaboración pagada cuando corresponda.</p>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="closeCreatorRulesModal()">Entendido</button>
+    </div>
+
+    <div id="toast"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -1023,6 +1088,7 @@
     function setCoinsBalance(n) {
       localStorage.setItem('sv_coins', String(Math.max(0, n)));
       updateWalletUI();
+      refreshFormalStatusUI();
     }
     function getCreatorEarnings() {
       return Number(localStorage.getItem('sv_creator_brl') || '0');
@@ -1776,7 +1842,120 @@
 
     window.openModal = () => document.getElementById('upload-modal').classList.remove('hidden');
     window.closeModal = () => document.getElementById('upload-modal').classList.add('hidden');
-    window.openLiveModal = () => document.getElementById('live-modal').classList.remove('hidden');
+    const MIN_FOLLOWERS_FOR_LIVE = 10;
+
+    function getFollowersCount() {
+      return Number(localStorage.getItem('sv_my_followers') || '0');
+    }
+
+    function getFormalData() {
+      try { return JSON.parse(localStorage.getItem('sv_formal_profile') || 'null'); } catch { return null; }
+    }
+
+    function refreshFormalStatusUI() {
+      const badge = document.getElementById('formal-status-badge');
+      const f = getFormalData();
+      if (!badge) return;
+      if (f && f.fullName && f.pixKey) {
+        badge.textContent = '✅ Formalizado: ' + f.fullName + ' • PIX: ' + f.pixKey;
+        badge.style.color = '#6ee7b7';
+      } else {
+        badge.textContent = '⚠️ Cuenta básica — Formaliza tus datos para retiros y Lives';
+        badge.style.color = '#fbbf24';
+      }
+    }
+
+    window.openFormalizeModal = () => {
+      const f = getFormalData();
+      if (f) {
+        document.getElementById('form-fullname').value = f.fullName || '';
+        document.getElementById('form-doc').value = f.docId || '';
+        document.getElementById('form-email').value = f.email || '';
+        document.getElementById('form-pix').value = f.pixKey || '';
+      }
+      document.getElementById('formalize-modal').classList.remove('hidden');
+    };
+    window.closeFormalizeModal = () => document.getElementById('formalize-modal').classList.add('hidden');
+
+    document.getElementById('formalize-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById('form-fullname').value.trim();
+      const docId = document.getElementById('form-doc').value.trim();
+      const email = document.getElementById('form-email').value.trim();
+      const pixKey = document.getElementById('form-pix').value.trim();
+      const profileData = { fullName, docId, email, pixKey, formalAt: new Date().toISOString() };
+      localStorage.setItem('sv_formal_profile', JSON.stringify(profileData));
+      refreshFormalStatusUI();
+      closeFormalizeModal();
+      toast('✅ Cuenta formalizada');
+      try {
+        await addDoc(collection(db, 'formal_users'), {
+          uid: currentUser ? currentUser.uid : 'guest',
+          fullName,
+          email,
+          pixKey,
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {}
+    });
+
+    window.openCreatorRulesModal = () => document.getElementById('creator-rules-modal').classList.remove('hidden');
+    window.closeCreatorRulesModal = () => document.getElementById('creator-rules-modal').classList.add('hidden');
+
+    window.openWithdrawModal = () => {
+      const f = getFormalData();
+      if (!f || !f.pixKey) {
+        toast('⚠️ Formaliza tu cuenta y clave PIX primero');
+        return openFormalizeModal();
+      }
+      const avail = getCreatorEarnings();
+      document.getElementById('withdraw-avail-lbl').textContent = 'R$ ' + avail.toFixed(2).replace('.', ',');
+      document.getElementById('withdraw-pix').value = f.pixKey || '';
+      document.getElementById('withdraw-modal').classList.remove('hidden');
+    };
+    window.closeWithdrawModal = () => document.getElementById('withdraw-modal').classList.add('hidden');
+
+    document.getElementById('withdraw-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const amount = Number(document.getElementById('withdraw-amount').value || 0);
+      const pixKey = document.getElementById('withdraw-pix').value.trim();
+      const f = getFormalData() || {};
+      const avail = getCreatorEarnings();
+      if (amount < 20) return toast('Mínimo R$ 20,00');
+      if (amount > avail) return toast('Saldo insuficiente');
+      try {
+        const resp = await fetch('/api/payouts/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amountBRL: amount,
+            pixKey,
+            fullName: f.fullName || getUserName(),
+            uid: currentUser ? currentUser.uid : 'guest'
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          return toast('⚠️ ' + (data.error || 'Error en retiro'));
+        }
+        const nextBal = Math.max(0, avail - amount);
+        localStorage.setItem('sv_creator_brl', nextBal.toFixed(2));
+        updateWalletUI();
+        closeWithdrawModal();
+        toast('💸 Solicitud de retiro por R$ ' + amount.toFixed(2) + ' enviada');
+      } catch (err) {
+        toast('Error de conexión al solicitar retiro');
+      }
+    });
+
+    window.openLiveModal = () => {
+      const followers = getFollowersCount();
+      if (followers < MIN_FOLLOWERS_FOR_LIVE) {
+        toast('🔒 Necesitas al menos ' + MIN_FOLLOWERS_FOR_LIVE + ' seguidores para hacer Lives (' + followers + '/' + MIN_FOLLOWERS_FOR_LIVE + ')');
+        return openCreatorRulesModal();
+      }
+      document.getElementById('live-modal').classList.remove('hidden');
+    };
     window.closeLiveModal = () => document.getElementById('live-modal').classList.add('hidden');
     window.openBrandModal = () => document.getElementById('brand-modal').classList.remove('hidden');
     window.closeBrandModal = () => document.getElementById('brand-modal').classList.add('hidden');
