@@ -1120,6 +1120,10 @@
     window.openRechargeModal = () => document.getElementById('recharge-modal').classList.remove('hidden');
     window.closeRechargeModal = () => document.getElementById('recharge-modal').classList.add('hidden');
     function getActiveUserId() {
+      const f = getFormalData();
+      if (f && f.email) {
+        return 'user_' + f.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      }
       return (currentUser && currentUser.uid) ? currentUser.uid : 'guest';
     }
 
@@ -1139,10 +1143,50 @@
       } catch (e) {}
     }
 
+    let pixPollInterval = null;
+    function startPixAutoPolling() {
+      if (pixPollInterval) clearInterval(pixPollInterval);
+      let attempts = 0;
+      pixPollInterval = setInterval(async () => {
+        attempts++;
+        if (attempts > 90) { // stop after 6 minutes
+          clearInterval(pixPollInterval);
+          return;
+        }
+        const pendingOrderRaw = localStorage.getItem('sv_pending_order');
+        if (!pendingOrderRaw) {
+          clearInterval(pixPollInterval);
+          return;
+        }
+        try {
+          const order = JSON.parse(pendingOrderRaw);
+          const resp = await fetch('/api/mercadopago/check-latest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: getActiveUserId(),
+              orderId: order.orderId,
+              coins: order.coins
+            })
+          });
+          const data = await resp.json();
+          if (data && data.ok && data.approved) {
+            localStorage.removeItem('sv_pending_order');
+            clearInterval(pixPollInterval);
+            await syncWalletFromServer();
+            toast('🪙 +' + order.coins + ' monedas acreditadas automáticamente!');
+          }
+        } catch (e) {}
+      }, 4000);
+    }
+
     window.buyCoinPack = async (coins, priceLabel) => {
       try {
-        toast('⏳ Abriendo Mercado Pago (' + priceLabel + ')...');
+        toast('⏳ Preparando pago PIX / Mercado Pago (' + priceLabel + ')...');
         const numericPrice = Number(String(priceLabel).replace(/[^0-9,\.]/g, '').replace(',', '.')) || 5.0;
+        const orderId = 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        const uid = getActiveUserId();
+
         const resp = await fetch('/api/mercadopago/create-preference', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1151,7 +1195,8 @@
             coins: Number(coins),
             price: numericPrice,
             title: coins + ' Monedas StarVibe',
-            userId: getActiveUserId()
+            userId: uid,
+            orderId
           })
         });
         const data = await resp.json();
@@ -1159,6 +1204,13 @@
         if (!resp.ok || !data.ok || !checkoutUrl) {
           return toast('⚠️ ' + (data.error || 'Error configurando Mercado Pago'));
         }
+        localStorage.setItem('sv_pending_order', JSON.stringify({
+          orderId,
+          coins: Number(coins),
+          userId: uid,
+          createdAt: Date.now()
+        }));
+        startPixAutoPolling();
         closeRechargeModal();
         window.location.href = checkoutUrl;
       } catch (err) {
@@ -1183,6 +1235,27 @@
               coins: coinsParam || 50
             })
           });
+          localStorage.removeItem('sv_pending_order');
+        } catch (e) {}
+      } else if (localStorage.getItem('sv_pending_order')) {
+        // Si el usuario volvió del banco tras pagar PIX sin redirección automática
+        startPixAutoPolling();
+        try {
+          const order = JSON.parse(localStorage.getItem('sv_pending_order'));
+          const r = await fetch('/api/mercadopago/check-latest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: getActiveUserId(),
+              orderId: order.orderId,
+              coins: order.coins
+            })
+          });
+          const d = await r.json();
+          if (d && d.ok && d.approved) {
+            localStorage.removeItem('sv_pending_order');
+            toast('🪙 +' + order.coins + ' monedas acreditadas!');
+          }
         } catch (e) {}
       }
 
@@ -1192,10 +1265,16 @@
         toast('🪙 ¡Recarga acreditada en tu cuenta!');
         history.replaceState({}, '', location.pathname);
       } else if (paymentStatus === 'pending') {
-        toast('⏳ Pago pendiente de confirmación');
+        toast('⏳ Verificando tu pago PIX automáticamente...');
+        startPixAutoPolling();
         history.replaceState({}, '', location.pathname);
       }
     }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkMercadoPagoReturn();
+      }
+    });
     checkMercadoPagoReturn();
 
     window.openSplitSettingsModal = () => {
@@ -1935,6 +2014,7 @@
       const profileData = { fullName, docId, email, pixKey, formalAt: new Date().toISOString() };
       localStorage.setItem('sv_formal_profile', JSON.stringify(profileData));
       refreshFormalStatusUI();
+      syncWalletFromServer();
       closeFormalizeModal();
       toast('✅ Cuenta formalizada');
       try {

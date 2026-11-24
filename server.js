@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Servir archivos estáticos tanto desde la raíz como desde /public (evita Cannot GET / o pantalla negra)
+// Servir archivos estáticos desde /public o desde la raíz
 const publicDir = path.join(__dirname, 'public');
 if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
@@ -41,7 +41,7 @@ if (hasFirebaseEnv) {
     console.error('❌ Error inicializando Firebase Admin:', err.message);
   }
 } else {
-  console.warn('⚠️ Variables de Firebase no configuradas. Usando respaldo temporal en memoria.');
+  console.warn('⚠️ Variables de Firebase no configuradas.');
 }
 
 const memoryBalances = new Map();
@@ -65,7 +65,6 @@ async function getUserBalance(userId) {
     const userRef = db.collection('starvibe_users').doc(safeUserId);
     const snap = await userRef.get();
     if (!snap.exists) {
-      // Si existe saldo en 'guest' (ej. recarga acreditada antes de iniciar sesión), migrarlo
       let initialCoins = 100;
       if (safeUserId !== 'guest') {
         const guestSnap = await db.collection('starvibe_users').doc('guest').get();
@@ -145,7 +144,7 @@ async function creditCoinsOnce({ paymentId, userId, coins, amountBRL }) {
   return { credited: true, newBalance: current.coins };
 }
 
-// 3. Endpoint de diagnóstico (/api/health)
+// 3. Diagnóstico
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
@@ -155,18 +154,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 4. Consultar saldo actual del usuario
+// 4. Consultar saldo
 app.get('/api/wallet/:userId', async (req, res) => {
   try {
     const balance = await getUserBalance(req.params.userId);
     res.json({ ok: true, userId: req.params.userId, ...balance });
   } catch (error) {
-    console.error('Error consultando saldo:', error);
     res.status(500).json({ ok: false, error: 'Error consultando saldo' });
   }
 });
 
-// 4b. Registrar envío de regalo virtual en Firestore
+// 4b. Regalos virtuales
 app.post('/api/wallet/gift', async (req, res) => {
   try {
     const { senderUserId = 'guest', creatorUserId = 'guest', coinCost = 0, creatorShare = 0 } = req.body || {};
@@ -195,7 +193,7 @@ app.post('/api/wallet/gift', async (req, res) => {
   }
 });
 
-// 4c. Solicitud de retiro PIX del creador
+// 4c. Retiros PIX
 app.post('/api/payouts/request', async (req, res) => {
   try {
     const { amountBRL, pixKey, fullName, uid = 'guest' } = req.body || {};
@@ -232,7 +230,7 @@ app.post('/api/mercadopago/create-preference', async (req, res) => {
       return res.status(500).json({ ok: false, error: 'MP_ACCESS_TOKEN no configurado en el servidor.' });
     }
 
-    const { packageId, userId = 'guest', coins: customCoins, price: customPrice, title: customTitle } = req.body || {};
+    const { packageId, userId = 'guest', orderId = '', coins: customCoins, price: customPrice, title: customTitle } = req.body || {};
     const selected = COIN_PACKAGES[packageId] || {
       id: packageId || 'custom',
       title: customTitle || `${customCoins || 50} Monedas StarVibe`,
@@ -256,6 +254,7 @@ app.post('/api/mercadopago/create-preference', async (req, res) => {
         ],
         external_reference: JSON.stringify({
           userId: String(userId),
+          orderId: String(orderId),
           coins: Number(selected.coins),
           packageId: selected.id
         }),
@@ -281,6 +280,48 @@ app.post('/api/mercadopago/create-preference', async (req, res) => {
       ok: false,
       error: error?.message || 'No se pudo iniciar el pago en Mercado Pago'
     });
+  }
+});
+
+// 5b. Auto-detector de PIX: consulta directamente en Mercado Pago los pagos recientes aprobados para esa orden/usuario
+app.post('/api/mercadopago/check-latest', async (req, res) => {
+  try {
+    if (!mpClient) return res.json({ ok: false, approved: false });
+    const { userId = 'guest', orderId = '', coins = 50 } = req.body || {};
+    const paymentApi = new Payment(mpClient);
+    const searchRes = await paymentApi.search({
+      options: {
+        sort: 'date_created',
+        criteria: 'desc',
+        limit: 10
+      }
+    });
+    const results = searchRes?.results || [];
+    for (const p of results) {
+      if (p.status !== 'approved') continue;
+      let meta = {};
+      try {
+        if (p.external_reference) meta = JSON.parse(p.external_reference);
+      } catch (_) {}
+
+      const matchesOrder = orderId && meta.orderId === orderId;
+      const matchesUserRecent = meta.userId === String(userId) && (Date.now() - new Date(p.date_created).getTime() < 15 * 60 * 1000);
+
+      if (matchesOrder || matchesUserRecent) {
+        const coinsToCredit = Number(meta.coins || coins || 50);
+        const result = await creditCoinsOnce({
+          paymentId: p.id,
+          userId: String(userId),
+          coins: coinsToCredit,
+          amountBRL: p.transaction_amount
+        });
+        const updated = await getUserBalance(String(userId));
+        return res.json({ ok: true, approved: true, paymentId: p.id, result, balance: updated });
+      }
+    }
+    return res.json({ ok: true, approved: false });
+  } catch (err) {
+    return res.json({ ok: false, approved: false, error: err.message });
   }
 });
 
@@ -323,10 +364,11 @@ app.post('/api/mercadopago/webhook', async (req, res) => {
   }
 });
 
-// 7. Endpoint manual para acreditar un pago aprobado por ID
-app.post('/api/mercadopago/verify-payment', async (req, res) => {
+// 7. Endpoint manual (POST y GET) para acreditar un pago aprobado por ID desde cualquier navegador
+async function handleVerifyPayment(req, res) {
   try {
-    const { paymentId, userId = 'guest', coins = 50 } = req.body || {};
+    const src = req.method === 'GET' ? req.query : (req.body || {});
+    const { paymentId, userId = 'guest', coins = 50 } = src;
     if (!paymentId || !mpClient) {
       return res.status(400).json({ ok: false, error: 'Falta paymentId o configuración de Mercado Pago' });
     }
@@ -362,9 +404,12 @@ app.post('/api/mercadopago/verify-payment', async (req, res) => {
     console.error('Error verificando pago manual:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
-});
+}
 
-// Fallback universal: busca index.html en /public o en la raíz
+app.post('/api/mercadopago/verify-payment', handleVerifyPayment);
+app.get('/api/mercadopago/verify-payment', handleVerifyPayment);
+
+// Fallback universal
 app.get('*', (req, res) => {
   const pubIndex = path.join(__dirname, 'public', 'index.html');
   const rootIndex = path.join(__dirname, 'index.html');
