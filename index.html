@@ -1331,6 +1331,17 @@
       updateWalletUI();
       if (typeof refreshAdminAndReferralUI === 'function') refreshAdminAndReferralUI();
     }
+    const OWNER_EMAIL = '123alejrafnstaller@gmail.com';
+    const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
+
+    function getActiveUserId() {
+      const f = getFormalData();
+      if (f && f.email) {
+        return 'user_' + f.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      }
+      return OWNER_USER_ID;
+    }
+
     // ==========================================
     // SISTEMA DE REFERIDOS CON METAS Y ANTI-FRAUDE
     // ==========================================
@@ -1475,9 +1486,7 @@
       }
     }, 5000);
 
-    refreshFormalStatusUI();
-      refreshFormalStatusUI();
-    }
+
     function getCreatorEarnings() {
       return Number(localStorage.getItem('sv_creator_brl') || '0');
     }
@@ -1507,16 +1516,7 @@
 
     window.openRechargeModal = () => document.getElementById('recharge-modal').classList.remove('hidden');
     window.closeRechargeModal = () => document.getElementById('recharge-modal').classList.add('hidden');
-    const OWNER_EMAIL = '123alejrafnstaller@gmail.com';
-    const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
 
-    function getActiveUserId() {
-      const f = getFormalData();
-      if (f && f.email) {
-        return 'user_' + f.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      }
-      return OWNER_USER_ID;
-    }
 
     async function syncWalletFromServer() {
       try {
