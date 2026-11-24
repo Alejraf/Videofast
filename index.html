@@ -922,7 +922,10 @@
         <strong style="font-size:13px;color:#fef08a;display:block;margin-bottom:6px;">📢 Configuración de Anuncios Monetag</strong>
         <p style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Pega tu Direct Link de Monetag para la pantalla de entrada y el feed (se guarda en el servidor).</p>
         <input id="monetag-url-input" type="url" placeholder="https://... (Direct Link de Monetag)" class="text-input" />
-        <button type="button" class="pill-btn gold" style="width:100%;" onclick="saveMonetagConfig()">💾 Guardar Enlace Monetag</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="pill-btn gold" style="flex:1;" onclick="saveMonetagConfig()">💾 Guardar Enlace</button>
+          <button type="button" class="pill-btn" style="flex:1;" onclick="closeSplitSettingsModal(); openEntryPromoNow();">▶️ Probar Anuncio</button>
+        </div>
       </div>
 
       <!-- 4. Ajustes de Reparto de Ganancias -->
@@ -2577,7 +2580,7 @@
 
         feedEl.appendChild(slide);
 
-        if ((idx + 1) % 4 === 0) {
+        if ((idx + 1) % 2 === 0 || (videosToRender.length === 1 && idx === 0)) {
           const adSlide = document.createElement('div');
           adSlide.className = 'slide ad-slide';
           const currentAdUrl = activeMonetagUrl || MONETAG_DIRECT_LINK;
@@ -3221,10 +3224,15 @@
       clearInterval(window._promoTimer);
     };
 
+    window.openEntryPromoNow = () => {
+      localStorage.removeItem('sv_last_entry_promo');
+      initEntryPromo();
+    };
+
     function initEntryPromo() {
       const lastShown = Number(localStorage.getItem('sv_last_entry_promo') || 0);
-      const twentyMins = 20 * 60 * 1000;
-      if (Date.now() - lastShown < twentyMins) return;
+      const testCooldown = 3 * 60 * 1000;
+      if (Date.now() - lastShown < testCooldown) return;
       localStorage.setItem('sv_last_entry_promo', String(Date.now()));
 
       const ov = document.getElementById('entry-promo-overlay');
