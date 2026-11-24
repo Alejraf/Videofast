@@ -818,6 +818,81 @@
           <input id="video-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" style="display: none;" required />
         </label>
 
+        <!-- EDITOR INTEGRADO STARVIBE STUDIO (9:16, 16:9, Recorte, Texto, Subtítulos Automáticos) -->
+        <div id="sv-video-editor-box" class="hidden" style="background:#0c0e14;border:1px solid rgba(250,204,21,0.45);border-radius:14px;padding:11px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <strong style="font-size:12.5px;color:#fef08a;">✂️ Editor Integrado StarVibe Studio</strong>
+            <span id="sv-edit-status-pill" style="font-size:10.5px;color:#6ee7b7;background:rgba(16,185,129,0.14);padding:2px 8px;border-radius:999px;">Original</span>
+          </div>
+
+          <!-- Vista previa Canvas -->
+          <div style="position:relative;width:100%;max-height:230px;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:8px;border:1px solid #1f2430;">
+            <canvas id="sv-editor-canvas" width="480" height="854" style="max-height:230px;max-width:100%;object-fit:contain;background:#000;"></canvas>
+            <video id="sv-editor-src-vid" playsinline muted style="display:none;"></video>
+          </div>
+
+          <!-- 1. Formato de Pantalla (9:16, 16:9, 1:1) y Encuadre -->
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+            <button type="button" class="pill-btn gold sv-aspect-btn" data-aspect="9:16" onclick="setEditorAspect('9:16', this)" style="flex:1;padding:6px 4px;font-size:11px;">📱 9:16 Vertical</button>
+            <button type="button" class="pill-btn sv-aspect-btn" data-aspect="16:9" onclick="setEditorAspect('16:9', this)" style="flex:1;padding:6px 4px;font-size:11px;">🖥️ 16:9 Horizontal</button>
+            <button type="button" class="pill-btn sv-aspect-btn" data-aspect="1:1" onclick="setEditorAspect('1:1', this)" style="flex:1;padding:6px 4px;font-size:11px;">⬜ 1:1 Cuadrado</button>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;font-size:11px;color:#d1d5db;">
+            <span>Encuadre:</span>
+            <select id="sv-fit-mode" onchange="renderEditorPreviewFrame()" style="flex:1;background:#161922;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:5px 7px;font-size:11px;">
+              <option value="cover">Llenar pantalla (Recorte centrado)</option>
+              <option value="contain">Ajustar completo (Fondo difuminado)</option>
+            </select>
+          </div>
+
+          <!-- 2. Recorte de Tiempo (Inicio / Fin en segundos) -->
+          <div style="background:#131620;border-radius:10px;padding:8px;margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#facc15;margin-bottom:4px;">
+              <span>⏱️ Recortar duración:</span>
+              <span id="sv-trim-lbl">0.0s → 0.0s (0.0s)</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label style="flex:1;font-size:10.5px;color:#9ca3af;">Inicio (s)
+                <input id="sv-trim-start" type="number" step="0.5" min="0" value="0" oninput="onEditorTrimChange()" style="width:100%;margin-top:2px;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:7px;padding:5px;font-size:11.5px;" />
+              </label>
+              <label style="flex:1;font-size:10.5px;color:#9ca3af;">Fin (s)
+                <input id="sv-trim-end" type="number" step="0.5" min="0.5" value="0" oninput="onEditorTrimChange()" style="width:100%;margin-top:2px;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:7px;padding:5px;font-size:11.5px;" />
+              </label>
+              <button type="button" class="pill-btn" onclick="previewTrimSegment()" style="margin-top:14px;padding:6px 9px;font-size:11px;">▶️ Ver</button>
+            </div>
+          </div>
+
+          <!-- 3. Texto en Pantalla + Leyendas Automáticas -->
+          <div style="background:#131620;border-radius:10px;padding:8px;margin-bottom:8px;">
+            <div style="font-size:11px;color:#93c5fd;font-weight:700;margin-bottom:5px;">🔤 Texto en Video y Leyendas Automáticas</div>
+            <div style="display:flex;gap:6px;margin-bottom:6px;">
+              <input id="sv-overlay-text" type="text" maxlength="70" placeholder="Escribe texto o título encima del video..." oninput="renderEditorPreviewFrame()" style="flex:1;background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:6px 8px;font-size:11.5px;" />
+              <select id="sv-text-pos" onchange="renderEditorPreviewFrame()" style="background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:8px;padding:5px;font-size:11px;">
+                <option value="bottom">Abajo</option>
+                <option value="center">Centro</option>
+                <option value="top">Arriba</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button type="button" id="sv-auto-cap-btn" class="pill-btn" onclick="generateAutoCaptionsForEditor()" style="flex:1;padding:6px 8px;font-size:11px;border-color:#60a5fa;color:#93c5fd;">🎙️ Generar Leyendas Automáticas</button>
+              <button type="button" class="pill-btn" onclick="clearEditorCaptions()" style="padding:6px 8px;font-size:11px;">🗑️ Limpiar</button>
+            </div>
+            <div id="sv-captions-preview" style="font-size:10.5px;color:#a7f3d0;margin-top:5px;display:none;"></div>
+          </div>
+
+          <!-- 4. Renderizar / Aplicar Edición antes de Publicar -->
+          <div style="display:flex;gap:6px;">
+            <button type="button" id="sv-render-edit-btn" class="pill-btn gold" onclick="renderEditedVideoBlob()" style="flex:1;padding:8px;font-size:11.5px;font-weight:800;">✨ Aplicar Edición al Video</button>
+            <button type="button" class="pill-btn" onclick="resetEditedVideoBlob()" style="padding:8px 10px;font-size:11px;">↩️ Original</button>
+          </div>
+          <div id="sv-render-prog-wrap" class="hidden" style="margin-top:6px;">
+            <div style="font-size:10.5px;color:#fde68a;margin-bottom:3px;" id="sv-render-prog-lbl">Procesando edición en tiempo real... 0%</div>
+            <div style="width:100%;height:6px;background:#1f2430;border-radius:999px;overflow:hidden;">
+              <div id="sv-render-prog-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#facc15,#10b981);"></div>
+            </div>
+          </div>
+        </div>
+
         <select id="category-input" class="select-input">
           <option value="Series">🎞️ Series / Episódios</option>
           <option value="Comedia">😂 Comedia / Animação</option>
@@ -3091,40 +3166,429 @@
     });
 
     let selectedVideoDurationSec = 0;
+    let editedVideoBlob = null;
+    let editedVideoFilename = '';
+    let editorAspect = '9:16';
+    let editorRawDuration = 0;
+    let editorObjectUrl = '';
+    let editorAutoCaptions = [];
+    let editorRendering = false;
+
+    function updateDurationBadgeUI(secVal) {
+      const badge = document.getElementById('video-meta-badge');
+      if (!badge) return;
+      badge.style.display = 'block';
+      const rounded = Math.round(secVal || 0);
+      if (rounded >= 45) {
+        badge.style.color = '#6ee7b7';
+        badge.textContent = '✅ Duración: ' + rounded + 's • APTO PARA MONETIZAR (R$ 0,50 / 1.000 vistas)';
+      } else {
+        badge.style.color = '#fbbf24';
+        badge.textContent = 'ℹ️ Duración: ' + rounded + 's • Se publicará normal (requiere +45s para monetizar)';
+      }
+    }
+
+    function drawWrappedEditorText(ctx, text, cx, cy, maxWidth, fontSize) {
+      if (!text) return;
+      ctx.save();
+      ctx.font = '900 ' + fontSize + 'px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const words = String(text).split(/\s+/);
+      const lines = [];
+      let line = '';
+      for (const w of words) {
+        const test = line ? (line + ' ' + w) : w;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      const lineH = Math.round(fontSize * 1.28);
+      const totalH = lines.length * lineH;
+      const startY = cy - totalH / 2 + lineH / 2;
+      lines.forEach((ln, i) => {
+        const y = startY + i * lineH;
+        const w = ctx.measureText(ln).width;
+        ctx.fillStyle = 'rgba(0,0,0,0.68)';
+        ctx.fillRect(cx - w / 2 - 10, y - lineH / 2 + 2, w + 20, lineH - 2);
+        ctx.lineWidth = Math.max(2, Math.round(fontSize * 0.11));
+        ctx.strokeStyle = '#000';
+        ctx.strokeText(ln, cx, y);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillText(ln, cx, y);
+      });
+      ctx.restore();
+    }
+
+    function drawEditorFrameToCanvas(vid, canvas, currentSec) {
+      if (!vid || !canvas || !vid.videoWidth || !vid.videoHeight) return;
+      const ctx = canvas.getContext('2d');
+      const cw = canvas.width;
+      const ch = canvas.height;
+      ctx.fillStyle = '#050507';
+      ctx.fillRect(0, 0, cw, ch);
+
+      const fitMode = document.getElementById('sv-fit-mode')?.value || 'cover';
+      const vw = vid.videoWidth;
+      const vh = vid.videoHeight;
+
+      if (fitMode === 'contain') {
+        ctx.save();
+        ctx.filter = 'blur(16px) brightness(0.45)';
+        const bgScale = Math.max(cw / vw, ch / vh);
+        const bw = vw * bgScale;
+        const bh = vh * bgScale;
+        ctx.drawImage(vid, (cw - bw) / 2, (ch - bh) / 2, bw, bh);
+        ctx.restore();
+
+        const fgScale = Math.min(cw / vw, ch / vh);
+        const fw = vw * fgScale;
+        const fh = vh * fgScale;
+        ctx.drawImage(vid, (cw - fw) / 2, (ch - fh) / 2, fw, fh);
+      } else {
+        const scale = Math.max(cw / vw, ch / vh);
+        const dw = vw * scale;
+        const dh = vh * scale;
+        ctx.drawImage(vid, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+      }
+
+      const customTxt = (document.getElementById('sv-overlay-text')?.value || '').trim();
+      const pos = document.getElementById('sv-text-pos')?.value || 'bottom';
+      if (customTxt) {
+        const yPos = pos === 'top' ? ch * 0.14 : (pos === 'center' ? ch * 0.5 : ch * 0.78);
+        drawWrappedEditorText(ctx, customTxt, cw / 2, yPos, cw * 0.86, Math.round(cw * 0.056));
+      }
+
+      if (editorAutoCaptions.length > 0) {
+        const tNow = Number(currentSec ?? vid.currentTime ?? 0);
+        const activeCap = editorAutoCaptions.find(c => tNow >= c.start && tNow <= c.end) || editorAutoCaptions[0];
+        if (activeCap && activeCap.text) {
+          drawWrappedEditorText(ctx, activeCap.text, cw / 2, ch * 0.88, cw * 0.88, Math.round(cw * 0.05));
+        }
+      }
+    }
+
+    window.renderEditorPreviewFrame = () => {
+      const vid = document.getElementById('sv-editor-src-vid');
+      const canvas = document.getElementById('sv-editor-canvas');
+      if (!vid || !canvas) return;
+      drawEditorFrameToCanvas(vid, canvas, vid.currentTime || 0);
+    };
+
+    window.setEditorAspect = (ratio, btn) => {
+      editorAspect = ratio;
+      document.querySelectorAll('.sv-aspect-btn').forEach(b => b.classList.remove('gold'));
+      if (btn) btn.classList.add('gold');
+      const canvas = document.getElementById('sv-editor-canvas');
+      if (canvas) {
+        if (ratio === '9:16') { canvas.width = 480; canvas.height = 854; }
+        else if (ratio === '16:9') { canvas.width = 854; canvas.height = 480; }
+        else { canvas.width = 640; canvas.height = 640; }
+      }
+      renderEditorPreviewFrame();
+    };
+
+    window.onEditorTrimChange = () => {
+      const sInp = document.getElementById('sv-trim-start');
+      const eInp = document.getElementById('sv-trim-end');
+      const lbl = document.getElementById('sv-trim-lbl');
+      let st = Math.max(0, Number(sInp?.value || 0));
+      let en = Math.min(editorRawDuration || 9999, Number(eInp?.value || editorRawDuration || 0));
+      if (en <= st) en = Math.min(editorRawDuration || (st + 1), st + 1);
+      const dur = Math.max(0.5, +(en - st).toFixed(1));
+      if (lbl) lbl.textContent = st.toFixed(1) + 's → ' + en.toFixed(1) + 's (' + dur + 's)';
+      selectedVideoDurationSec = Math.round(dur);
+      updateDurationBadgeUI(dur);
+      const vid = document.getElementById('sv-editor-src-vid');
+      if (vid && !editorRendering && vid.readyState >= 1) {
+        vid.currentTime = st;
+      }
+    };
+
+    window.previewTrimSegment = () => {
+      const vid = document.getElementById('sv-editor-src-vid');
+      if (!vid || !vid.src) return;
+      const st = Math.max(0, Number(document.getElementById('sv-trim-start')?.value || 0));
+      const en = Math.min(editorRawDuration || vid.duration || 10, Number(document.getElementById('sv-trim-end')?.value || 10));
+      vid.currentTime = st;
+      vid.play().catch(() => {});
+      const step = () => {
+        if (vid.paused || vid.currentTime >= en) {
+          vid.pause();
+          return;
+        }
+        renderEditorPreviewFrame();
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+
+    function buildTimedCaptionsFromText(rawText, startSec, endSec) {
+      const clean = String(rawText || '').trim();
+      if (!clean) return [];
+      const words = clean.split(/\s+/);
+      const chunks = [];
+      for (let i = 0; i < words.length; i += 5) {
+        chunks.push(words.slice(i, i + 5).join(' '));
+      }
+      const total = Math.max(1, endSec - startSec);
+      const perChunk = total / chunks.length;
+      return chunks.map((txt, i) => ({
+        start: +(startSec + i * perChunk).toFixed(2),
+        end: +(startSec + (i + 1) * perChunk).toFixed(2),
+        text: txt
+      }));
+    }
+
+    window.generateAutoCaptionsForEditor = () => {
+      const st = Math.max(0, Number(document.getElementById('sv-trim-start')?.value || 0));
+      const en = Math.min(editorRawDuration || 15, Number(document.getElementById('sv-trim-end')?.value || 15));
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const prevEl = document.getElementById('sv-captions-preview');
+      const vid = document.getElementById('sv-editor-src-vid');
+
+      if (!SpeechRec) {
+        const manualDict = prompt('Tu navegador no soporta transcripción de voz automática directa. Escribe el texto hablado y lo dividiré en leyendas sincronizadas:');
+        if (!manualDict) return;
+        editorAutoCaptions = buildTimedCaptionsFromText(manualDict, st, en);
+        if (prevEl) {
+          prevEl.style.display = 'block';
+          prevEl.textContent = '✅ ' + editorAutoCaptions.length + ' bloques de leyendas sincronizadas listos.';
+        }
+        renderEditorPreviewFrame();
+        return;
+      }
+
+      toast('🎙️ Escuchando audio del video para generar leyendas...');
+      const rec = new SpeechRec();
+      rec.lang = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'en' ? 'en-US' : 'es-ES');
+      rec.continuous = true;
+      rec.interimResults = true;
+      const segments = [];
+      let segStart = st;
+
+      if (vid && vid.src) {
+        vid.muted = false;
+        vid.currentTime = st;
+        vid.play().catch(() => {});
+      }
+
+      rec.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            const txt = res[0].transcript.trim();
+            const nowT = vid ? Math.min(en, Math.max(segStart + 0.6, vid.currentTime)) : (segStart + 2);
+            if (txt) {
+              segments.push({ start: +segStart.toFixed(2), end: +nowT.toFixed(2), text: txt });
+              segStart = nowT;
+            }
+          }
+        }
+      };
+
+      rec.onerror = () => {
+        if (vid) { vid.pause(); vid.muted = true; }
+        const fallbackTxt = prompt('No se pudo captar audio claro desde el micrófono/altavoz. Escribe las frases y las sincronizamos automáticamente:');
+        if (fallbackTxt) {
+          editorAutoCaptions = buildTimedCaptionsFromText(fallbackTxt, st, en);
+          if (prevEl) {
+            prevEl.style.display = 'block';
+            prevEl.textContent = '✅ ' + editorAutoCaptions.length + ' leyendas sincronizadas.';
+          }
+          renderEditorPreviewFrame();
+        }
+      };
+
+      rec.onend = () => {
+        if (vid) { vid.pause(); vid.muted = true; }
+        if (segments.length > 0) {
+          editorAutoCaptions = segments;
+          if (prevEl) {
+            prevEl.style.display = 'block';
+            prevEl.textContent = '✅ Leyendas generadas (' + segments.length + ' frases): ' + segments.map(s => s.text).join(' • ');
+          }
+          renderEditorPreviewFrame();
+          toast('✅ Leyendas automáticas listas');
+        }
+      };
+
+      try {
+        rec.start();
+        const maxListenMs = Math.min(25000, Math.max(4000, Math.round((en - st) * 1000)));
+        setTimeout(() => { try { rec.stop(); } catch (e) {} }, maxListenMs);
+      } catch (e) {
+        toast('No se pudo iniciar el reconocimiento de voz');
+      }
+    };
+
+    window.clearEditorCaptions = () => {
+      editorAutoCaptions = [];
+      const txtInp = document.getElementById('sv-overlay-text');
+      if (txtInp) txtInp.value = '';
+      const prevEl = document.getElementById('sv-captions-preview');
+      if (prevEl) prevEl.style.display = 'none';
+      renderEditorPreviewFrame();
+      toast('Textos y leyendas limpiados');
+    };
+
+    window.resetEditedVideoBlob = () => {
+      editedVideoBlob = null;
+      editedVideoFilename = '';
+      const pill = document.getElementById('sv-edit-status-pill');
+      if (pill) {
+        pill.textContent = 'Original';
+        pill.style.color = '#6ee7b7';
+      }
+      toast('↩️ Se usará el archivo original sin recortar');
+    };
+
+    window.renderEditedVideoBlob = async () => {
+      const vid = document.getElementById('sv-editor-src-vid');
+      const canvas = document.getElementById('sv-editor-canvas');
+      if (!vid || !canvas || !vid.src || editorRendering) return;
+      if (typeof canvas.captureStream !== 'function' || typeof MediaRecorder === 'undefined') {
+        return toast('Tu navegador no soporta exportación de video editado en línea');
+      }
+
+      const st = Math.max(0, Number(document.getElementById('sv-trim-start')?.value || 0));
+      const en = Math.min(editorRawDuration || vid.duration || 10, Number(document.getElementById('sv-trim-end')?.value || 10));
+      const totalDur = Math.max(0.5, en - st);
+
+      editorRendering = true;
+      const btn = document.getElementById('sv-render-edit-btn');
+      const pWrap = document.getElementById('sv-render-prog-wrap');
+      const pLbl = document.getElementById('sv-render-prog-lbl');
+      const pBar = document.getElementById('sv-render-prog-bar');
+      if (btn) btn.disabled = true;
+      if (pWrap) pWrap.classList.remove('hidden');
+
+      try {
+        vid.pause();
+        vid.currentTime = st;
+        await new Promise(r => { vid.onseeked = () => r(); setTimeout(r, 350); });
+
+        const canvasStream = canvas.captureStream(30);
+        let combinedStream = canvasStream;
+        try {
+          vid.muted = false;
+          const vStream = vid.captureStream ? vid.captureStream() : (vid.mozCaptureStream ? vid.mozCaptureStream() : null);
+          if (vStream && vStream.getAudioTracks().length > 0) {
+            combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...vStream.getAudioTracks()]);
+          }
+        } catch (e) {}
+
+        const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+          ? 'video/webm;codecs=vp9,opus'
+          : (MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '');
+        const recorder = mime
+          ? new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 2500000 })
+          : new MediaRecorder(combinedStream);
+
+        const chunks = [];
+        recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+
+        const donePromise = new Promise((resolve) => {
+          recorder.onstop = () => resolve(new Blob(chunks, { type: recorder.mimeType || 'video/webm' }));
+        });
+
+        recorder.start(200);
+        await vid.play();
+
+        const drawLoop = () => {
+          if (!editorRendering) return;
+          const cur = vid.currentTime;
+          drawEditorFrameToCanvas(vid, canvas, cur);
+          const pct = Math.min(100, Math.max(1, Math.round(((cur - st) / totalDur) * 100)));
+          if (pLbl) pLbl.textContent = 'Renderizando edición (' + editorAspect + ')... ' + pct + '%';
+          if (pBar) pBar.style.width = pct + '%';
+
+          if (cur >= en || vid.ended) {
+            vid.pause();
+            if (recorder.state !== 'inactive') recorder.stop();
+            return;
+          }
+          requestAnimationFrame(drawLoop);
+        };
+        requestAnimationFrame(drawLoop);
+
+        const outBlob = await donePromise;
+        editedVideoBlob = outBlob;
+        editedVideoFilename = 'starvibe_edit_' + editorAspect.replace(':', 'x') + '_' + Date.now() + '.webm';
+        selectedVideoDurationSec = Math.round(totalDur);
+        updateDurationBadgeUI(totalDur);
+
+        const pill = document.getElementById('sv-edit-status-pill');
+        if (pill) {
+          pill.textContent = '✅ Editado (' + editorAspect + ' • ' + Math.round(totalDur) + 's)';
+          pill.style.color = '#facc15';
+        }
+        toast('✨ Edición aplicada lista para publicar (' + (outBlob.size / (1024 * 1024)).toFixed(1) + ' MB)');
+      } catch (err) {
+        toast('⚠️ No se pudo renderizar el video editado');
+      } finally {
+        editorRendering = false;
+        vid.muted = true;
+        if (btn) btn.disabled = false;
+        if (pWrap) pWrap.classList.add('hidden');
+      }
+    };
+
     videoInput.addEventListener('change', () => {
       const f = videoInput.files && videoInput.files[0];
       const badge = document.getElementById('video-meta-badge');
+      const editorBox = document.getElementById('sv-video-editor-box');
       selectedVideoDurationSec = 0;
+      editedVideoBlob = null;
+      editedVideoFilename = '';
+      editorAutoCaptions = [];
+
       if (!f) {
         if (badge) badge.style.display = 'none';
+        if (editorBox) editorBox.classList.add('hidden');
         return;
       }
       if (f.size > 45 * 1024 * 1024) {
         toast('⚠️ El video supera el límite de 45 MB');
       }
-      const tempVid = document.createElement('video');
-      tempVid.preload = 'metadata';
-      tempVid.onloadedmetadata = () => {
-        selectedVideoDurationSec = Math.round(tempVid.duration || 0);
-        URL.revokeObjectURL(tempVid.src);
-        if (badge) {
-          badge.style.display = 'block';
-          if (selectedVideoDurationSec >= 45) {
-            badge.style.color = '#6ee7b7';
-            badge.textContent = '✅ Duración: ' + selectedVideoDurationSec + 's • APTO PARA MONETIZAR (R$ 0,50 / 1.000 vistas)';
-          } else {
-            badge.style.color = '#fbbf24';
-            badge.textContent = 'ℹ️ Duración: ' + selectedVideoDurationSec + 's • Se publicará normal (requiere +45s para monetizar)';
+      if (editorObjectUrl) URL.revokeObjectURL(editorObjectUrl);
+      editorObjectUrl = URL.createObjectURL(f);
+
+      const edVid = document.getElementById('sv-editor-src-vid');
+      if (edVid) {
+        edVid.onloadedmetadata = () => {
+          editorRawDuration = Number(edVid.duration || 0);
+          selectedVideoDurationSec = Math.round(editorRawDuration);
+          updateDurationBadgeUI(editorRawDuration);
+
+          const sInp = document.getElementById('sv-trim-start');
+          const eInp = document.getElementById('sv-trim-end');
+          if (sInp) sInp.value = '0';
+          if (eInp) {
+            eInp.max = editorRawDuration.toFixed(1);
+            eInp.value = editorRawDuration.toFixed(1);
           }
-        }
-      };
-      tempVid.src = URL.createObjectURL(f);
+          onEditorTrimChange();
+          setEditorAspect('9:16', document.querySelector('.sv-aspect-btn[data-aspect="9:16"]'));
+          if (editorBox) editorBox.classList.remove('hidden');
+          edVid.currentTime = Math.min(0.2, editorRawDuration / 2);
+        };
+        edVid.onseeked = () => {
+          if (!editorRendering) renderEditorPreviewFrame();
+        };
+        edVid.src = editorObjectUrl;
+      }
     });
 
     document.getElementById('upload-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      const file = videoInput.files && videoInput.files[0];
-      if (!file) return;
+      const rawFile = videoInput.files && videoInput.files[0];
+      if (!rawFile) return;
+      const file = editedVideoBlob ? new File([editedVideoBlob], editedVideoFilename || 'starvibe_edited.webm', { type: editedVideoBlob.type || 'video/webm' }) : rawFile;
       if (file.size > 45 * 1024 * 1024) return toast('Máximo 45 MB por video');
 
       const submitBtn = document.getElementById('submit-btn');
@@ -3178,6 +3642,11 @@
               createdAt: serverTimestamp()
             });
             document.getElementById('upload-form').reset();
+            editedVideoBlob = null;
+            editedVideoFilename = '';
+            editorAutoCaptions = [];
+            const edBoxAfter = document.getElementById('sv-video-editor-box');
+            if (edBoxAfter) edBoxAfter.classList.add('hidden');
             fileLabel.textContent = t('pick_video_lbl');
             progWrap.classList.add('hidden');
             progBar.style.width = '0%';
