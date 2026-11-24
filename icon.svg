@@ -1,11 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fde047"/>
-      <stop offset="50%" stop-color="#facc15"/>
-      <stop offset="100%" stop-color="#d97706"/>
+    <radialGradient id="bgGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1e1b12"/>
+      <stop offset="100%" stop-color="#070709"/>
+    </radialGradient>
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="35%" stop-color="#facc15"/>
+      <stop offset="70%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#a16207"/>
     </linearGradient>
+    <linearGradient id="goldDark" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#713f12"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.75"/>
+    </filter>
   </defs>
-  <rect width="512" height="512" rx="115" fill="#09090b"/>
-  <polygon points="256,74 309,192 438,206 341,293 368,420 256,355 144,420 171,293 74,206 203,192" fill="url(#goldGrad)"/>
+
+  <!-- App Rounded Squircle Background -->
+  <rect width="512" height="512" rx="116" fill="url(#bgGlow)"/>
+  <rect x="18" y="18" width="476" height="476" rx="102" fill="none" stroke="url(#goldLight)" stroke-width="5" opacity="0.75"/>
+
+  <!-- Subtle Gold Sparkle Dust -->
+  <circle cx="155" cy="145" r="2.5" fill="#fef08a" opacity="0.7"/>
+  <circle cx="365" cy="150" r="3" fill="#facc15" opacity="0.8"/>
+  <circle cx="385" cy="310" r="2.5" fill="#fef08a" opacity="0.6"/>
+  <circle cx="130" cy="325" r="2" fill="#facc15" opacity="0.7"/>
+
+  <!-- Star Outer Frame -->
+  <g filter="url(#dropShadow)">
+    <polygon points="256,64 313,182 444,200 348,291 372,420 256,358 140,420 164,291 68,200 199,182"
+             fill="none" stroke="url(#goldLight)" stroke-width="24" stroke-linejoin="round"/>
+    <polygon points="256,82 307,188 424,204 338,286 360,401 256,345 152,401 174,286 88,204 205,188"
+             fill="none" stroke="url(#goldDark)" stroke-width="7" stroke-linejoin="round" opacity="0.85"/>
+
+    <!-- Intertwined Dynamic "S" Ribbon -->
+    <path d="M 332 135 C 280 120, 210 142, 206 196 C 202 246, 304 242, 300 296 C 296 344, 224 360, 174 342 C 216 376, 314 366, 326 300 C 338 234, 232 234, 236 188 C 240 148, 294 140, 332 135 Z"
+          fill="url(#goldLight)"/>
+    <path d="M 326 140 C 282 128, 220 148, 216 194 C 212 238, 308 238, 304 294 C 300 338, 232 354, 184 342"
+          fill="none" stroke="#fef9c3" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+  </g>
 </svg>

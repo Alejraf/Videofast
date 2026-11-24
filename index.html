@@ -3,57 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Goldstar — Videos Cortos, Creadores y Series</title>
-  <meta name="theme-color" content="#000000" />
+  <title>StarVibe — Videos Cortos, Series y En Vivo</title>
+  <meta name="theme-color" content="#050507" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Goldstar" />
-  <meta name="description" content="Descubre, crea y comparte videos verticales cortos en Goldstar." />
+  <meta name="apple-mobile-web-app-title" content="StarVibe" />
+  <meta name="description" content="Descubre, crea y comparte videos verticales cortos, series y directos en StarVibe." />
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/icon.svg" />
   <style>
+    :root {
+      --gold-1: #fef08a;
+      --gold-2: #facc15;
+      --gold-3: #d97706;
+      --bg-dark: #050507;
+      --card-dark: #0f1117;
+      --border-gold: rgba(250, 204, 21, 0.32);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: #000; color: #fff; overflow: hidden; user-select: none; height: 100dvh; width: 100vw; }
-    .app { position: relative; height: 100dvh; width: 100vw; background: #000; overflow: hidden; }
+    body { background: var(--bg-dark); color: #fff; overflow: hidden; user-select: none; height: 100dvh; width: 100vw; }
+    .app { position: relative; height: 100dvh; width: 100vw; background: var(--bg-dark); overflow: hidden; }
 
-    /* Top Header & TikTok Tabs */
+    /* Premium Header & TikTok Navigation Tabs */
     .header {
-      position: absolute; top: 0; left: 0; right: 0; z-index: 25;
+      position: absolute; top: 0; left: 0; right: 0; z-index: 26;
       padding: calc(10px + env(safe-area-inset-top)) 14px 12px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.92) 40%, transparent);
+      background: linear-gradient(to bottom, rgba(5,5,7,0.95) 45%, transparent);
       pointer-events: none;
     }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; pointer-events: auto; }
-    .logo { font-size: 18px; font-weight: 900; letter-spacing: 1.5px; color: #facc15; display: flex; align-items: center; gap: 5px; }
-    .header-tools { display: flex; align-items: center; gap: 7px; }
+    .brand-lockup { display: flex; align-items: center; gap: 8px; }
+    .brand-icon { width: 28px; height: 28px; border-radius: 8px; box-shadow: 0 0 14px rgba(250,204,21,0.35); }
+    .logo {
+      font-size: 18px; font-weight: 900; letter-spacing: 1.8px;
+      background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .header-tools { display: flex; align-items: center; gap: 6px; }
     .pill-btn {
-      background: rgba(255,255,255,0.14); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.16);
       color: #fff; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 999px; cursor: pointer;
     }
-    .pill-btn.gold { background: rgba(250,204,21,0.2); border-color: rgba(250,204,21,0.55); color: #facc15; }
-    .feed-tabs { display: flex; justify-content: center; gap: 18px; pointer-events: auto; }
+    .pill-btn.gold { background: rgba(250,204,21,0.16); border-color: rgba(250,204,21,0.5); color: var(--gold-2); }
+
+    .feed-tabs { display: flex; justify-content: center; gap: 14px; pointer-events: auto; align-items: center; }
     .feed-tab {
-      background: none; border: none; color: rgba(255,255,255,0.62); font-size: 14px; font-weight: 800;
-      padding-bottom: 5px; cursor: pointer; position: relative;
+      background: none; border: none; color: rgba(255,255,255,0.62); font-size: 13.5px; font-weight: 800;
+      padding-bottom: 5px; cursor: pointer; position: relative; display: flex; align-items: center; gap: 4px;
     }
     .feed-tab.active { color: #fff; }
     .feed-tab.active::after {
-      content: ""; position: absolute; left: 20%; right: 20%; bottom: 0; height: 3px;
-      background: #facc15; border-radius: 99px;
+      content: ""; position: absolute; left: 18%; right: 18%; bottom: 0; height: 3px;
+      background: linear-gradient(90deg, var(--gold-1), var(--gold-2)); border-radius: 99px;
     }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444; display: inline-block; }
 
-    /* Search Bar Overlay */
-    .search-bar {
-      display: flex; gap: 8px; margin-top: 8px; pointer-events: auto;
-    }
+    /* Search Bar */
+    .search-bar { display: flex; gap: 8px; margin-top: 8px; pointer-events: auto; }
     .search-bar input {
-      flex: 1; background: rgba(17,24,39,0.92); border: 1px solid #374151; border-radius: 999px;
+      flex: 1; background: rgba(15,17,23,0.94); border: 1px solid #374151; border-radius: 999px;
       padding: 8px 14px; color: #fff; font-size: 13px; outline: none;
     }
     .search-bar button {
-      background: #facc15; color: #000; border: none; border-radius: 999px; padding: 0 14px; font-weight: 800; font-size: 12px; cursor: pointer;
+      background: linear-gradient(135deg, var(--gold-2), var(--gold-3)); color: #000; border: none;
+      border-radius: 999px; padding: 0 14px; font-weight: 900; font-size: 12px; cursor: pointer;
     }
 
     /* Views */
@@ -64,14 +79,17 @@
     .feed { height: 100%; width: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
     .feed::-webkit-scrollbar { display: none; }
     .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; color: #9ca3af; }
-    .btn-primary { background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-weight: 900; border: none; padding: 12px 24px; border-radius: 30px; font-size: 14px; margin-top: 14px; cursor: pointer; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000;
+      font-weight: 900; border: none; padding: 12px 24px; border-radius: 30px; font-size: 14px; margin-top: 14px; cursor: pointer;
+    }
 
     /* Video Slide */
     .slide { position: relative; height: 100dvh; width: 100vw; scroll-snap-align: start; background: #000; display: flex; align-items: center; justify-content: center; }
     .slide video { height: 100%; width: 100%; object-fit: cover; }
     .speed-badge {
       position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.75); border: 1px solid #facc15; color: #facc15;
+      background: rgba(0,0,0,0.78); border: 1px solid var(--gold-2); color: var(--gold-2);
       font-size: 11px; font-weight: 900; padding: 4px 12px; border-radius: 999px; z-index: 18; display: none;
     }
     .heart-burst {
@@ -85,107 +103,133 @@
       position: absolute; left: 0; right: 0; bottom: 64px; height: 4px;
       background: rgba(255,255,255,0.22); z-index: 18; cursor: pointer;
     }
-    .vid-progress-fill { height: 100%; width: 0%; background: #facc15; transition: width 0.1s linear; }
+    .vid-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-1), var(--gold-2)); transition: width 0.1s linear; }
 
     /* Right Action Rail */
-    .actions { position: absolute; right: 12px; bottom: 86px; z-index: 14; display: flex; flex-direction: column; align-items: center; gap: 13px; }
+    .actions { position: absolute; right: 12px; bottom: 86px; z-index: 14; display: flex; flex-direction: column; align-items: center; gap: 12px; }
     .act-item { display: flex; flex-direction: column; align-items: center; }
     .act-btn {
-      background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(5,5,7,0.58); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.16);
       color: #fff; width: 45px; height: 45px; border-radius: 50%; font-size: 19px;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .act-btn.liked { background: rgba(239,68,68,0.3); border-color: #ef4444; }
-    .act-btn.saved { background: rgba(250,204,21,0.28); border-color: #facc15; }
+    .act-btn.liked { background: rgba(239,68,68,0.32); border-color: #ef4444; }
+    .act-btn.saved { background: rgba(250,204,21,0.28); border-color: var(--gold-2); }
     .act-count { font-size: 11px; font-weight: 700; margin-top: 3px; text-shadow: 0 1px 3px #000; }
 
-    /* Bottom Video Info */
-    .info { position: absolute; left: 14px; bottom: 80px; right: 74px; z-index: 14; text-shadow: 0 1px 4px rgba(0,0,0,0.92); }
+    /* Bottom Video Info + StarVibe Shop/Offer CTA */
+    .info { position: absolute; left: 14px; bottom: 78px; right: 74px; z-index: 14; text-shadow: 0 1px 4px rgba(0,0,0,0.92); }
     .creator-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
-    .username { font-weight: 900; font-size: 15px; color: #facc15; cursor: pointer; }
+    .username { font-weight: 900; font-size: 15px; color: var(--gold-2); cursor: pointer; }
     .follow-btn {
-      background: #facc15; color: #000; border: none; border-radius: 999px;
+      background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #000; border: none; border-radius: 999px;
       font-size: 11px; font-weight: 900; padding: 3px 10px; cursor: pointer;
     }
     .follow-btn.following { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
     .caption { font-size: 13.5px; color: #f3f4f6; line-height: 1.35; word-break: break-word; }
-    .hashtags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-    .hash-chip { font-size: 11.5px; font-weight: 700; color: #fde047; cursor: pointer; }
+    .hashtags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+    .hash-chip { font-size: 11.5px; font-weight: 700; color: var(--gold-1); cursor: pointer; }
     .badges-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-    .tag-pill { display: inline-block; font-size: 10.5px; font-weight: 700; background: rgba(255,255,255,0.14); padding: 2px 8px; border-radius: 6px; color: #fde047; }
+    .tag-pill { display: inline-block; font-size: 10.5px; font-weight: 700; background: rgba(255,255,255,0.14); padding: 2px 8px; border-radius: 6px; color: var(--gold-1); }
     .sponsor-pill { display: inline-block; font-size: 10.5px; font-weight: 800; background: rgba(16,185,129,0.22); border: 1px solid rgba(16,185,129,0.45); padding: 2px 8px; border-radius: 6px; color: #6ee7b7; }
+    .shop-cta-btn {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+      background: linear-gradient(135deg, rgba(250,204,21,0.95), rgba(217,119,6,0.95));
+      color: #000; font-size: 12px; font-weight: 900; padding: 7px 13px; border-radius: 10px;
+      text-decoration: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55);
+    }
+
+    /* Live Directory View */
+    .live-wrap { height: 100%; overflow-y: auto; padding: 88px 16px 96px; background: var(--bg-dark); }
+    .live-banner {
+      background: linear-gradient(135deg, #1c1917, #292008); border: 1px solid var(--border-gold);
+      border-radius: 18px; padding: 16px; margin-bottom: 14px;
+    }
+    .live-card {
+      background: var(--card-dark); border: 1px solid #1f2937; border-radius: 16px; padding: 14px;
+      margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px; background: rgba(239,68,68,0.2);
+      border: 1px solid #ef4444; color: #fca5a5; font-size: 11px; font-weight: 900;
+      padding: 3px 9px; border-radius: 999px; width: fit-content;
+    }
 
     /* Native Sponsored Slide */
-    .ad-slide { background: radial-gradient(circle at top, #1f1907, #050505 70%); padding: 28px; text-align: center; flex-direction: column; }
-    .ad-card { max-width: 340px; width: 100%; background: #111827; border: 1px solid rgba(250,204,21,0.35); border-radius: 22px; padding: 24px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.75); }
-    .ad-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #facc15; background: rgba(250,204,21,0.14); padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
+    .ad-slide { background: radial-gradient(circle at top, #231c07, #050507 70%); padding: 28px; text-align: center; flex-direction: column; }
+    .ad-card { max-width: 340px; width: 100%; background: var(--card-dark); border: 1px solid var(--border-gold); border-radius: 22px; padding: 24px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+    .ad-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 1px; color: var(--gold-2); background: rgba(250,204,21,0.14); padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
     .ad-card h3 { font-size: 19px; margin-bottom: 8px; color: #fff; }
     .ad-card p { font-size: 13px; color: #9ca3af; line-height: 1.45; margin-bottom: 18px; }
-    .ad-cta { display: block; width: 100%; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-weight: 900; font-size: 15px; cursor: pointer; text-decoration: none; }
+    .ad-cta { display: block; width: 100%; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; font-weight: 900; font-size: 15px; cursor: pointer; text-decoration: none; }
 
-    /* Profile & Creator Studio */
-    .profile-wrap { height: 100%; overflow-y: auto; padding: 84px 16px 96px; background: #09090b; }
-    .prof-card { background: #111827; border: 1px solid #1f2937; border-radius: 18px; padding: 18px; text-align: center; margin-bottom: 14px; }
-    .avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-size: 26px; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; background: #030712; padding: 10px; border-radius: 12px; border: 1px solid #1f2937; }
-    .stat-box strong { display: block; font-size: 16px; color: #facc15; }
+    /* Profile & Creator/Brand Studio */
+    .profile-wrap { height: 100%; overflow-y: auto; padding: 86px 16px 96px; background: var(--bg-dark); }
+    .prof-card { background: var(--card-dark); border: 1px solid var(--border-gold); border-radius: 20px; padding: 18px; text-align: center; margin-bottom: 14px; }
+    .avatar { width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; font-size: 26px; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; box-shadow: 0 0 20px rgba(250,204,21,0.28); }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; background: #050507; padding: 10px; border-radius: 12px; border: 1px solid #1f2937; }
+    .stat-box strong { display: block; font-size: 16px; color: var(--gold-2); }
     .stat-box span { font-size: 11px; color: #9ca3af; }
     .name-row { display: flex; gap: 8px; margin-top: 10px; }
-    .name-row input { flex: 1; background: #030712; border: 1px solid #374151; border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 13.5px; }
-    .name-row button { background: #facc15; color: #000; border: none; border-radius: 10px; padding: 0 14px; font-weight: 800; cursor: pointer; }
+    .name-row input { flex: 1; background: #050507; border: 1px solid #374151; border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 13.5px; }
+    .name-row button { background: linear-gradient(135deg, var(--gold-2), var(--gold-3)); color: #000; border: none; border-radius: 10px; padding: 0 14px; font-weight: 900; cursor: pointer; }
+
     .brand-studio {
-      background: linear-gradient(135deg, #172554, #1e1b4b); border: 1px solid #3b82f6;
-      border-radius: 16px; padding: 14px; margin-bottom: 14px;
+      background: linear-gradient(135deg, #16140c, #1f1a0d); border: 1px solid var(--border-gold);
+      border-radius: 18px; padding: 15px; margin-bottom: 14px;
     }
-    .brand-studio h4 { font-size: 14px; color: #93c5fd; margin-bottom: 4px; }
-    .brand-studio p { font-size: 12px; color: #dbeafe; line-height: 1.4; margin-bottom: 10px; }
+    .brand-studio h4 { font-size: 14.5px; color: var(--gold-2); margin-bottom: 5px; }
+    .brand-studio p { font-size: 12px; color: #e5e7eb; line-height: 1.45; margin-bottom: 12px; }
+    .studio-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
     .prof-subtabs { display: flex; gap: 8px; margin-bottom: 10px; }
-    .prof-subtab { flex: 1; background: #111827; border: 1px solid #1f2937; color: #9ca3af; padding: 9px; border-radius: 10px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
-    .prof-subtab.active { border-color: #facc15; color: #facc15; }
+    .prof-subtab { flex: 1; background: var(--card-dark); border: 1px solid #1f2937; color: #9ca3af; padding: 9px; border-radius: 10px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+    .prof-subtab.active { border-color: var(--gold-2); color: var(--gold-2); }
     .my-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
     .grid-item { position: relative; aspect-ratio: 9/16; background: #1f2937; border-radius: 10px; overflow: hidden; }
     .grid-item video { width: 100%; height: 100%; object-fit: cover; }
-    .del-vid { position: absolute; top: 5px; right: 5px; background: rgba(220,38,38,0.88); color: #fff; border: none; border-radius: 6px; padding: 3px 6px; font-size: 11px; cursor: pointer; }
-    .legal-box { margin-top: 18px; font-size: 11.5px; color: #9ca3af; text-align: center; line-height: 1.5; background: #111827; padding: 14px; border-radius: 14px; border: 1px solid #1f2937; }
-    .legal-box a { color: #facc15; text-decoration: none; margin: 0 6px; font-weight: 700; }
+    .del-vid { position: absolute; top: 5px; right: 5px; background: rgba(220,38,38,0.9); color: #fff; border: none; border-radius: 6px; padding: 3px 6px; font-size: 11px; cursor: pointer; }
+
+    .legal-box { margin-top: 18px; font-size: 11.5px; color: #9ca3af; text-align: center; line-height: 1.5; background: var(--card-dark); padding: 14px; border-radius: 14px; border: 1px solid #1f2937; }
+    .legal-box a { color: var(--gold-2); text-decoration: none; margin: 0 6px; font-weight: 700; }
     .danger-btn { margin-top: 10px; background: rgba(239,68,68,0.16); border: 1px solid rgba(239,68,68,0.45); color: #fca5a5; padding: 8px 14px; border-radius: 10px; font-size: 11.5px; font-weight: 700; cursor: pointer; }
 
     /* Bottom Navbar */
     .navbar {
-      position: absolute; bottom: 0; left: 0; right: 0; z-index: 25; height: 64px;
-      background: rgba(0,0,0,0.96); border-top: 1px solid rgba(255,255,255,0.12);
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 26; height: 64px;
+      background: rgba(5,5,7,0.97); border-top: 1px solid rgba(250,204,21,0.18);
       display: flex; justify-content: space-around; align-items: center;
     }
     .nav-btn { background: none; border: none; color: #9ca3af; font-size: 11.5px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
-    .nav-btn.active { color: #facc15; }
-    .add-btn { background: linear-gradient(135deg, #facc15, #d97706); color: #000; border: none; padding: 6px 20px; border-radius: 12px; font-size: 22px; font-weight: 900; cursor: pointer; }
+    .nav-btn.active { color: var(--gold-2); }
+    .add-btn { background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; border: none; padding: 6px 22px; border-radius: 14px; font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: 0 0 18px rgba(250,204,21,0.3); }
 
     /* Modals */
-    .modal { position: absolute; inset: 0; z-index: 45; background: rgba(0,0,0,0.96); display: flex; flex-direction: column; justify-content: center; padding: 20px; overflow-y: auto; }
+    .modal { position: absolute; inset: 0; z-index: 45; background: rgba(5,5,7,0.97); display: flex; flex-direction: column; justify-content: center; padding: 20px; overflow-y: auto; }
     .hidden { display: none !important; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .modal-title { font-size: 19px; font-weight: 900; color: #facc15; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-title { font-size: 19px; font-weight: 900; color: var(--gold-2); }
     .close-btn { background: #1f2937; border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; }
-    .dropzone { border: 2px dashed #4b5563; border-radius: 16px; padding: 22px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; margin-bottom: 12px; }
-    .text-input, .select-input { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 12px; padding: 12px; color: #fff; font-size: 14px; margin-bottom: 10px; outline: none; }
-    .check-row { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; color: #d1d5db; margin-bottom: 12px; line-height: 1.35; }
-    .check-row input { margin-top: 3px; accent-color: #facc15; }
-    .progress-wrap { width: 100%; background: #1f2937; border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 12px; }
-    .progress-fill { background: #facc15; height: 100%; width: 0%; transition: width 0.2s; }
-    .submit-btn { width: 100%; background: linear-gradient(135deg, #facc15, #d97706); color: #000; font-weight: 900; font-size: 15px; border: none; padding: 14px; border-radius: 12px; cursor: pointer; }
+    .dropzone { border: 2px dashed rgba(250,204,21,0.45); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; margin-bottom: 10px; background: rgba(250,204,21,0.04); }
+    .text-input, .select-input { width: 100%; background: var(--card-dark); border: 1px solid #374151; border-radius: 12px; padding: 11px 12px; color: #fff; font-size: 13.5px; margin-bottom: 9px; outline: none; }
+    .check-row { display: flex; align-items: flex-start; gap: 9px; font-size: 11.5px; color: #d1d5db; margin-bottom: 10px; line-height: 1.35; }
+    .check-row input { margin-top: 3px; accent-color: var(--gold-2); }
+    .progress-wrap { width: 100%; background: #1f2937; border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill { background: linear-gradient(90deg, var(--gold-1), var(--gold-2)); height: 100%; width: 0%; transition: width 0.2s; }
+    .submit-btn { width: 100%; background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; font-weight: 900; font-size: 15px; border: none; padding: 13px; border-radius: 12px; cursor: pointer; }
     .submit-btn:disabled { background: #374151; color: #9ca3af; cursor: not-allowed; }
-    .report-option { width: 100%; text-align: left; background: #111827; border: 1px solid #374151; color: #fff; padding: 13px; border-radius: 12px; margin-bottom: 9px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    .report-option { width: 100%; text-align: left; background: var(--card-dark); border: 1px solid #374151; color: #fff; padding: 13px; border-radius: 12px; margin-bottom: 9px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 
     /* Comments Drawer */
-    .drawer { position: absolute; left: 0; right: 0; bottom: 0; height: 65dvh; z-index: 40; background: #111827; border-top: 1px solid #374151; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; padding: 16px; }
+    .drawer { position: absolute; left: 0; right: 0; bottom: 0; height: 65dvh; z-index: 40; background: var(--card-dark); border-top: 1px solid var(--border-gold); border-radius: 20px 20px 0 0; display: flex; flex-direction: column; padding: 16px; }
     .comments-list { flex: 1; overflow-y: auto; margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
-    .comment-item { background: #1f2937; padding: 10px 12px; border-radius: 12px; font-size: 13px; }
-    .comment-item strong { color: #facc15; font-size: 12px; display: block; margin-bottom: 2px; }
+    .comment-item { background: #181b24; padding: 10px 12px; border-radius: 12px; font-size: 13px; }
+    .comment-item strong { color: var(--gold-2); font-size: 12px; display: block; margin-bottom: 2px; }
     .comment-form { display: flex; gap: 8px; }
-    .comment-form input { flex: 1; background: #030712; border: 1px solid #374151; border-radius: 10px; padding: 11px; color: #fff; font-size: 14px; }
-    .comment-form button { background: #facc15; color: #000; border: none; border-radius: 10px; padding: 0 16px; font-weight: 800; cursor: pointer; }
+    .comment-form input { flex: 1; background: #050507; border: 1px solid #374151; border-radius: 10px; padding: 11px; color: #fff; font-size: 14px; }
+    .comment-form button { background: var(--gold-2); color: #000; border: none; border-radius: 10px; padding: 0 16px; font-weight: 900; cursor: pointer; }
 
-    #toast { position: fixed; top: 86px; left: 50%; transform: translateX(-50%); background: rgba(17,24,39,0.96); border: 1px solid #facc15; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700; z-index: 99; display: none; text-align: center; max-width: 90%; }
+    #toast { position: fixed; top: 88px; left: 50%; transform: translateX(-50%); background: rgba(15,17,23,0.97); border: 1px solid var(--gold-2); color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700; z-index: 99; display: none; text-align: center; max-width: 90%; }
   </style>
 </head>
 <body>
@@ -193,20 +237,24 @@
   <div class="app">
     <div class="header">
       <div class="header-top">
-        <div class="logo">★ GOLDSTAR</div>
+        <div class="brand-lockup">
+          <img src="/icon.svg" alt="StarVibe" class="brand-icon" />
+          <div class="logo">STARVIBE</div>
+        </div>
         <div class="header-tools">
-          <button id="install-app-btn" class="pill-btn gold hidden" onclick="triggerInstallApp()">📲 Instalar App</button>
+          <button id="install-app-btn" class="pill-btn gold hidden" onclick="triggerInstallApp()">📲 Instalar</button>
           <button class="pill-btn" onclick="toggleSearchBar()">🔍</button>
           <button id="sound-toggle" class="pill-btn gold" onclick="toggleMuteAll()">🔇 Sonido</button>
         </div>
       </div>
       <div class="feed-tabs" id="feed-tabs">
+        <button class="feed-tab" data-mode="live" onclick="switchToLiveTab(this)"><span class="live-dot"></span> En Vivo</button>
         <button class="feed-tab" data-mode="following" onclick="setFeedMode('following', this)">Siguiendo</button>
         <button class="feed-tab active" data-mode="foryou" onclick="setFeedMode('foryou', this)">Para ti</button>
         <button class="feed-tab" data-mode="trending" onclick="setFeedMode('trending', this)">Tendencias</button>
       </div>
       <div id="search-bar" class="search-bar hidden">
-        <input id="search-input" type="text" placeholder="Buscar #hashtag, @creador o tema..." oninput="applySearchFilter()" />
+        <input id="search-input" type="text" placeholder="Buscar #hashtag, @creador o serie..." oninput="applySearchFilter()" />
         <button onclick="clearSearch()">Limpiar</button>
       </div>
     </div>
@@ -214,17 +262,30 @@
     <!-- VISTA 1: FEED VERTICAL -->
     <div id="view-feed" class="view active">
       <div id="video-feed" class="feed">
-        <div class="empty-state"><p>Cargando videos de Goldstar...</p></div>
+        <div class="empty-state"><p>Cargando videos de StarVibe...</p></div>
       </div>
     </div>
 
-    <!-- VISTA 2: PERFIL Y CREATOR STUDIO -->
+    <!-- VISTA 2: SALAS EN VIVO (LIVE) -->
+    <div id="view-live" class="view">
+      <div class="live-wrap">
+        <div class="live-banner">
+          <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE</div>
+          <h3 style="font-size:17px;margin:8px 0 4px;color:#fff;">Transmisiones en Vivo Verificadas</h3>
+          <p style="font-size:12.5px;color:#d1d5db;line-height:1.4;">Conecta en tiempo real con creadores aprobados. Todas las transmisiones cuentan con moderación activa y reporte inmediato.</p>
+          <button class="btn-primary" style="padding:10px 18px;font-size:12.5px;" onclick="openLiveModal()">📡 Iniciar / Publicar Sala Live</button>
+        </div>
+        <div id="live-rooms-list"></div>
+      </div>
+    </div>
+
+    <!-- VISTA 3: PERFIL Y CREATOR/BRAND STUDIO -->
     <div id="view-profile" class="view">
       <div class="profile-wrap">
         <div class="prof-card">
-          <div class="avatar" id="prof-avatar">★</div>
+          <div class="avatar" id="prof-avatar">S</div>
           <h3 id="prof-title">@Creador</h3>
-          <p style="font-size:12px;color:#9ca3af;margin-top:4px;">Creador Oficial en Goldstar</p>
+          <p style="font-size:12px;color:#9ca3af;margin-top:4px;">Creador en StarVibe</p>
           <div class="stats-row">
             <div class="stat-box"><strong id="stat-videos">0</strong><span>Videos</span></div>
             <div class="stat-box"><strong id="stat-likes">0</strong><span>Me gusta</span></div>
@@ -237,9 +298,12 @@
         </div>
 
         <div class="brand-studio">
-          <h4>🤝 Goldstar Creator & Brand Studio</h4>
-          <p>Colabora con marcas declarando tus patrocinios de forma transparente y construye tu audiencia con series y hashtags.</p>
-          <button class="pill-btn gold" onclick="triggerInstallApp()">📲 Abrir Goldstar sin barra del navegador</button>
+          <h4>🤝 StarVibe Creator & Brand Studio</h4>
+          <p>Monetiza tus videos añadiendo enlaces directos de producto/afiliado (estilo Shop) o conecta tu marca con nuestra audiencia.</p>
+          <div class="studio-btns">
+            <button class="pill-btn gold" onclick="openBrandModal()">💼 Anunciar mi Marca</button>
+            <button class="pill-btn gold" onclick="triggerInstallApp()">📲 Abrir sin barra del navegador</button>
+          </div>
         </div>
 
         <div class="prof-subtabs">
@@ -252,7 +316,7 @@
           <a href="#" onclick="showLegal('terms');return false;">Normas de la Comunidad</a> •
           <a href="#" onclick="showLegal('privacy');return false;">Privacidad (LGPD)</a> •
           <a href="#" onclick="showLegal('dmca');return false;">Copyright / DMCA</a>
-          <p style="margin-top:6px;">Contacto legal y marcas: <strong>suporte@goldstarapp.sbs</strong></p>
+          <p style="margin-top:6px;">Contacto legal y marcas: <strong>suporte@starvibeapp.sbs</strong></p>
           <button class="danger-btn" onclick="deleteAllMyData()">🗑️ Eliminar mi cuenta y mis datos (LGPD)</button>
         </div>
       </div>
@@ -265,34 +329,38 @@
       <button id="nav-profile" onclick="switchTab('profile')" class="nav-btn"><span>👤</span><span>Perfil</span></button>
     </div>
 
-    <!-- MODAL SUBIR VIDEO -->
+    <!-- MODAL SUBIR VIDEO (CON ENLACE SHOP / AFILIADO) -->
     <div id="upload-modal" class="modal hidden">
       <div class="modal-header">
-        <div class="modal-title">Publicar en Goldstar</div>
+        <div class="modal-title">Publicar en StarVibe</div>
         <button onclick="closeModal()" class="close-btn">✕</button>
       </div>
 
       <form id="upload-form">
         <label class="dropzone">
-          <span style="font-size: 34px; margin-bottom: 6px;">🎬</span>
-          <span id="file-label" style="font-size: 13.5px; color: #d1d5db;">Toca aquí para elegir un video (.mp4 / máx. 45 MB)</span>
+          <span style="font-size: 32px; margin-bottom: 5px;">🎬</span>
+          <span id="file-label" style="font-size: 13px; color: #d1d5db;">Toca aquí para elegir un video (.mp4 / máx. 45 MB)</span>
           <input id="video-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" style="display: none;" required />
         </label>
 
         <select id="category-input" class="select-input">
-          <option value="Entretenimiento">🎭 Categoría: Entretenimiento</option>
+          <option value="Series">🎞️ Categoría: Series / Episodios</option>
           <option value="Comedia">😂 Categoría: Comedia / Animación</option>
+          <option value="Entretenimiento">🎭 Categoría: Entretenimiento</option>
           <option value="Música">🎵 Categoría: Música</option>
           <option value="Gaming">🎮 Categoría: Gaming</option>
           <option value="Educación">💡 Categoría: Tips / Educación</option>
-          <option value="Marcas">🛍️ Categoría: Productos / Negocios</option>
+          <option value="Shop">🛍️ Categoría: Tienda / Productos</option>
         </select>
 
-        <input id="caption-input" type="text" maxlength="140" placeholder="Descripción y #hashtags (ej. #Humor #SerieEp1)..." class="text-input" />
+        <input id="caption-input" type="text" maxlength="140" placeholder="Descripción y #hashtags (ej. #SerieEp1 #Humor)..." class="text-input" />
+
+        <input id="shop-label-input" type="text" maxlength="32" placeholder="🛍️ Texto botón oferta/enlace (opcional, ej. Ver Producto)" class="text-input" />
+        <input id="shop-url-input" type="url" placeholder="🔗 URL segura https://... (tienda, afiliado o episodio)" class="text-input" />
 
         <label class="check-row">
           <input id="sponsored-check" type="checkbox" />
-          <span><strong>🤝 Colaboración pagada / Marca:</strong> Marcar si este video promociona un producto o patrocinador (se mostrará etiqueta transparente).</span>
+          <span><strong>🤝 Colaboración pagada / Marca:</strong> Marcar si promociona un producto o patrocinador (etiqueta legal transparente).</span>
         </label>
 
         <label class="check-row">
@@ -304,7 +372,40 @@
           <div id="progress-bar" class="progress-fill"></div>
         </div>
 
-        <button id="submit-btn" type="submit" class="submit-btn">Publicar Ahora</button>
+        <button id="submit-btn" type="submit" class="submit-btn">Publicar en StarVibe</button>
+      </form>
+    </div>
+
+    <!-- MODAL SALA EN VIVO -->
+    <div id="live-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">📡 Publicar Sala En Vivo</div>
+        <button onclick="closeLiveModal()" class="close-btn">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;">Por seguridad legal (Marco Civil / ECA Digital), solo se permiten transmisiones públicas moderadas con enlace HTTPS oficial (YouTube Live / Twitch).</p>
+      <form id="live-form">
+        <input id="live-title-input" type="text" maxlength="80" placeholder="Título de tu directo..." class="text-input" required />
+        <input id="live-url-input" type="url" placeholder="Enlace de transmisión https://youtube.com/live/..." class="text-input" required />
+        <label class="check-row">
+          <input type="checkbox" required />
+          <span>Soy mayor de 18 años y acepto las normas de transmisión en vivo de StarVibe.</span>
+        </label>
+        <button type="submit" class="submit-btn">Activar Sala En Vivo</button>
+      </form>
+    </div>
+
+    <!-- MODAL ANUNCIAR MARCA (BRAND PORTAL) -->
+    <div id="brand-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">💼 Anuncia tu Marca en StarVibe</div>
+        <button onclick="closeBrandModal()" class="close-btn">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;">Impulsa tu negocio o tienda con videos patrocinados y enlaces directos en el feed de StarVibe.</p>
+      <form id="brand-form">
+        <input id="brand-name-input" type="text" maxlength="60" placeholder="Nombre de la empresa o marca..." class="text-input" required />
+        <input id="brand-contact-input" type="text" maxlength="80" placeholder="WhatsApp o correo de contacto..." class="text-input" required />
+        <input id="brand-goal-input" type="text" maxlength="120" placeholder="Objetivo (ej. Ventas, Descargas, Alcance local)..." class="text-input" required />
+        <button type="submit" class="submit-btn">Enviar Solicitud Comercial</button>
       </form>
     </div>
 
@@ -314,7 +415,7 @@
         <div class="modal-title">🚩 Reportar Contenido</div>
         <button onclick="closeReportModal()" class="close-btn">✕</button>
       </div>
-      <p style="font-size:13px;color:#9ca3af;margin-bottom:14px;">Selecciona el motivo de la denuncia. El video será ocultado y enviado a revisión:</p>
+      <p style="font-size:13px;color:#9ca3af;margin-bottom:14px;">Selecciona el motivo de la denuncia. El contenido será ocultado y enviado a revisión:</p>
       <button class="report-option" onclick="submitReportReason('Copyright / DMCA')">©️ Infracción de Derechos de Autor (DMCA)</button>
       <button class="report-option" onclick="submitReportReason('Contenido sexual o sensible')">🔞 Contenido sexual o no apto</button>
       <button class="report-option" onclick="submitReportReason('Violencia, acoso o discurso de odio')">⚠️ Violencia, acoso o discurso de odio</button>
@@ -324,7 +425,7 @@
     <!-- DRAWER COMENTARIOS -->
     <div id="comments-drawer" class="drawer hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <strong style="color:#facc15;">Comentarios</strong>
+        <strong style="color:var(--gold-2);">Comentarios</strong>
         <button onclick="closeComments()" class="close-btn" style="width:28px;height:28px;font-size:14px;">✕</button>
       </div>
       <div id="comments-list" class="comments-list"></div>
@@ -375,7 +476,7 @@
 
     const feedEl = document.getElementById('video-feed');
 
-    // PWA Install Prompt (abrir sin barra del navegador)
+    // PWA Install Prompt
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredInstallPrompt = e;
@@ -389,7 +490,11 @@
         deferredInstallPrompt = null;
         document.getElementById('install-app-btn').classList.add('hidden');
       } else {
-        alert('Para abrir Goldstar sin la barra del navegador:\n\n1. En Chrome Android toca los 3 puntos (⋮) arriba a la derecha.\n2. Selecciona "Instalar aplicación" o "Añadir a pantalla de inicio".\n3. Ábrela desde el ícono de estrella dorada en tu pantalla.');
+        alert('Para abrir StarVibe sin barra del navegador:
+
+1. En Chrome Android toca los 3 puntos (⋮) arriba a la derecha.
+2. Selecciona "Instalar aplicación" o "Añadir a pantalla de inicio".
+3. Ábrela desde el ícono de StarVibe en tu pantalla.');
       }
     };
 
@@ -398,17 +503,17 @@
       t.textContent = msg;
       t.style.display = 'block';
       clearTimeout(window._t);
-      window._t = setTimeout(() => { t.style.display = 'none'; }, 2800);
+      window._t = setTimeout(() => { t.style.display = 'none'; }, 2900);
     }
 
     function getUserName() {
-      return localStorage.getItem('gs_username') || 'Creador_' + (currentUser ? currentUser.uid.slice(0, 4) : 'Star');
+      return localStorage.getItem('sv_username') || localStorage.getItem('gs_username') || 'Creador_' + (currentUser ? currentUser.uid.slice(0, 4) : 'Star');
     }
 
     window.saveUsername = () => {
       const val = document.getElementById('username-input').value.trim().replace(/[^a-zA-Z0-9_áéíóúÁÉÍÓÚñÑ]/g, '');
       if (!val) return toast('Escribe un nombre válido');
-      localStorage.setItem('gs_username', val);
+      localStorage.setItem('sv_username', val);
       updateProfileHeader();
       toast('Nombre actualizado a @' + val);
     };
@@ -417,7 +522,7 @@
       const name = getUserName();
       document.getElementById('prof-title').textContent = '@' + name;
       document.getElementById('prof-avatar').textContent = name.charAt(0).toUpperCase();
-      document.getElementById('username-input').value = localStorage.getItem('gs_username') || '';
+      document.getElementById('username-input').value = localStorage.getItem('sv_username') || localStorage.getItem('gs_username') || '';
       const mine = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
       const totalLikes = mine.reduce((acc, v) => acc + Number(v.likes || 0), 0);
       document.getElementById('stat-videos').textContent = mine.length;
@@ -439,15 +544,27 @@
     function saveSet(key, set) {
       localStorage.setItem(key, JSON.stringify([...set]));
     }
-    function getLikedSet() { return getSet('gs_likes'); }
-    function getSavedSet() { return getSet('gs_saved'); }
-    function getFollowingSet() { return getSet('gs_following'); }
-    function getHiddenSet() { return getSet('gs_hidden'); }
+    function getLikedSet() { return getSet('sv_likes'); }
+    function getSavedSet() { return getSet('sv_saved'); }
+    function getFollowingSet() { return getSet('sv_following'); }
+    function getHiddenSet() { return getSet('sv_hidden'); }
+
+    window.switchToLiveTab = (btn) => {
+      document.querySelectorAll('.feed-tab').forEach((b) => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
+      document.getElementById('view-live').classList.add('active');
+      document.querySelectorAll('#video-feed video').forEach((v) => v.pause());
+    };
 
     window.setFeedMode = (mode, btn) => {
       feedMode = mode;
       document.querySelectorAll('.feed-tab').forEach((b) => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
+      document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
+      document.getElementById('view-feed').classList.add('active');
+      document.getElementById('nav-feed').classList.add('active');
+      document.getElementById('nav-profile').classList.remove('active');
       renderFeed();
     };
 
@@ -477,6 +594,7 @@
       renderFeed();
     };
 
+    // Videos Realtime Feed
     const q = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snapshot) => {
       const hidden = getHiddenSet();
@@ -493,6 +611,32 @@
     }, (err) => {
       feedEl.innerHTML = `<div class="empty-state" style="color:#f87171;">⚠️ Error al cargar feed: ${err.message}</div>`;
     });
+
+    // Live Rooms Realtime
+    const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
+    onSnapshot(lq, (snap) => {
+      const list = document.getElementById('live-rooms-list');
+      if (!list) return;
+      if (snap.empty) {
+        list.innerHTML = '<div class="live-card"><p style="font-size:13px;color:#9ca3af;">No hay salas en vivo activas en este momento. ¡Sé el primero en abrir una!</p></div>';
+        return;
+      }
+      list.innerHTML = '';
+      snap.forEach((docSnap) => {
+        const l = docSnap.data();
+        const card = document.createElement('div');
+        card.className = 'live-card';
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="live-badge"><span class="live-dot"></span> EN VIVO</span>
+            <span style="font-size:12px;color:#facc15;font-weight:800;">@${l.user || 'Creador'}</span>
+          </div>
+          <h4 style="font-size:15px;color:#fff;">${l.title || 'Transmisión en Vivo'}</h4>
+          <a href="${l.streamUrl}" target="_blank" rel="noopener" class="ad-cta" style="padding:11px;font-size:13.5px;text-align:center;">Entrar al Directo →</a>
+        `;
+        list.appendChild(card);
+      });
+    }, () => {});
 
     function getFilteredVideos() {
       let list = [...allVideosCache];
@@ -525,7 +669,7 @@
       if (videosToRender.length === 0) {
         feedEl.innerHTML = `
           <div class="empty-state">
-            <div style="font-size:44px;margin-bottom:10px;">★</div>
+            <img src="/icon.svg" style="width:62px;height:62px;margin-bottom:12px;" />
             <p style="font-size:16px;color:#fff;font-weight:800;">${feedMode === 'following' ? 'Aún no sigues creadores con videos' : 'No se encontraron videos aquí'}</p>
             <p style="font-size:13px;margin-top:6px;">Explora "Para ti" o publica un video corto vertical.</p>
             <button onclick="setFeedMode('foryou', document.querySelector('[data-mode=foryou]'))" class="btn-primary">Ver Para ti</button>
@@ -544,6 +688,7 @@
         const creatorKey = v.uid || v.user || 'creator';
         const isFollowing = followingSet.has(creatorKey);
         const tags = extractHashtags(v.caption);
+        const hasShopLink = v.shopUrl && /^https:\/\//i.test(v.shopUrl);
 
         const slide = document.createElement('div');
         slide.className = 'slide';
@@ -567,7 +712,7 @@
               <div class="act-count">Guardar</div>
             </div>
             <div class="act-item">
-              <button onclick="shareVideo('${v.id}', '${(v.caption || 'Mira este video en Goldstar').replace(/'/g, '')}')" class="act-btn">↗️</button>
+              <button onclick="shareVideo('${v.id}', '${(v.caption || 'Mira este video en StarVibe').replace(/'/g, '')}')" class="act-btn">↗️</button>
               <div class="act-count">Compartir</div>
             </div>
             <div class="act-item">
@@ -586,9 +731,10 @@
             <div class="caption">${v.caption || ''}</div>
             ${tags.length ? `<div class="hashtags">${tags.map((t) => `<span class="hash-chip" onclick="filterByTag('${t}')">${t}</span>`).join('')}</div>` : ''}
             <div class="badges-row">
-              <span class="tag-pill">★ ${v.category || 'Goldstar Original'}</span>
+              <span class="tag-pill">★ ${v.category || 'StarVibe Original'}</span>
               ${v.isSponsored ? `<span class="sponsor-pill">🤝 Patrocinado por marca</span>` : ''}
             </div>
+            ${hasShopLink ? `<a href="${v.shopUrl}" target="_blank" rel="noopener" class="shop-cta-btn">🛍️ ${v.shopLabel || 'Ver Oferta / Enlace'} →</a>` : ''}
           </div>
         `;
 
@@ -609,7 +755,6 @@
           if (vidEl.duration) vidEl.currentTime = ratio * vidEl.duration;
         });
 
-        // Doble toque para Like + mantener presionado para 2x
         let lastTap = 0;
         let holdTimer = null;
         vidEl.addEventListener('pointerdown', () => {
@@ -651,9 +796,9 @@
           adSlide.className = 'slide ad-slide';
           adSlide.innerHTML = `
             <div class="ad-card">
-              <span class="ad-tag">PATROCINADO • GOLDSTAR</span>
-              <h3>Descubre Apps y Juegos Destacados</h3>
-              <p>Explora recomendaciones seleccionadas de nuestros patrocinadores para apoyar a los creadores de Goldstar.</p>
+              <span class="ad-tag">PATROCINADO • STARVIBE</span>
+              <h3>Descubre Apps y Ofertas Destacadas</h3>
+              <p>Explora recomendaciones seleccionadas de nuestros socios comerciales para apoyar a los creadores de StarVibe.</p>
               <a href="${MONETAG_DIRECT_LINK}" target="_blank" rel="noopener" class="ad-cta">Explorar Ahora →</a>
             </div>
           `;
@@ -677,7 +822,7 @@
         btn.textContent = 'Siguiendo';
         toast('Siguiendo a @' + creatorName);
       }
-      saveSet('gs_following', set);
+      saveSet('sv_following', set);
       updateProfileHeader();
     };
 
@@ -692,7 +837,7 @@
         btn.classList.add('saved');
         toast('🔖 Guardado en tu Perfil');
       }
-      saveSet('gs_saved', set);
+      saveSet('sv_saved', set);
       renderProfileGrid();
     };
 
@@ -727,22 +872,23 @@
     }
 
     window.deleteMyVideo = async (id) => {
-      if (!confirm('¿Eliminar este video de Goldstar?')) return;
+      if (!confirm('¿Eliminar este video de StarVibe?')) return;
       await deleteDoc(doc(db, 'videos', id));
       toast('Video eliminado');
     };
 
     window.deleteAllMyData = async () => {
-      if (!confirm('¿Eliminar tu cuenta local y todos tus videos publicados en Goldstar (Derecho de supresión LGPD)?')) return;
+      if (!confirm('¿Eliminar tu cuenta local y todos tus videos publicados en StarVibe (Derecho de supresión LGPD)?')) return;
       const mine = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
       for (const v of mine) {
         try { await deleteDoc(doc(db, 'videos', v.id)); } catch (e) {}
       }
+      localStorage.removeItem('sv_username');
       localStorage.removeItem('gs_username');
-      localStorage.removeItem('gs_likes');
-      localStorage.removeItem('gs_saved');
-      localStorage.removeItem('gs_following');
-      localStorage.removeItem('gs_hidden');
+      localStorage.removeItem('sv_likes');
+      localStorage.removeItem('sv_saved');
+      localStorage.removeItem('sv_following');
+      localStorage.removeItem('sv_hidden');
       updateProfileHeader();
       renderProfileGrid();
       toast('Tus datos y publicaciones han sido eliminados.');
@@ -787,12 +933,58 @@
 
     window.openModal = () => document.getElementById('upload-modal').classList.remove('hidden');
     window.closeModal = () => document.getElementById('upload-modal').classList.add('hidden');
+    window.openLiveModal = () => document.getElementById('live-modal').classList.remove('hidden');
+    window.closeLiveModal = () => document.getElementById('live-modal').classList.add('hidden');
+    window.openBrandModal = () => document.getElementById('brand-modal').classList.remove('hidden');
+    window.closeBrandModal = () => document.getElementById('brand-modal').classList.add('hidden');
+
+    document.getElementById('live-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('live-title-input').value.trim();
+      const streamUrl = document.getElementById('live-url-input').value.trim();
+      if (!/^https:\/\//i.test(streamUrl)) return toast('Ingresa un enlace HTTPS válido');
+      try {
+        await addDoc(collection(db, 'lives'), {
+          title,
+          streamUrl,
+          user: getUserName(),
+          uid: currentUser ? currentUser.uid : 'guest',
+          createdAt: serverTimestamp()
+        });
+        document.getElementById('live-form').reset();
+        closeLiveModal();
+        toast('📡 ¡Sala En Vivo publicada!');
+      } catch (err) {
+        toast('Error al publicar sala');
+      }
+    });
+
+    document.getElementById('brand-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const brand = document.getElementById('brand-name-input').value.trim();
+      const contact = document.getElementById('brand-contact-input').value.trim();
+      const goal = document.getElementById('brand-goal-input').value.trim();
+      try {
+        await addDoc(collection(db, 'brand_inquiries'), {
+          brand,
+          contact,
+          goal,
+          uid: currentUser ? currentUser.uid : 'guest',
+          createdAt: serverTimestamp()
+        });
+        document.getElementById('brand-form').reset();
+        closeBrandModal();
+        toast('💼 Solicitud enviada al equipo comercial de StarVibe');
+      } catch (err) {
+        toast('Error al enviar solicitud');
+      }
+    });
 
     window.likeVideo = async (videoId, btnEl) => {
       const liked = getLikedSet();
       if (liked.has(videoId)) return;
       liked.add(videoId);
-      saveSet('gs_likes', liked);
+      saveSet('sv_likes', liked);
       if (btnEl) btnEl.classList.add('liked');
       const countEl = document.getElementById('lc-' + videoId);
       if (countEl) countEl.textContent = Number(countEl.textContent || 0) + 1;
@@ -804,7 +996,7 @@
     window.shareVideo = (id, caption) => {
       const url = location.origin + '/?v=' + id;
       if (navigator.share) {
-        navigator.share({ title: 'Goldstar Video', text: caption, url }).catch(() => {});
+        navigator.share({ title: 'StarVibe Video', text: caption, url }).catch(() => {});
       } else {
         navigator.clipboard?.writeText(url);
         toast('Enlace del video copiado');
@@ -825,7 +1017,7 @@
       if (!vid) return;
       const hidden = getHiddenSet();
       hidden.add(vid);
-      saveSet('gs_hidden', hidden);
+      saveSet('sv_hidden', hidden);
       renderFeed();
       toast('🚩 Reporte enviado (' + reason + '). Video ocultado.');
       try {
@@ -930,11 +1122,15 @@
             const resp = JSON.parse(xhr.responseText);
             const caption = document.getElementById('caption-input').value.trim();
             const category = document.getElementById('category-input').value;
+            const shopLabel = document.getElementById('shop-label-input').value.trim();
+            const shopUrl = document.getElementById('shop-url-input').value.trim();
             const isSponsored = document.getElementById('sponsored-check').checked;
             await addDoc(collection(db, 'videos'), {
               videoUrl: resp.secure_url,
               caption,
               category,
+              shopLabel,
+              shopUrl,
               isSponsored,
               user: getUserName(),
               uid: currentUser ? currentUser.uid : 'guest',
@@ -948,22 +1144,22 @@
             progWrap.classList.add('hidden');
             progBar.style.width = '0%';
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Publicar Ahora';
+            submitBtn.textContent = 'Publicar en StarVibe';
             closeModal();
-            toast('★ ¡Video publicado en Goldstar!');
+            toast('★ ¡Video publicado en StarVibe!');
           } else {
             throw new Error('Error en Cloudinary (' + xhr.status + ')');
           }
         } catch (err) {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Publicar Ahora';
+          submitBtn.textContent = 'Publicar en StarVibe';
           toast('Error al publicar: ' + err.message);
         }
       };
 
       xhr.onerror = () => {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Publicar Ahora';
+        submitBtn.textContent = 'Publicar en StarVibe';
         toast('Error de red al subir el video');
       };
 
@@ -972,11 +1168,11 @@
 
     window.showLegal = (type) => {
       if (type === 'terms') {
-        alert('Normas de la Comunidad Goldstar: Prohibido subir contenido sexual, violencia, acoso, spam o material protegido sin derechos. Las colaboraciones comerciales deben marcarse como patrocinadas.');
+        alert('Normas de la Comunidad StarVibe: Prohibido subir contenido sexual, violencia, acoso, spam o material protegido sin derechos. Las colaboraciones comerciales deben marcarse como patrocinadas.');
       } else if (type === 'privacy') {
         alert('Política de Privacidad (LGPD): Solo almacenamos tu identificador de sesión, nombre público y videos subidos voluntariamente. Puedes eliminar tu cuenta y todos tus videos en cualquier momento desde tu Perfil.');
       } else {
-        alert('Política DMCA / Copyright: Si un contenido infringe derechos de autor, repórtalo con el botón 🚩 o escribe a suporte@goldstarapp.sbs para su retirada inmediata.');
+        alert('Política DMCA / Copyright: Si un contenido infringe derechos de autor, repórtalo con el botón 🚩 o escribe a suporte@starvibeapp.sbs para su retirada inmediata.');
       }
     };
 

@@ -1,13 +1,13 @@
 {
-  "name": "Goldstar — Reels & Videos Cortos",
-  "short_name": "Goldstar",
-  "description": "Descubre, crea y comparte videos verticales cortos, series y contenido de creadores en Goldstar.",
+  "name": "StarVibe — Reels, Series & En Vivo",
+  "short_name": "StarVibe",
+  "description": "Descubre, crea y comparte videos verticales cortos, series y transmisiones en vivo en StarVibe.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen"],
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#050507",
+  "theme_color": "#050507",
   "orientation": "portrait",
   "categories": ["entertainment", "social", "video"],
   "icons": [
