@@ -1,4 +1,4 @@
-const CACHE_NAME = 'starvibe-v6-0-0';
+const CACHE_NAME = 'starvibe-v7-0-0';
 
 self.addEventListener('install', () => self.skipWaiting());
 

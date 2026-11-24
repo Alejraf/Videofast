@@ -434,9 +434,69 @@
     .comment-form button { background: var(--gold-2); color: #000; border: none; border-radius: 10px; padding: 0 16px; font-weight: 900; cursor: pointer; }
 
     #toast { position: fixed; top: 88px; left: 50%; transform: translateX(-50%); background: rgba(15,17,23,0.97); border: 1px solid var(--gold-2); color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700; z-index: 99; display: none; text-align: center; max-width: 90%; }
+    /* Splash Entry Promo Ad (TikTok-style with Skip button, 1x per 45 mins) */
+    #entry-promo-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: radial-gradient(circle at top, #1f1b10 0%, #050507 82%);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 20px 18px 26px; color: #fff;
+    }
+    #entry-promo-overlay.hidden { display: none !important; }
+    .promo-top-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .promo-badge {
+      background: rgba(250,204,21,0.16); border: 1px solid rgba(250,204,21,0.5);
+      color: #fef08a; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
+    }
+    .promo-skip-btn {
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; font-size: 12px; font-weight: 800; padding: 7px 14px; border-radius: 999px;
+      cursor: pointer;
+    }
+    .promo-skip-btn.ready {
+      background: linear-gradient(135deg, #facc15, #d97706); color: #000; border-color: #fef08a;
+    }
+    .promo-center-box {
+      background: linear-gradient(160deg, #151822, #0c0e14);
+      border: 1.5px solid rgba(250,204,21,0.45);
+      border-radius: 24px; padding: 24px 18px; text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+      max-width: 420px; width: 100%; margin: 0 auto;
+    }
+    .promo-cta-btn {
+      display: inline-block; width: 100%; margin-top: 16px; padding: 13px 16px;
+      border-radius: 14px; background: linear-gradient(135deg, #facc15, #d97706);
+      color: #000; font-weight: 900; font-size: 14px; text-decoration: none;
+    }
+    .monetize-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.55);
+      color: #6ee7b7; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+    }
   </style>
 </head>
 <body>
+  <!-- PANTALLA PROMOCIONAL DE ENTRADA (ESTILO TIKTOK CON BOTÓN SALTAR) -->
+  <div id="entry-promo-overlay" class="hidden">
+    <div class="promo-top-bar">
+      <span class="promo-badge">★ PATROCINADO • STARVIBE</span>
+      <button id="entry-promo-skip" class="promo-skip-btn" onclick="dismissEntryPromo()">Saltar en 4s</button>
+    </div>
+    <div class="promo-center-box">
+      <img src="/icon.svg" style="width:68px;height:68px;margin-bottom:12px;" alt="StarVibe" />
+      <h2 id="promo-card-title" style="font-size:20px;font-weight:900;color:#fef08a;margin-bottom:8px;">Bienvenido a StarVibe</h2>
+      <p id="promo-card-desc" style="font-size:13px;color:#d1d5db;line-height:1.5;">
+        Mira videos originales, envía regalos en vivo y gana dinero real por tus videos (+45s) y transmisiones.
+      </p>
+      <div id="monetag-slot-container" style="margin-top:12px;"></div>
+      <a id="entry-promo-cta" href="https://uplcm.com/4/12319298" target="_blank" rel="noopener sponsored" onclick="dismissEntryPromo()" class="promo-cta-btn">
+        🎁 Descubrir Oferta Patrocinada →
+      </a>
+    </div>
+    <p style="text-align:center;font-size:11px;color:#6b7280;">Publicidad ligera que financia los pagos a creadores en StarVibe</p>
+  </div>
+
 
   <div class="app">
     <div class="header">
@@ -614,7 +674,7 @@
             <span class="split-pill">65% App • 35% Creador</span>
           </div>
           <p style="font-size:11.5px;color:#d1d5db;line-height:1.4;" data-i18n="wallet_desc">
-            Reparto transparente mejorado frente a TikTok: 35% directo para quien transmite en vivo y 65% para la plataforma StarVibe.
+            Gana <strong>35%</strong> en regalos En Vivo y <strong>R$ 0,50 por cada 1.000 vistas</strong> en videos de +45s. Retiro mínimo por PIX: <strong>R$ 50,00</strong>.
           </p>
           <div class="wallet-grid">
             <div class="wallet-box">
@@ -673,9 +733,17 @@
       </div>
 
       <form id="upload-form">
+        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.4);border-radius:12px;padding:10px;margin-bottom:10px;font-size:11.5px;color:#d1fae5;line-height:1.45;">
+          💰 <strong>Reglas de Monetización por Video:</strong><br>
+          • <strong>Duración mínima:</strong> 45 segundos (videos más cortos se publican pero no monetizan).<br>
+          • <strong>Formato y peso:</strong> MP4 / WebM vertical, máximo <strong>45 MB</strong>.<br>
+          • <strong>Pago:</strong> <strong>R$ 0,50 por cada 1.000 vistas válidas</strong> (mínimo 1.000 vistas para activar pago).
+        </div>
+
         <label class="dropzone">
           <span style="font-size: 32px; margin-bottom: 5px;">🎬</span>
-          <span id="file-label" style="font-size: 13px; color: #d1d5db;" data-i18n="pick_video_lbl">Toca aquí para elegir un video (.mp4 / máx. 45 MB)</span>
+          <span id="file-label" style="font-size: 13px; color: #d1d5db;" data-i18n="pick_video_lbl">Toca aquí para elegir un video (.mp4 / máx. 45 MB / +45s para monetizar)</span>
+          <span id="video-meta-badge" style="font-size: 11px; color: #facc15; margin-top: 4px; display: none;"></span>
           <input id="video-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" style="display: none;" required />
         </label>
 
@@ -770,6 +838,12 @@
         <input id="creator-share-range" type="range" min="25" max="45" step="5" value="35" style="width:100%;accent-color:#facc15;" oninput="previewSplitChange(this.value)" />
       </div>
       <button class="submit-btn" onclick="saveSplitSettings()" data-i18n="save_split_btn">Guardar Configuración</button>
+      <div class="wallet-card" style="margin-top:12px;">
+        <strong style="font-size:13px;color:#fef08a;display:block;margin-bottom:6px;">📢 Configuración de Anuncios Monetag</strong>
+        <p style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Pega tu Direct Link o Zone URL de Monetag para la pantalla de entrada y el feed (se guarda en el servidor).</p>
+        <input id="monetag-url-input" type="url" placeholder="https://... (Direct Link de Monetag)" class="text-input" />
+        <button type="button" class="pill-btn gold" style="width:100%;" onclick="saveMonetagConfig()">💾 Guardar Enlace Monetag</button>
+      </div>
     </div>
 
     <!-- MODAL MARCAS -->
@@ -843,13 +917,13 @@
       </div>
       <div class="wallet-card" style="margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;">
-          <span style="font-size:12.5px;color:#d1d5db;">Saldo disponible (35% creador):</span>
+          <span style="font-size:12.5px;color:#d1d5db;">Saldo disponible (Lives 35% + Videos):</span>
           <strong id="withdraw-avail-lbl" style="color:#6ee7b7;font-size:15px;">R$ 0,00</strong>
         </div>
-        <p style="font-size:11px;color:#9ca3af;margin-top:6px;">Retiro mínimo: R$ 20,00 • Procesamiento en hasta 7 días hábiles tras verificación.</p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:6px;">Retiro mínimo: <strong>R$ 50,00</strong> • Procesamiento en hasta 7 días hábiles tras verificación de vistas y cuenta.</p>
       </div>
       <form id="withdraw-form">
-        <input id="withdraw-amount" type="number" step="0.01" min="20" placeholder="Monto a retirar en R$ (mín. 20.00)..." class="text-input" required />
+        <input id="withdraw-amount" type="number" step="0.01" min="50" placeholder="Monto a retirar en R$ (mín. 50.00)..." class="text-input" required />
         <input id="withdraw-pix" type="text" maxlength="90" placeholder="Tu clave PIX registrada..." class="text-input" required />
         <button type="submit" class="submit-btn">Solicitar Retiro por PIX</button>
       </form>
@@ -858,15 +932,15 @@
     <!-- MODAL REGLAS EXPLÍCITAS PARA SER CREADOR -->
     <div id="creator-rules-modal" class="modal hidden">
       <div class="modal-header">
-        <div class="modal-title">📜 Reglas Oficiales de Creador StarVibe</div>
+        <div class="modal-title">📜 Reglas Oficiales de Monetización StarVibe</div>
         <button onclick="closeCreatorRulesModal()" class="close-btn">✕</button>
       </div>
       <div style="background:#0f1117;border:1px solid rgba(250,204,21,0.35);border-radius:16px;padding:15px;font-size:12.5px;color:#e5e7eb;line-height:1.55;">
-        <p style="margin-bottom:8px;"><strong>1. Requisito para hacer Lives:</strong> Cuenta formalizada (+18 años, documento y clave PIX registrada) y transmisión propia del titular.</p>
-        <p style="margin-bottom:8px;"><strong>2. Reparto de ganancias (60% / 40%):</strong> <strong>35%</strong> del valor de los regalos virtuales va para quien transmite y <strong>65%</strong> para la plataforma StarVibe.</p>
-        <p style="margin-bottom:8px;"><strong>3. Propiedad intelectual (DMCA):</strong> Solo puedes subir videos originales o con licencia. Prohibido robar o resubir contenido protegido.</p>
-        <p style="margin-bottom:8px;"><strong>4. Conducta segura:</strong> Prohibido contenido sexual explícito, violencia, discurso de odio, estafas o exposición de menores.</p>
-        <p><strong>5. Publicidad y enlaces:</strong> Cualquier promoción o enlace Shop debe ser real y marcarse como colaboración pagada cuando corresponda.</p>
+        <p style="margin-bottom:8px;"><strong>1. Monetización de Videos (+45 segundos):</strong> Videos originales en MP4/WebM (máx. <strong>45 MB</strong>) con duración mínima de <strong>45 segundos</strong> pagan <strong>R$ 0,50 por cada 1.000 visualizaciones válidas</strong> (mínimo 1.000 vistas para activar cobro).</p>
+        <p style="margin-bottom:8px;"><strong>2. Salas En Vivo (65% App / 35% Creador):</strong> Requiere cuenta formalizada (+18 años, documento y PIX) y transmisión propia. El creador recibe el <strong>35%</strong> de los regalos virtuales.</p>
+        <p style="margin-bottom:8px;"><strong>3. Retiro Mínimo por PIX:</strong> El saldo mínimo acumulado para solicitar retiro es de <strong>R$ 50,00</strong>.</p>
+        <p style="margin-bottom:8px;"><strong>4. Propiedad intelectual (DMCA):</strong> Solo videos 100% originales o con licencia. Prohibido subir contenido de terceros.</p>
+        <p><strong>5. Anti-fraude:</strong> Vistas repetidas del mismo dispositivo o bots no contabilizan para monetización.</p>
       </div>
       <button class="btn-primary" style="width:100%;" onclick="closeCreatorRulesModal()">Entendido</button>
     </div>
@@ -1849,6 +1923,9 @@
 
         const slide = document.createElement('div');
         slide.className = 'slide';
+        slide.dataset.vidId = v.id;
+        slide.dataset.creatorUid = v.uid || '';
+        slide.dataset.durationSec = String(v.durationSec || 0);
         slide.innerHTML = `
           <video src="${v.videoUrl}" loop playsinline ${isMuted ? 'muted' : ''} preload="metadata"></video>
           <div class="speed-badge" id="spd-${v.id}">⏩ 2x</div>
@@ -1898,6 +1975,8 @@
             ${tags.length ? `<div class="hashtags">${tags.map((tg) => `<span class="hash-chip" onclick="filterByTag('${tg}')">${tg}</span>`).join('')}</div>` : ''}
             <div class="badges-row">
               <span class="tag-pill">★ ${v.category || 'StarVibe Original'}</span>
+              <span class="tag-pill">👁️ ${Number(v.views || 0).toLocaleString('es-ES')} vistas</span>
+              ${Number(v.durationSec || 0) >= 45 ? `<span class="monetize-pill">💰 Monetizable (${Math.round(v.durationSec)}s)</span>` : ''}
               ${v.isSponsored ? `<span class="sponsor-pill">${t('sponsored_badge')}</span>` : ''}
             </div>
             <div class="skip-controls">
@@ -2114,18 +2193,50 @@
     };
 
     function setupAutoPlay() {
-      const videos = document.querySelectorAll('#video-feed video');
+      const slides = document.querySelectorAll('#video-feed .slide');
       const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
+          const vid = entry.target.querySelector('video');
+          if (!vid) return;
           if (entry.isIntersecting) {
-            entry.target.muted = isMuted;
-            entry.target.play().catch(() => {});
+            vid.muted = isMuted;
+            vid.play().catch(() => {});
+            const vidId = entry.target.dataset.vidId;
+            const creatorUid = entry.target.dataset.creatorUid;
+            const durSec = Number(entry.target.dataset.durationSec || 0);
+            if (vidId && !vid._viewTimer) {
+              vid._viewTimer = setTimeout(async () => {
+                const viewedSet = getSet('sv_viewed_videos');
+                if (viewedSet.has(vidId)) return;
+                viewedSet.add(vidId);
+                saveSet('sv_viewed_videos', viewedSet);
+                try {
+                  await updateDoc(doc(db, 'videos', vidId), { views: increment(1) });
+                  if (durSec >= 45 && creatorUid && creatorUid !== getActiveUserId()) {
+                    await fetch('/api/videos/track-view', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        videoId: vidId,
+                        creatorUserId: creatorUid,
+                        durationSec: durSec,
+                        viewerId: getActiveUserId()
+                      })
+                    });
+                  }
+                } catch (e) {}
+              }, 10000); // 10 segundos reales de visualización válida
+            }
           } else {
-            entry.target.pause();
+            vid.pause();
+            if (vid._viewTimer) {
+              clearTimeout(vid._viewTimer);
+              vid._viewTimer = null;
+            }
           }
         });
       }, { threshold: 0.7 });
-      videos.forEach((vid) => observer.observe(vid));
+      slides.forEach((sl) => observer.observe(sl));
     }
 
     window.toggleMuteAll = () => {
@@ -2247,7 +2358,7 @@
       const pixKey = document.getElementById('withdraw-pix').value.trim();
       const f = getFormalData() || {};
       const avail = getCreatorEarnings();
-      if (amount < 20) return toast('Mínimo R$ 20,00');
+      if (amount < 50) return toast('Retiro mínimo: R$ 50,00');
       if (amount > avail) return toast('Saldo insuficiente');
       try {
         const resp = await fetch('/api/payouts/request', {
@@ -2257,7 +2368,7 @@
             amountBRL: amount,
             pixKey,
             fullName: f.fullName || getUserName(),
-            uid: currentUser ? currentUser.uid : 'guest'
+            uid: getActiveUserId()
           })
         });
         const data = await resp.json();
@@ -2448,11 +2559,42 @@
       }
     });
 
+    let selectedVideoDurationSec = 0;
+    videoInput.addEventListener('change', () => {
+      const f = videoInput.files && videoInput.files[0];
+      const badge = document.getElementById('video-meta-badge');
+      selectedVideoDurationSec = 0;
+      if (!f) {
+        if (badge) badge.style.display = 'none';
+        return;
+      }
+      if (f.size > 45 * 1024 * 1024) {
+        toast('⚠️ El video supera el límite de 45 MB');
+      }
+      const tempVid = document.createElement('video');
+      tempVid.preload = 'metadata';
+      tempVid.onloadedmetadata = () => {
+        selectedVideoDurationSec = Math.round(tempVid.duration || 0);
+        URL.revokeObjectURL(tempVid.src);
+        if (badge) {
+          badge.style.display = 'block';
+          if (selectedVideoDurationSec >= 45) {
+            badge.style.color = '#6ee7b7';
+            badge.textContent = '✅ Duración: ' + selectedVideoDurationSec + 's • APTO PARA MONETIZAR (R$ 0,50 / 1.000 vistas)';
+          } else {
+            badge.style.color = '#fbbf24';
+            badge.textContent = 'ℹ️ Duración: ' + selectedVideoDurationSec + 's • Se publicará normal (requiere +45s para monetizar)';
+          }
+        }
+      };
+      tempVid.src = URL.createObjectURL(f);
+    });
+
     document.getElementById('upload-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const file = videoInput.files && videoInput.files[0];
       if (!file) return;
-      if (file.size > 45 * 1024 * 1024) return toast('Max 45 MB');
+      if (file.size > 45 * 1024 * 1024) return toast('Máximo 45 MB por video');
 
       const submitBtn = document.getElementById('submit-btn');
       const progWrap = document.getElementById('progress-container');
@@ -2486,15 +2628,19 @@
             const shopLabel = document.getElementById('shop-label-input').value.trim();
             const shopUrl = document.getElementById('shop-url-input').value.trim();
             const isSponsored = document.getElementById('sponsored-check').checked;
+            const finalDur = Math.round(Number(resp.duration || selectedVideoDurationSec || 0));
             await addDoc(collection(db, 'videos'), {
               videoUrl: resp.secure_url,
+              durationSec: finalDur,
+              monetizable: finalDur >= 45,
               caption,
               category,
               shopLabel,
               shopUrl,
               isSponsored,
               user: getUserName(),
-              uid: currentUser ? currentUser.uid : 'guest',
+              uid: getActiveUserId(),
+              views: 0,
               likes: 0,
               commentsCount: 0,
               reports: 0,
@@ -2536,6 +2682,68 @@
         alert('DMCA / Copyright: Report infringing content via 🚩 or suporte@starvibeapp.sbs.');
       }
     };
+
+    // Entry Promo Ad (TikTok-style with 4s skip button, max once per 45 mins)
+    let activeMonetagUrl = localStorage.getItem('sv_monetag_url') || MONETAG_DIRECT_LINK;
+    window.dismissEntryPromo = () => {
+      const ov = document.getElementById('entry-promo-overlay');
+      if (ov) ov.classList.add('hidden');
+      clearInterval(window._promoTimer);
+    };
+
+    function initEntryPromo() {
+      const lastShown = Number(localStorage.getItem('sv_last_entry_promo') || 0);
+      const fortyFiveMins = 45 * 60 * 1000;
+      if (Date.now() - lastShown < fortyFiveMins) return;
+      localStorage.setItem('sv_last_entry_promo', String(Date.now()));
+
+      const ov = document.getElementById('entry-promo-overlay');
+      const skipBtn = document.getElementById('entry-promo-skip');
+      const ctaEl = document.getElementById('entry-promo-cta');
+      if (!ov || !skipBtn) return;
+      if (ctaEl && activeMonetagUrl) ctaEl.href = activeMonetagUrl;
+      ov.classList.remove('hidden');
+
+      let sec = 4;
+      skipBtn.textContent = 'Saltar en ' + sec + 's';
+      window._promoTimer = setInterval(() => {
+        sec--;
+        if (sec > 0) {
+          skipBtn.textContent = 'Saltar en ' + sec + 's';
+        } else {
+          clearInterval(window._promoTimer);
+          skipBtn.classList.add('ready');
+          skipBtn.textContent = 'Saltar anuncio ✕';
+        }
+      }, 1000);
+    }
+
+    window.saveMonetagConfig = async () => {
+      const val = (document.getElementById('monetag-url-input')?.value || '').trim();
+      if (!/^https:\/\//i.test(val)) return toast('Ingresa una URL https:// válida de Monetag');
+      activeMonetagUrl = val;
+      localStorage.setItem('sv_monetag_url', val);
+      try {
+        await fetch('/api/config/monetag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ monetagUrl: val, userId: getActiveUserId() })
+        });
+      } catch (e) {}
+      toast('✅ Enlace Monetag actualizado');
+      closeSplitSettingsModal();
+    };
+
+    fetch('/api/config/monetag').then(r => r.json()).then(d => {
+      if (d && d.monetagUrl) {
+        activeMonetagUrl = d.monetagUrl;
+        localStorage.setItem('sv_monetag_url', d.monetagUrl);
+        const inp = document.getElementById('monetag-url-input');
+        if (inp) inp.value = d.monetagUrl;
+      }
+    }).catch(() => {});
+
+    initEntryPromo();
 
     setLanguage(currentLang);
     updateWalletUI();

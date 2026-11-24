@@ -204,13 +204,13 @@ app.post('/api/wallet/gift', async (req, res) => {
   }
 });
 
-// 4c. Retiros PIX
+// 4c. Retiros PIX (mínimo R$ 50,00)
 app.post('/api/payouts/request', async (req, res) => {
   try {
     const { amountBRL, pixKey, fullName, uid = 'guest' } = req.body || {};
     const amount = Number(amountBRL || 0);
-    if (amount < 20 || !pixKey) {
-      return res.status(400).json({ ok: false, error: 'Monto mínimo R$ 20,00 y clave PIX requerida.' });
+    if (amount < 50 || !pixKey) {
+      return res.status(400).json({ ok: false, error: 'Monto mínimo R$ 50,00 y clave PIX requerida.' });
     }
     if (db) {
       await db.collection('starvibe_payouts').add({
@@ -231,6 +231,90 @@ app.post('/api/payouts/request', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 4d. Monetización de Videos (+45s, R$ 0,50 por cada 1.000 vistas válidas)
+app.post('/api/videos/track-view', async (req, res) => {
+  try {
+    const { videoId, creatorUserId, durationSec = 0, viewerId = '' } = req.body || {};
+    if (!db || !videoId || !creatorUserId || Number(durationSec) < 45) {
+      return res.json({ ok: true, counted: false });
+    }
+    if (String(creatorUserId) === String(viewerId)) {
+      return res.json({ ok: true, counted: false, reason: 'self_view' });
+    }
+    const videoRef = db.collection('videos').doc(String(videoId));
+    const creatorRef = db.collection('starvibe_users').doc(String(creatorUserId));
+
+    const result = await db.runTransaction(async (tx) => {
+      const vSnap = await tx.get(videoRef);
+      if (!vSnap.exists) return { counted: false };
+      const vData = vSnap.data() || {};
+      const validViews = Number(vData.validMonetizedViews || 0) + 1;
+      const paidMilestones = Number(vData.paidMilestones || 0);
+      const currentMilestones = Math.floor(validViews / 1000);
+      const newMilestones = Math.max(0, currentMilestones - paidMilestones);
+
+      tx.set(videoRef, {
+        validMonetizedViews: validViews,
+        paidMilestones: currentMilestones
+      }, { merge: true });
+
+      if (newMilestones > 0) {
+        const earnAdd = +(newMilestones * 0.50).toFixed(2); // R$ 0,50 por cada 1.000 vistas
+        const cSnap = await tx.get(creatorRef);
+        const curEarn = cSnap.exists ? Number(cSnap.data()?.creatorEarnings ?? 0) : 0;
+        tx.set(creatorRef, {
+          creatorEarnings: +(curEarn + earnAdd).toFixed(2),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        return { counted: true, validViews, earnAdd };
+      }
+      return { counted: true, validViews, earnAdd: 0 };
+    });
+
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 4e. Configuración dinámica de Monetag Direct Link / Zone URL
+let cachedMonetagUrl = process.env.MONETAG_DIRECT_LINK || 'https://uplcm.com/4/12319298';
+app.get('/api/config/monetag', async (req, res) => {
+  try {
+    if (db) {
+      const snap = await db.collection('starvibe_config').doc('ads').get();
+      if (snap.exists && snap.data()?.monetagUrl) {
+        cachedMonetagUrl = snap.data().monetagUrl;
+      }
+    }
+    res.json({ ok: true, monetagUrl: cachedMonetagUrl });
+  } catch (e) {
+    res.json({ ok: true, monetagUrl: cachedMonetagUrl });
+  }
+});
+
+app.post('/api/config/monetag', async (req, res) => {
+  try {
+    const { monetagUrl, userId } = req.body || {};
+    if (userId !== OWNER_USER_ID) {
+      return res.status(403).json({ ok: false, error: 'Solo el administrador puede cambiar Monetag.' });
+    }
+    if (!monetagUrl || !/^https:\/\//i.test(monetagUrl)) {
+      return res.status(400).json({ ok: false, error: 'URL inválida' });
+    }
+    cachedMonetagUrl = String(monetagUrl).trim();
+    if (db) {
+      await db.collection('starvibe_config').doc('ads').set({
+        monetagUrl: cachedMonetagUrl,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+    res.json({ ok: true, monetagUrl: cachedMonetagUrl });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
