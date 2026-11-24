@@ -1,7 +1,7 @@
 {
-  "name": "StarVibe — Reels, Series & En Vivo",
+  "name": "StarVibe — Reels, Series & Live",
   "short_name": "StarVibe",
-  "description": "Descubre, crea y comparte videos verticales cortos, series y transmisiones en vivo en StarVibe.",
+  "description": "Short vertical videos, series and live streams on StarVibe.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
