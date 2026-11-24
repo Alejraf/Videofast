@@ -586,10 +586,13 @@
             <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala oficial • Regalos: 35% creador / 65% app</span>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <button class="pill-btn gold" onclick="openRechargeModal()">🪙 <span id="room-coins-badge">100</span></button>
-          <button class="pill-btn" onclick="reportActiveLive()">🚩</button>
-          <button class="close-btn" style="width:30px;height:30px;font-size:15px;" onclick="closeLiveRoom()">✕</button>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
+          <button id="viewer-pause-btn" class="pill-btn" style="padding:5px 9px;font-size:11px;border-color:#facc15;color:#fef08a;" onclick="toggleViewerPauseLive()">⏸️ Pausar</button>
+          <button id="live-pause-btn" class="pill-btn hidden" style="padding:5px 9px;font-size:11px;border-color:#60a5fa;color:#93c5fd;" onclick="toggleHostPauseLive()">⏸️ Pausar Sala</button>
+          <button id="live-end-btn" class="pill-btn hidden" style="padding:5px 9px;font-size:11px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;" onclick="endActiveLiveRoom()">⏹️ Terminar Live</button>
+          <button class="pill-btn gold" style="padding:5px 9px;font-size:11px;" onclick="openRechargeModal()">🪙 <span id="room-coins-badge">100</span></button>
+          <button class="pill-btn" style="padding:5px 9px;font-size:11px;" onclick="reportActiveLive()">🚩</button>
+          <button class="close-btn" style="width:28px;height:28px;font-size:14px;" onclick="closeLiveRoom()">✕</button>
         </div>
       </div>
 
@@ -613,6 +616,12 @@
             <div id="burst-gift-text" style="font-size:14.5px;font-weight:900;color:#fef08a;margin-top:6px;"></div>
             <div id="burst-gift-sub" style="font-size:11.5px;color:#d1d5db;margin-top:3px;"></div>
           </div>
+        </div>
+        <div id="live-paused-banner" class="hidden" style="position:absolute;inset:0;background:rgba(5,5,7,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:12;padding:16px;text-align:center;">
+          <div style="font-size:28px;">⏸️</div>
+          <strong id="live-paused-title" style="font-size:15px;color:#fef08a;">Transmisión en Pausa</strong>
+          <p id="live-paused-desc" style="font-size:12px;color:#d1d5db;">El reproductor está detenido temporalmente.</p>
+          <button id="resume-from-banner-btn" type="button" class="pill-btn gold" style="padding:7px 14px;font-size:12px;" onclick="resumeAnyLivePause()">▶️ Reanudar</button>
         </div>
       </div>
 
@@ -2028,18 +2037,141 @@
             <span style="font-size:12px;color:#facc15;font-weight:800;">@${l.user || 'Creador'} • 🎁 ${l.totalGiftsCoins || 0} 🪙</span>
           </div>
           <h4 style="font-size:15px;color:#fff;">${l.title || 'Live'}</h4>
-          <button type="button" class="ad-cta" style="padding:11px;font-size:13.5px;text-align:center;">${t('enter_live_btn')}</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="ad-cta enter-live-action" style="flex:1;padding:11px;font-size:13.5px;text-align:center;">${t('enter_live_btn')}</button>
+            ${((l.uid && l.uid === getActiveUserId()) || getActiveUserId() === OWNER_USER_ID) ? `<button type="button" class="pill-btn end-card-live-btn" style="padding:10px 12px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;">⏹️ Terminar</button>` : ''}
+          </div>
         `;
-        card.querySelector('button').addEventListener('click', () => openLiveRoom(l));
+        card.querySelector('.enter-live-action').addEventListener('click', () => openLiveRoom(l));
+        const endCardBtn = card.querySelector('.end-card-live-btn');
+        if (endCardBtn) endCardBtn.addEventListener('click', () => terminateLiveById(l.id));
         list.appendChild(card);
       });
     }, () => {});
 
+    let hostLivePaused = false;
+    let viewerLivePaused = false;
+    let currentLiveEmbedSrc = '';
+    let unsubLiveDoc = null;
+
+    function isLiveHostOrAdmin(liveObj) {
+      if (!liveObj) return false;
+      const uid = getActiveUserId();
+      return Boolean((liveObj.uid && liveObj.uid === uid) || uid === OWNER_USER_ID);
+    }
+
+    function syncLiveHostControls(liveObj) {
+      const canControl = isLiveHostOrAdmin(liveObj);
+      const pauseBtn = document.getElementById('live-pause-btn');
+      const endBtn = document.getElementById('live-end-btn');
+      if (pauseBtn) pauseBtn.classList.toggle('hidden', !canControl);
+      if (endBtn) endBtn.classList.toggle('hidden', !canControl);
+    }
+
+    function applyCombinedPauseUI() {
+      const effectivePaused = Boolean(hostLivePaused || viewerLivePaused);
+      const iframe = document.getElementById('live-iframe');
+      const banner = document.getElementById('live-paused-banner');
+      const titleEl = document.getElementById('live-paused-title');
+      const descEl = document.getElementById('live-paused-desc');
+      const resumeBannerBtn = document.getElementById('resume-from-banner-btn');
+      const hostPauseBtn = document.getElementById('live-pause-btn');
+      const viewerPauseBtn = document.getElementById('viewer-pause-btn');
+
+      if (hostPauseBtn) hostPauseBtn.textContent = hostLivePaused ? '▶️ Reanudar Sala' : '⏸️ Pausar Sala';
+      if (viewerPauseBtn) viewerPauseBtn.textContent = viewerLivePaused ? '▶️ Reanudar' : '⏸️ Pausar';
+
+      if (effectivePaused) {
+        if (iframe) iframe.src = '';
+        if (banner) banner.classList.remove('hidden');
+        if (hostLivePaused && !viewerLivePaused) {
+          if (titleEl) titleEl.textContent = 'Creador en Pausa';
+          if (descEl) descEl.textContent = 'El creador pausó momentáneamente la transmisión.';
+          if (resumeBannerBtn) resumeBannerBtn.classList.toggle('hidden', !isLiveHostOrAdmin(activeLiveRoom));
+        } else {
+          if (titleEl) titleEl.textContent = 'Transmisión en Pausa';
+          if (descEl) descEl.textContent = 'Pausaste tu reproducción. Toca Reanudar cuando quieras volver.';
+          if (resumeBannerBtn) resumeBannerBtn.classList.remove('hidden');
+        }
+      } else {
+        if (banner) banner.classList.add('hidden');
+        if (iframe && currentLiveEmbedSrc) iframe.src = currentLiveEmbedSrc;
+      }
+    }
+
+    window.toggleViewerPauseLive = () => {
+      if (!activeLiveRoom) return;
+      viewerLivePaused = !viewerLivePaused;
+      applyCombinedPauseUI();
+      toast(viewerLivePaused ? '⏸️ Pausaste el Live' : '▶️ Reanudaste el Live');
+    };
+
+    window.toggleHostPauseLive = async () => {
+      if (!activeLiveRoom || !isLiveHostOrAdmin(activeLiveRoom)) return;
+      const nextPaused = !hostLivePaused;
+      hostLivePaused = nextPaused;
+      applyCombinedPauseUI();
+      toast(nextPaused ? '⏸️ Sala pausada para todos' : '▶️ Sala reanudada');
+      try {
+        await updateDoc(doc(db, 'lives', activeLiveRoom.id), { paused: nextPaused });
+      } catch (e) {}
+    };
+
+    window.resumeAnyLivePause = async () => {
+      if (!activeLiveRoom) return;
+      if (viewerLivePaused) {
+        viewerLivePaused = false;
+      }
+      if (hostLivePaused && isLiveHostOrAdmin(activeLiveRoom)) {
+        hostLivePaused = false;
+        try {
+          await updateDoc(doc(db, 'lives', activeLiveRoom.id), { paused: false });
+        } catch (e) {}
+      }
+      applyCombinedPauseUI();
+    };
+
+    window.terminateLiveById = async (roomId) => {
+      if (!roomId) return;
+      if (activeLiveRoom && activeLiveRoom.id === roomId) {
+        closeLiveRoom();
+      }
+      try {
+        await deleteDoc(doc(db, 'lives', roomId));
+        toast('⏹️ Transmisión en vivo terminada');
+      } catch (e) {
+        toast('Error al terminar el Live');
+      }
+    };
+
+    window.endActiveLiveRoom = async () => {
+      if (!activeLiveRoom) return;
+      await terminateLiveById(activeLiveRoom.id);
+    };
+
     window.openLiveRoom = (liveObj) => {
       activeLiveRoom = liveObj;
+      currentLiveEmbedSrc = toEmbedStreamUrl(liveObj.streamUrl);
       document.getElementById('room-creator').textContent = '@' + (liveObj.user || 'Creador') + ' ✅';
       document.getElementById('room-title').textContent = (liveObj.title || 'Live') + ' • 35% creador / 65% app';
-      document.getElementById('live-iframe').src = toEmbedStreamUrl(liveObj.streamUrl);
+      hostLivePaused = Boolean(liveObj.paused);
+      viewerLivePaused = false;
+      syncLiveHostControls(liveObj);
+      applyCombinedPauseUI();
+
+      if (unsubLiveDoc) unsubLiveDoc();
+      unsubLiveDoc = onSnapshot(doc(db, 'lives', liveObj.id), (snap) => {
+        if (!snap.exists()) {
+          if (activeLiveRoom && activeLiveRoom.id === liveObj.id) {
+            closeLiveRoom();
+            toast('⏹️ El creador finalizó el Live');
+          }
+          return;
+        }
+        const d = snap.data() || {};
+        hostLivePaused = Boolean(d.paused);
+        applyCombinedPauseUI();
+      }, () => {});
 
       const offerBar = document.getElementById('room-offer-bar');
       const offerLink = document.getElementById('room-offer-link');
@@ -2075,9 +2207,15 @@
     };
 
     window.closeLiveRoom = () => {
+      hostLivePaused = false;
+      viewerLivePaused = false;
+      currentLiveEmbedSrc = '';
+      const banner = document.getElementById('live-paused-banner');
+      if (banner) banner.classList.add('hidden');
       document.getElementById('live-room-overlay').classList.add('hidden');
       document.getElementById('live-iframe').src = '';
       if (unsubLiveChat) unsubLiveChat();
+      if (unsubLiveDoc) { unsubLiveDoc(); unsubLiveDoc = null; }
       activeLiveRoom = null;
     };
 
