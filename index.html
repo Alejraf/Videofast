@@ -413,9 +413,9 @@
     .add-btn { background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; border: none; padding: 6px 22px; border-radius: 14px; font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: 0 0 18px rgba(250,204,21,0.3); }
 
     /* Modals */
-    .modal { position: absolute; inset: 0; z-index: 48; background: rgba(5,5,7,0.97); display: flex; flex-direction: column; justify-content: center; padding: 20px; overflow-y: auto; }
+    .modal { position: fixed; inset: 0; z-index: 60; background: rgba(5,5,7,0.98); display: flex; flex-direction: column; justify-content: flex-start; padding: 14px 16px 32px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .hidden { display: none !important; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-header { position: sticky; top: -14px; z-index: 15; background: rgba(5,5,7,0.96); display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .modal-title { font-size: 19px; font-weight: 900; color: var(--gold-2); }
     .close-btn { background: #1f2937; border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; }
     .dropzone { border: 2px dashed rgba(250,204,21,0.45); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; margin-bottom: 10px; background: rgba(250,204,21,0.04); }
@@ -566,6 +566,10 @@
     <!-- VISTA 2: SALAS EN VIVO (LIVE) -->
     <div id="view-live" class="view">
       <div class="live-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <button type="button" class="pill-btn" style="padding:7px 12px;font-size:12px;" onclick="switchTab('feed')">← Volver al Inicio</button>
+          <span style="font-size:11px;color:#9ca3af;">Salas En Vivo</span>
+        </div>
         <div class="live-banner">
           <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE • 65% / 35%</div>
           <h3 style="font-size:17px;margin:8px 0 4px;color:#fff;" data-i18n="live_banner_title">Transmisiones en Vivo y Regalos Virtuales</h3>
@@ -674,6 +678,10 @@
     <!-- VISTA 3: PERFIL, IDIOMAS, WALLET Y STUDIO -->
     <div id="view-profile" class="view">
       <div class="profile-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <button type="button" class="pill-btn" style="padding:7px 12px;font-size:12px;" onclick="switchTab('feed')">← Volver al Inicio</button>
+          <span style="font-size:11px;color:#9ca3af;">Mi Perfil</span>
+        </div>
         <div class="prof-card">
           <div class="avatar" id="prof-avatar">S</div>
           <h3 id="prof-title">@Creador</h3>
@@ -799,8 +807,9 @@
     <!-- MODAL SUBIR VIDEO -->
     <div id="upload-modal" class="modal hidden">
       <div class="modal-header">
-        <div class="modal-title" data-i18n="upload_title">Publicar en StarVibe</div>
-        <button onclick="closeModal()" class="close-btn">✕</button>
+        <button type="button" onclick="closeModal()" class="pill-btn" style="padding:7px 12px;font-size:12px;">← Volver</button>
+        <div class="modal-title" style="font-size:16px;" data-i18n="upload_title">Publicar en StarVibe</div>
+        <button type="button" onclick="closeModal()" class="close-btn">✕</button>
       </div>
 
       <form id="upload-form">
@@ -828,7 +837,7 @@
           <!-- Vista previa Canvas -->
           <div style="position:relative;width:100%;max-height:230px;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:8px;border:1px solid #1f2430;">
             <canvas id="sv-editor-canvas" width="480" height="854" style="max-height:230px;max-width:100%;object-fit:contain;background:#000;"></canvas>
-            <video id="sv-editor-src-vid" playsinline muted style="display:none;"></video>
+            <video id="sv-editor-src-vid" playsinline webkit-playsinline muted preload="auto" style="position:absolute;width:2px;height:2px;opacity:0.01;pointer-events:none;"></video>
           </div>
 
           <!-- 1. Formato de Pantalla (9:16, 16:9, 1:1) y Encuadre -->
@@ -881,9 +890,10 @@
           </div>
 
           <!-- 4. Renderizar / Aplicar Edición antes de Publicar -->
-          <div style="display:flex;gap:6px;">
-            <button type="button" id="sv-render-edit-btn" class="pill-btn gold" onclick="renderEditedVideoBlob()" style="flex:1;padding:8px;font-size:11.5px;font-weight:800;">✨ Aplicar Edición al Video</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" id="sv-render-edit-btn" class="pill-btn gold" onclick="renderEditedVideoBlob()" style="flex:1;padding:8px;font-size:11.5px;font-weight:800;">✨ Aplicar Edición</button>
             <button type="button" class="pill-btn" onclick="resetEditedVideoBlob()" style="padding:8px 10px;font-size:11px;">↩️ Original</button>
+            <button type="button" class="pill-btn" onclick="cancelEditorRender()" style="padding:8px 10px;font-size:11px;border-color:#ef4444;color:#fca5a5;">⏹️ Detener</button>
           </div>
           <div id="sv-render-prog-wrap" class="hidden" style="margin-top:6px;">
             <div style="font-size:10.5px;color:#fde68a;margin-bottom:3px;" id="sv-render-prog-lbl">Procesando edición en tiempo real... 0%</div>
@@ -2808,7 +2818,8 @@
       document.querySelectorAll('video').forEach((v) => { v.muted = isMuted; });
     };
 
-    window.switchTab = (tab) => {
+    window.switchTab = (tab, skipHistory = false) => {
+      if (tab !== 'feed' && !skipHistory) pushNavState('tab-' + tab);
       document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach((el) => el.classList.remove('active'));
       document.getElementById('view-' + tab).classList.add('active');
@@ -2824,8 +2835,71 @@
       }
     };
 
-    window.openModal = () => document.getElementById('upload-modal').classList.remove('hidden');
-    window.closeModal = () => document.getElementById('upload-modal').classList.add('hidden');
+    function pushNavState(tag) {
+      try {
+        if (!history.state || history.state.svView !== tag) {
+          history.pushState({ svView: tag }, '', '');
+        }
+      } catch (e) {}
+    }
+
+    function closeAllOpenOverlays() {
+      let closedSomething = false;
+      const overlayIds = [
+        'upload-modal', 'live-modal', 'formalize-modal', 'withdraw-modal',
+        'creator-rules-modal', 'recharge-modal', 'split-settings-modal',
+        'brand-modal', 'comments-modal', 'report-modal'
+      ];
+      overlayIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && !el.classList.contains('hidden')) {
+          if (id === 'upload-modal') {
+            cancelEditorRender();
+            const edVid = document.getElementById('sv-editor-src-vid');
+            if (edVid) { try { edVid.pause(); } catch (e) {} }
+          }
+          el.classList.add('hidden');
+          closedSomething = true;
+        }
+      });
+      const liveRoom = document.getElementById('live-room-overlay');
+      if (liveRoom && !liveRoom.classList.contains('hidden')) {
+        closeLiveRoom();
+        closedSomething = true;
+      }
+      const promoOv = document.getElementById('entry-promo-overlay');
+      if (promoOv && !promoOv.classList.contains('hidden')) {
+        dismissEntryPromo();
+        closedSomething = true;
+      }
+      return closedSomething;
+    }
+
+    window.addEventListener('popstate', () => {
+      if (closeAllOpenOverlays()) {
+        return;
+      }
+      const feedView = document.getElementById('view-feed');
+      if (feedView && !feedView.classList.contains('active')) {
+        switchTab('feed', true);
+      }
+    });
+
+    window.openModal = () => {
+      pushNavState('upload-modal');
+      const m = document.getElementById('upload-modal');
+      if (m) {
+        m.classList.remove('hidden');
+        m.scrollTop = 0;
+      }
+    };
+    window.closeModal = () => {
+      cancelEditorRender();
+      const edVid = document.getElementById('sv-editor-src-vid');
+      if (edVid) { try { edVid.pause(); } catch (e) {} }
+      const m = document.getElementById('upload-modal');
+      if (m) m.classList.add('hidden');
+    };
     const MIN_FOLLOWERS_FOR_LIVE = 10;
 
     function getFollowersCount() {
@@ -3436,7 +3510,24 @@
       toast('Textos y leyendas limpiados');
     };
 
+    let activeEditorRecorder = null;
+
+    window.cancelEditorRender = () => {
+      editorRendering = false;
+      const vid = document.getElementById('sv-editor-src-vid');
+      if (vid) { try { vid.pause(); vid.muted = true; } catch (e) {} }
+      if (activeEditorRecorder && activeEditorRecorder.state !== 'inactive') {
+        try { activeEditorRecorder.stop(); } catch (e) {}
+      }
+      activeEditorRecorder = null;
+      const btn = document.getElementById('sv-render-edit-btn');
+      const pWrap = document.getElementById('sv-render-prog-wrap');
+      if (btn) btn.disabled = false;
+      if (pWrap) pWrap.classList.add('hidden');
+    };
+
     window.resetEditedVideoBlob = () => {
+      cancelEditorRender();
       editedVideoBlob = null;
       editedVideoFilename = '';
       const pill = document.getElementById('sv-edit-status-pill');
@@ -3482,12 +3573,13 @@
           }
         } catch (e) {}
 
-        const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-          ? 'video/webm;codecs=vp9,opus'
+        const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+          ? 'video/webm;codecs=vp8,opus'
           : (MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '');
         const recorder = mime
-          ? new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 2500000 })
+          ? new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 1500000 })
           : new MediaRecorder(combinedStream);
+        activeEditorRecorder = recorder;
 
         const chunks = [];
         recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
@@ -3496,7 +3588,7 @@
           recorder.onstop = () => resolve(new Blob(chunks, { type: recorder.mimeType || 'video/webm' }));
         });
 
-        recorder.start(200);
+        recorder.start(250);
         await vid.play();
 
         const drawLoop = () => {
@@ -3577,10 +3669,17 @@
           if (editorBox) editorBox.classList.remove('hidden');
           edVid.currentTime = Math.min(0.2, editorRawDuration / 2);
         };
+        edVid.onloadeddata = () => {
+          if (!editorRendering) renderEditorPreviewFrame();
+        };
         edVid.onseeked = () => {
           if (!editorRendering) renderEditorPreviewFrame();
         };
+        edVid.onerror = () => {
+          toast('⚠️ No se pudo previsualizar este formato en el editor, pero puedes publicarlo directo');
+        };
         edVid.src = editorObjectUrl;
+        edVid.load();
       }
     });
 
