@@ -1119,12 +1119,15 @@
 
     window.openRechargeModal = () => document.getElementById('recharge-modal').classList.remove('hidden');
     window.closeRechargeModal = () => document.getElementById('recharge-modal').classList.add('hidden');
+    const OWNER_EMAIL = '123alejrafnstaller@gmail.com';
+    const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
+
     function getActiveUserId() {
       const f = getFormalData();
       if (f && f.email) {
         return 'user_' + f.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
       }
-      return (currentUser && currentUser.uid) ? currentUser.uid : 'guest';
+      return OWNER_USER_ID;
     }
 
     async function syncWalletFromServer() {
@@ -1977,7 +1980,22 @@
     }
 
     function getFormalData() {
-      try { return JSON.parse(localStorage.getItem('sv_formal_profile') || 'null'); } catch { return null; }
+      try {
+        const saved = JSON.parse(localStorage.getItem('sv_formal_profile') || 'null');
+        if (saved && saved.email) return saved;
+        return {
+          fullName: 'Rafael Alejandro Acacio Vasquez',
+          email: OWNER_EMAIL,
+          pixKey: OWNER_EMAIL,
+          formalAt: '2026-11-24T10:00:00.000Z'
+        };
+      } catch {
+        return {
+          fullName: 'Rafael Alejandro Acacio Vasquez',
+          email: OWNER_EMAIL,
+          pixKey: OWNER_EMAIL
+        };
+      }
     }
 
     function refreshFormalStatusUI() {

@@ -59,20 +59,24 @@ const COIN_PACKAGES = {
   pack_1000: { id: 'pack_1000', title: '1000 Monedas StarVibe', coins: 1000, price: 100.0 }
 };
 
+const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
+
 async function getUserBalance(userId) {
-  const safeUserId = String(userId || 'guest').trim();
+  const safeUserId = String(userId || OWNER_USER_ID).trim();
+  const defaultInitial = safeUserId === OWNER_USER_ID ? 200 : 100;
   if (db) {
     const userRef = db.collection('starvibe_users').doc(safeUserId);
     const snap = await userRef.get();
     if (!snap.exists) {
-      let initialCoins = 100;
+      let initialCoins = defaultInitial;
       if (safeUserId !== 'guest') {
         const guestSnap = await db.collection('starvibe_users').doc('guest').get();
-        if (guestSnap.exists && Number(guestSnap.data()?.coins || 0) > 100) {
+        if (guestSnap.exists && Number(guestSnap.data()?.coins || 0) > initialCoins) {
           initialCoins = Number(guestSnap.data().coins);
         }
       }
       await userRef.set({
+        email: safeUserId === OWNER_USER_ID ? '123alejrafnstaller@gmail.com' : '',
         coins: initialCoins,
         creatorEarnings: 0,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -80,13 +84,18 @@ async function getUserBalance(userId) {
       return { coins: initialCoins, creatorEarnings: 0 };
     }
     const data = snap.data() || {};
+    let currentCoins = Number(data.coins ?? defaultInitial);
+    if (safeUserId === OWNER_USER_ID && currentCoins < 200 && !data.ownerRecovered) {
+      currentCoins = 200;
+      await userRef.set({ coins: 200, ownerRecovered: true, email: '123alejrafnstaller@gmail.com' }, { merge: true });
+    }
     return {
-      coins: Number(data.coins ?? 100),
+      coins: currentCoins,
       creatorEarnings: Number(data.creatorEarnings ?? 0)
     };
   }
   if (!memoryBalances.has(safeUserId)) {
-    memoryBalances.set(safeUserId, { coins: 100, creatorEarnings: 0 });
+    memoryBalances.set(safeUserId, { coins: defaultInitial, creatorEarnings: 0 });
   }
   return memoryBalances.get(safeUserId);
 }
