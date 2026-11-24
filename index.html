@@ -2967,14 +2967,27 @@
       return closedSomething;
     }
 
+    let backExitArmedAt = 0;
+
     window.addEventListener('popstate', () => {
       if (closeAllOpenOverlays()) {
+        pushNavState('home');
         return;
       }
       const feedView = document.getElementById('view-feed');
       if (feedView && !feedView.classList.contains('active')) {
         switchTab('feed', true);
+        pushNavState('home');
+        return;
       }
+      const now = Date.now();
+      if (now - backExitArmedAt < 2500) {
+        try { history.go(-2); } catch (e) {}
+        return;
+      }
+      backExitArmedAt = now;
+      pushNavState('home');
+      toast('Toca Atrás otra vez para salir de StarVibe');
     });
 
     window.openModal = () => {
@@ -4023,6 +4036,13 @@
     setLanguage(currentLang);
     updateWalletUI();
     refreshAdminAndReferralUI();
+
+    try {
+      if (!history.state || !history.state.svView) {
+        history.replaceState({ svView: 'home' }, '', '');
+        history.pushState({ svView: 'home' }, '', '');
+      }
+    } catch (e) {}
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
