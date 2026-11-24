@@ -133,9 +133,7 @@
     }
 
     /* Quick Rewind / Forward Controls */
-    .skip-controls {
-      display: inline-flex; align-items: center; gap: 6px; margin-top: 7px;
-    }
+    .skip-controls { display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; }
     .skip-btn {
       background: rgba(5,5,7,0.68); backdrop-filter: blur(8px);
       border: 1px solid rgba(250,204,21,0.38); color: var(--gold-1);
@@ -177,7 +175,7 @@
       text-decoration: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55);
     }
 
-    /* Live Directory View */
+    /* Live Directory & Integrated Live Room */
     .live-wrap { height: 100%; overflow-y: auto; padding: 88px 16px 96px; background: var(--bg-dark); }
     .live-banner {
       background: linear-gradient(135deg, #1c1917, #292008); border: 1px solid var(--border-gold);
@@ -193,6 +191,62 @@
       padding: 3px 9px; border-radius: 999px; width: fit-content;
     }
 
+    /* Fullscreen Integrated Live Room Overlay */
+    .live-room-overlay {
+      position: absolute; inset: 0; z-index: 42; background: #050507;
+      display: flex; flex-direction: column;
+    }
+    .live-room-top {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+      background: rgba(15,17,23,0.96); border-bottom: 1px solid var(--border-gold);
+    }
+    .live-player-box {
+      width: 100%; aspect-ratio: 16/9; background: #000; position: relative; border-bottom: 1px solid #1f2937;
+    }
+    .live-player-box iframe { width: 100%; height: 100%; border: none; }
+    .live-gift-burst {
+      position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; background: rgba(0,0,0,0.45);
+      opacity: 0; transition: opacity 0.3s ease; text-align: center; padding: 16px;
+    }
+    .live-gift-burst.show { opacity: 1; }
+    .live-gift-burst .big-emoji { font-size: 64px; animation: popGift 0.5s ease; }
+    @keyframes popGift { 0% { transform: scale(0.3); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .live-chat-area {
+      flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px;
+      background: #07080c;
+    }
+    .live-msg { font-size: 12.5px; background: #11141d; padding: 7px 10px; border-radius: 10px; border: 1px solid #1f2937; }
+    .live-msg.gift-msg {
+      background: linear-gradient(135deg, rgba(250,204,21,0.22), rgba(217,119,6,0.18));
+      border-color: var(--gold-2); color: #fef9c3; font-weight: 700;
+    }
+    .live-gift-bar {
+      display: flex; gap: 7px; overflow-x: auto; padding: 8px 12px;
+      background: #0f1117; border-top: 1px solid #1f2937; scrollbar-width: none;
+    }
+    .live-gift-bar::-webkit-scrollbar { display: none; }
+    .gift-chip {
+      flex: 0 0 auto; background: #181b24; border: 1px solid rgba(250,204,21,0.38);
+      border-radius: 12px; padding: 6px 10px; color: #fff; cursor: pointer; text-align: center; min-width: 78px;
+    }
+    .gift-chip:active { background: var(--gold-2); color: #000; }
+    .gift-chip strong { display: block; font-size: 11px; color: var(--gold-2); }
+    .gift-chip span { font-size: 10px; color: #9ca3af; }
+    .live-chat-form {
+      display: flex; gap: 8px; padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+      background: #0f1117; border-top: 1px solid #1f2937;
+    }
+    .live-chat-form input {
+      flex: 1; background: #050507; border: 1px solid #374151; border-radius: 999px;
+      padding: 9px 14px; color: #fff; font-size: 13px; outline: none;
+    }
+    .live-chat-form button {
+      background: linear-gradient(135deg, var(--gold-2), var(--gold-3)); color: #000;
+      border: none; border-radius: 999px; padding: 0 16px; font-weight: 900; font-size: 12.5px; cursor: pointer;
+    }
+
     /* Native Sponsored Slide */
     .ad-slide { background: radial-gradient(circle at top, #231c07, #050507 70%); padding: 28px; text-align: center; flex-direction: column; }
     .ad-card { max-width: 340px; width: 100%; background: var(--card-dark); border: 1px solid var(--border-gold); border-radius: 22px; padding: 24px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
@@ -201,7 +255,7 @@
     .ad-card p { font-size: 13px; color: #9ca3af; line-height: 1.45; margin-bottom: 18px; }
     .ad-cta { display: block; width: 100%; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; font-weight: 900; font-size: 15px; cursor: pointer; text-decoration: none; }
 
-    /* Profile & Creator/Brand Studio */
+    /* Profile, Wallet & Revenue Split Settings (60% App / 40% Creator) */
     .profile-wrap { height: 100%; overflow-y: auto; padding: 86px 16px 96px; background: var(--bg-dark); }
     .prof-card { background: var(--card-dark); border: 1px solid var(--border-gold); border-radius: 20px; padding: 18px; text-align: center; margin-bottom: 14px; }
     .avatar { width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; font-size: 26px; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; box-shadow: 0 0 20px rgba(250,204,21,0.28); }
@@ -211,6 +265,20 @@
     .name-row { display: flex; gap: 8px; margin-top: 10px; }
     .name-row input { flex: 1; background: #050507; border: 1px solid #374151; border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 13.5px; }
     .name-row button { background: linear-gradient(135deg, var(--gold-2), var(--gold-3)); color: #000; border: none; border-radius: 10px; padding: 0 14px; font-weight: 900; cursor: pointer; }
+
+    .wallet-card {
+      background: linear-gradient(135deg, #0d1612, #111d17); border: 1px solid rgba(16,185,129,0.45);
+      border-radius: 18px; padding: 15px; margin-bottom: 14px;
+    }
+    .wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .split-pill {
+      background: rgba(16,185,129,0.2); border: 1px solid #10b981; color: #6ee7b7;
+      font-size: 10.5px; font-weight: 900; padding: 3px 9px; border-radius: 999px;
+    }
+    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+    .wallet-box { background: rgba(0,0,0,0.45); border: 1px solid #1f2937; border-radius: 12px; padding: 10px; }
+    .wallet-box strong { display: block; font-size: 16px; color: #fff; }
+    .wallet-box span { font-size: 11px; color: #9ca3af; }
 
     .brand-studio {
       background: linear-gradient(135deg, #16140c, #1f1a0d); border: 1px solid var(--border-gold);
@@ -243,7 +311,7 @@
     .add-btn { background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; border: none; padding: 6px 22px; border-radius: 14px; font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: 0 0 18px rgba(250,204,21,0.3); }
 
     /* Modals */
-    .modal { position: absolute; inset: 0; z-index: 45; background: rgba(5,5,7,0.97); display: flex; flex-direction: column; justify-content: center; padding: 20px; overflow-y: auto; }
+    .modal { position: absolute; inset: 0; z-index: 48; background: rgba(5,5,7,0.97); display: flex; flex-direction: column; justify-content: center; padding: 20px; overflow-y: auto; }
     .hidden { display: none !important; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .modal-title { font-size: 19px; font-weight: 900; color: var(--gold-2); }
@@ -257,6 +325,15 @@
     .submit-btn { width: 100%; background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3)); color: #000; font-weight: 900; font-size: 15px; border: none; padding: 13px; border-radius: 12px; cursor: pointer; }
     .submit-btn:disabled { background: #374151; color: #9ca3af; cursor: not-allowed; }
     .report-option { width: 100%; text-align: left; background: var(--card-dark); border: 1px solid #374151; color: #fff; padding: 13px; border-radius: 12px; margin-bottom: 9px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    .pack-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card-dark); border: 1px solid var(--border-gold);
+      padding: 13px; border-radius: 14px; margin-bottom: 10px;
+    }
+    .pack-item button {
+      background: linear-gradient(135deg, var(--gold-2), var(--gold-3)); color: #000;
+      border: none; border-radius: 10px; padding: 8px 14px; font-weight: 900; cursor: pointer;
+    }
 
     /* Comments Drawer */
     .drawer { position: absolute; left: 0; right: 0; bottom: 0; height: 65dvh; z-index: 40; background: var(--card-dark); border-top: 1px solid var(--border-gold); border-radius: 20px 20px 0 0; display: flex; flex-direction: column; padding: 16px; }
@@ -308,16 +385,88 @@
     <div id="view-live" class="view">
       <div class="live-wrap">
         <div class="live-banner">
-          <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE</div>
-          <h3 style="font-size:17px;margin:8px 0 4px;color:#fff;">Transmisiones en Vivo Verificadas</h3>
-          <p style="font-size:12.5px;color:#d1d5db;line-height:1.4;">Conecta en tiempo real con creadores aprobados. Todas las transmisiones cuentan con moderación activa y reporte inmediato.</p>
+          <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE • REPARTO 60% / 40%</div>
+          <h3 style="font-size:17px;margin:8px 0 4px;color:#fff;">Transmisiones en Vivo y Regalos Virtuales</h3>
+          <p style="font-size:12.5px;color:#d1d5db;line-height:1.4;">Mira directos integrados dentro de StarVibe, envía regalos virtuales al creador (40% para quien transmite / 60% plataforma) y compra ofertas en vivo.</p>
           <button class="btn-primary" style="padding:10px 18px;font-size:12.5px;" onclick="openLiveModal()">📡 Iniciar / Publicar Sala Live</button>
         </div>
         <div id="live-rooms-list"></div>
       </div>
     </div>
 
-    <!-- VISTA 3: PERFIL Y CREATOR/BRAND STUDIO -->
+    <!-- SALA LIVE INTEGRADA (REPRODUCTOR + CHAT + REGALOS VIRTUALES) -->
+    <div id="live-room-overlay" class="live-room-overlay hidden">
+      <div class="live-room-top">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+          <div>
+            <strong id="room-creator" style="font-size:13px;color:var(--gold-2);display:block;">@Creador</strong>
+            <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala en directo</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button class="pill-btn gold" onclick="openRechargeModal()">🪙 <span id="room-coins-badge">100</span></button>
+          <button class="pill-btn" onclick="reportActiveLive()">🚩</button>
+          <button class="close-btn" style="width:30px;height:30px;font-size:15px;" onclick="closeLiveRoom()">✕</button>
+        </div>
+      </div>
+
+      <div class="live-player-box">
+        <iframe id="live-iframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        <div id="live-gift-burst" class="live-gift-burst">
+          <div class="big-emoji" id="burst-gift-emoji">🌟</div>
+          <div id="burst-gift-text" style="font-size:14px;font-weight:900;color:#fef08a;margin-top:6px;">¡Regalo enviado!</div>
+        </div>
+      </div>
+
+      <div id="room-offer-bar" class="hidden" style="background:#17150d;padding:7px 12px;border-bottom:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center;">
+        <span id="room-offer-text" style="font-size:12px;color:#fde047;font-weight:800;">🛍️ Oferta destacada en vivo</span>
+        <a id="room-offer-link" href="#" target="_blank" rel="noopener" class="follow-btn" style="text-decoration:none;">Ver Oferta →</a>
+      </div>
+
+      <div id="live-chat-messages" class="live-chat-area"></div>
+
+      <!-- Catálogo de Regalos Virtuales con distintos precios -->
+      <div class="live-gift-bar">
+        <button class="gift-chip" onclick="sendVirtualGift('✨ Chispa', 10, 1.00)">
+          <div>✨ Chispa</div>
+          <strong>10 🪙</strong>
+          <span>R$ 1,00</span>
+        </button>
+        <button class="gift-chip" onclick="sendVirtualGift('🌹 Rosa Dorada', 25, 2.50)">
+          <div>🌹 Rosa</div>
+          <strong>25 🪙</strong>
+          <span>R$ 2,50</span>
+        </button>
+        <button class="gift-chip" onclick="sendVirtualGift('🔥 Fuego VIP', 50, 5.00)">
+          <div>🔥 Fuego</div>
+          <strong>50 🪙</strong>
+          <span>R$ 5,00</span>
+        </button>
+        <button class="gift-chip" onclick="sendVirtualGift('👑 Corona Star', 150, 15.00)">
+          <div>👑 Corona</div>
+          <strong>150 🪙</strong>
+          <span>R$ 15,00</span>
+        </button>
+        <button class="gift-chip" onclick="sendVirtualGift('🚀 Nave Vibe', 500, 50.00)">
+          <div>🚀 Nave</div>
+          <strong>500 🪙</strong>
+          <span>R$ 50,00</span>
+        </button>
+        <button class="gift-chip" onclick="sendVirtualGift('💎 Diamante', 1000, 100.00)">
+          <div>💎 Diamante</div>
+          <strong>1000 🪙</strong>
+          <span>R$ 100,00</span>
+        </button>
+      </div>
+
+      <form id="live-chat-form" class="live-chat-form">
+        <input id="live-chat-input" type="text" maxlength="120" placeholder="Escribe en el chat en vivo..." required />
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+
+    <!-- VISTA 3: PERFIL, WALLET Y CREATOR/BRAND STUDIO -->
     <div id="view-profile" class="view">
       <div class="profile-wrap">
         <div class="prof-card">
@@ -332,6 +481,31 @@
           <div class="name-row">
             <input id="username-input" type="text" maxlength="20" placeholder="Tu nombre de usuario..." />
             <button onclick="saveUsername()">Guardar</button>
+          </div>
+        </div>
+
+        <!-- Billetera & Ajustes de Reparto de Ganancias (60% Plataforma / 40% Creador) -->
+        <div class="wallet-card">
+          <div class="wallet-header">
+            <strong style="font-size:14px;color:#6ee7b7;">💰 Billetera & Reparto de Ganancias</strong>
+            <span class="split-pill">60% App • 40% Creador</span>
+          </div>
+          <p style="font-size:11.5px;color:#d1d5db;line-height:1.4;">
+            Reparto transparente mejorado frente a TikTok: <strong>40%</strong> directo para quien transmite en vivo y <strong>60%</strong> para el mantenimiento y crecimiento de StarVibe.
+          </p>
+          <div class="wallet-grid">
+            <div class="wallet-box">
+              <strong id="wallet-coins">100 🪙</strong>
+              <span>Mis Monedas (Regalos)</span>
+            </div>
+            <div class="wallet-box">
+              <strong id="wallet-creator-earnings">R$ 0,00</strong>
+              <span>Ganancia Creador (40%)</span>
+            </div>
+          </div>
+          <div class="studio-btns">
+            <button class="pill-btn gold" onclick="openRechargeModal()">➕ Recargar Monedas (PIX)</button>
+            <button class="pill-btn" onclick="openSplitSettingsModal()">⚙️ Ajustes de Reparto</button>
           </div>
         </div>
 
@@ -420,16 +594,64 @@
         <div class="modal-title">📡 Publicar Sala En Vivo</div>
         <button onclick="closeLiveModal()" class="close-btn">✕</button>
       </div>
-      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;">Por seguridad legal (Marco Civil / ECA Digital), solo se permiten transmisiones públicas moderadas con enlace HTTPS oficial (YouTube Live / Twitch).</p>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;">Tu transmisión se reproducirá integrada dentro de StarVibe con chat en vivo y regalos (recibes el 40% del valor de cada regalo).</p>
       <form id="live-form">
         <input id="live-title-input" type="text" maxlength="80" placeholder="Título de tu directo..." class="text-input" required />
-        <input id="live-url-input" type="url" placeholder="Enlace de transmisión https://youtube.com/live/..." class="text-input" required />
+        <input id="live-url-input" type="url" placeholder="Enlace YouTube Live o Twitch (https://...)" class="text-input" required />
+        <input id="live-offer-url-input" type="url" placeholder="🛍️ Enlace de venta en vivo opcional (https://...)" class="text-input" />
         <label class="check-row">
           <input type="checkbox" required />
-          <span>Soy mayor de 18 años y acepto las normas de transmisión en vivo de StarVibe.</span>
+          <span>Soy mayor de 18 años y acepto las normas de transmisión en vivo y reparto (60% StarVibe / 40% Creador).</span>
         </label>
         <button type="submit" class="submit-btn">Activar Sala En Vivo</button>
       </form>
+    </div>
+
+    <!-- MODAL RECARGA DE MONEDAS PARA REGALOS -->
+    <div id="recharge-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">🪙 Recargar Monedas StarVibe</div>
+        <button onclick="closeRechargeModal()" class="close-btn">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;">Usa tus monedas para enviar regalos animados en vivo. Cada regalo reparte 40% al creador y 60% a StarVibe.</p>
+      <div class="pack-item">
+        <div><strong>50 Monedas 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Para Chispas y Rosas</div></div>
+        <button onclick="buyCoinPack(50, 'R$ 5,00')">R$ 5,00</button>
+      </div>
+      <div class="pack-item">
+        <div><strong>150 Monedas 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Para Fuegos y Coronas</div></div>
+        <button onclick="buyCoinPack(150, 'R$ 15,00')">R$ 15,00</button>
+      </div>
+      <div class="pack-item">
+        <div><strong>500 Monedas 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Para Naves Vibe</div></div>
+        <button onclick="buyCoinPack(500, 'R$ 50,00')">R$ 50,00</button>
+      </div>
+      <div class="pack-item">
+        <div><strong>1.000 Monedas 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Para Diamantes VIP</div></div>
+        <button onclick="buyCoinPack(1000, 'R$ 100,00')">R$ 100,00</button>
+      </div>
+    </div>
+
+    <!-- MODAL AJUSTES DE REPARTO DE GANANCIAS -->
+    <div id="split-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ Ajustes de Reparto de Ganancias</div>
+        <button onclick="closeSplitSettingsModal()" class="close-btn">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:14px;">Configuración oficial de distribución de ingresos por regalos virtuales en StarVibe Live:</p>
+      <div class="wallet-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#fff;">🏢 Plataforma StarVibe (Tú):</span>
+          <strong id="split-app-val" style="color:var(--gold-2);">60%</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:13px;color:#fff;">🎙️ Creador que transmite:</span>
+          <strong id="split-creator-val" style="color:#6ee7b7;">40%</strong>
+        </div>
+        <input id="creator-share-range" type="range" min="30" max="50" step="5" value="40" style="width:100%;accent-color:#facc15;" oninput="previewSplitChange(this.value)" />
+        <p style="font-size:11px;color:#9ca3af;margin-top:8px;">* TikTok suele retener hasta 70% y dejar 30% al creador. Con 60% / 40% ofreces una ventaja competitiva real para atraer streamers.</p>
+      </div>
+      <button class="submit-btn" onclick="saveSplitSettings()">Guardar Configuración de Reparto</button>
     </div>
 
     <!-- MODAL ANUNCIAR MARCA -->
@@ -505,7 +727,9 @@
     let isMuted = true;
     let activeCommentVideoId = null;
     let pendingReportVideoId = null;
+    let activeLiveRoom = null;
     let unsubComments = null;
+    let unsubLiveChat = null;
     let allVideosCache = [];
     let feedMode = 'foryou';
     let searchQuery = '';
@@ -513,6 +737,74 @@
     let deferredInstallPrompt = null;
 
     const feedEl = document.getElementById('video-feed');
+
+    // Wallet & Revenue Split State (Default: 60% App / 40% Creator)
+    function getCoinsBalance() {
+      const val = localStorage.getItem('sv_coins');
+      if (val === null) {
+        localStorage.setItem('sv_coins', '100');
+        return 100;
+      }
+      return Number(val) || 0;
+    }
+    function setCoinsBalance(n) {
+      localStorage.setItem('sv_coins', String(Math.max(0, n)));
+      updateWalletUI();
+    }
+    function getCreatorEarnings() {
+      return Number(localStorage.getItem('sv_creator_brl') || '0');
+    }
+    function addCreatorEarnings(amount) {
+      const next = getCreatorEarnings() + amount;
+      localStorage.setItem('sv_creator_brl', next.toFixed(2));
+      updateWalletUI();
+    }
+    function getCreatorSplitPct() {
+      return Number(localStorage.getItem('sv_creator_split') || '40');
+    }
+    function updateWalletUI() {
+      const coins = getCoinsBalance();
+      const earn = getCreatorEarnings();
+      const cSplit = getCreatorSplitPct();
+      const aSplit = 100 - cSplit;
+      const wCoins = document.getElementById('wallet-coins');
+      const rCoins = document.getElementById('room-coins-badge');
+      const wEarn = document.getElementById('wallet-creator-earnings');
+      if (wCoins) wCoins.textContent = coins + ' 🪙';
+      if (rCoins) rCoins.textContent = coins;
+      if (wEarn) wEarn.textContent = 'R$ ' + earn.toFixed(2).replace('.', ',');
+      document.querySelectorAll('.split-pill').forEach((el) => {
+        el.textContent = `${aSplit}% App • ${cSplit}% Creador`;
+      });
+    }
+
+    window.openRechargeModal = () => document.getElementById('recharge-modal').classList.remove('hidden');
+    window.closeRechargeModal = () => document.getElementById('recharge-modal').classList.add('hidden');
+    window.buyCoinPack = (coins, priceLabel) => {
+      setCoinsBalance(getCoinsBalance() + coins);
+      closeRechargeModal();
+      toast(`🪙 +${coins} Monedas acreditadas (${priceLabel})`);
+    };
+
+    window.openSplitSettingsModal = () => {
+      const cSplit = getCreatorSplitPct();
+      document.getElementById('creator-share-range').value = cSplit;
+      previewSplitChange(cSplit);
+      document.getElementById('split-modal').classList.remove('hidden');
+    };
+    window.closeSplitSettingsModal = () => document.getElementById('split-modal').classList.add('hidden');
+    window.previewSplitChange = (creatorPct) => {
+      const c = Number(creatorPct);
+      document.getElementById('split-creator-val').textContent = c + '%';
+      document.getElementById('split-app-val').textContent = (100 - c) + '%';
+    };
+    window.saveSplitSettings = () => {
+      const c = Number(document.getElementById('creator-share-range').value);
+      localStorage.setItem('sv_creator_split', String(c));
+      updateWalletUI();
+      closeSplitSettingsModal();
+      toast(`⚙️ Reparto guardado: ${100 - c}% StarVibe / ${c}% Creador`);
+    };
 
     function formatTime(sec) {
       if (!isFinite(sec) || sec < 0) return '0:00';
@@ -535,7 +827,11 @@
         deferredInstallPrompt = null;
         document.getElementById('install-app-btn').classList.add('hidden');
       } else {
-        alert('Para abrir StarVibe sin barra del navegador:\n\n1. En Chrome Android toca los 3 puntos (⋮) arriba a la derecha.\n2. Selecciona "Instalar aplicación" o "Añadir a pantalla de inicio".\n3. Ábrela desde el ícono de StarVibe en tu pantalla.');
+        alert('Para abrir StarVibe sin barra del navegador:
+
+1. En Chrome Android toca los 3 puntos (⋮) arriba a la derecha.
+2. Selecciona "Instalar aplicación" o "Añadir a pantalla de inicio".
+3. Ábrela desde el ícono de StarVibe en tu pantalla.');
       }
     };
 
@@ -544,7 +840,7 @@
       t.textContent = msg;
       t.style.display = 'block';
       clearTimeout(window._t);
-      window._t = setTimeout(() => { t.style.display = 'none'; }, 2900);
+      window._t = setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
     function getUserName() {
@@ -569,6 +865,7 @@
       document.getElementById('stat-videos').textContent = mine.length;
       document.getElementById('stat-likes').textContent = totalLikes;
       document.getElementById('stat-following').textContent = getFollowingSet().size;
+      updateWalletUI();
     }
 
     signInAnonymously(auth).catch(() => {});
@@ -635,6 +932,7 @@
       renderFeed();
     };
 
+    // Videos Feed
     const q = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snapshot) => {
       const hidden = getHiddenSet();
@@ -652,6 +950,31 @@
       feedEl.innerHTML = `<div class="empty-state" style="color:#f87171;">⚠️ Error al cargar feed: ${err.message}</div>`;
     });
 
+    // Helper to convert YouTube / Twitch links into embeddable URL inside the app
+    function toEmbedStreamUrl(url) {
+      try {
+        const u = new URL(url);
+        if (u.hostname.includes('youtube.com')) {
+          if (u.pathname.startsWith('/live/')) {
+            const vid = u.pathname.split('/live/')[1].split('/')[0];
+            return `https://www.youtube.com/embed/${vid}?autoplay=1&playsinline=1`;
+          }
+          const v = u.searchParams.get('v');
+          if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&playsinline=1`;
+        }
+        if (u.hostname.includes('youtu.be')) {
+          const vid = u.pathname.replace('/', '');
+          if (vid) return `https://www.youtube.com/embed/${vid}?autoplay=1&playsinline=1`;
+        }
+        if (u.hostname.includes('twitch.tv')) {
+          const ch = u.pathname.replace('/', '');
+          if (ch) return `https://player.twitch.tv/?channel=${ch}&parent=${location.hostname}`;
+        }
+      } catch (e) {}
+      return url;
+    }
+
+    // Live Rooms List
     const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
     onSnapshot(lq, (snap) => {
       const list = document.getElementById('live-rooms-list');
@@ -662,20 +985,144 @@
       }
       list.innerHTML = '';
       snap.forEach((docSnap) => {
-        const l = docSnap.data();
+        const l = { id: docSnap.id, ...docSnap.data() };
+        if ((l.reports || 0) >= 3) return;
         const card = document.createElement('div');
         card.className = 'live-card';
         card.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <span class="live-badge"><span class="live-dot"></span> EN VIVO</span>
-            <span style="font-size:12px;color:#facc15;font-weight:800;">@${l.user || 'Creador'}</span>
+            <span style="font-size:12px;color:#facc15;font-weight:800;">@${l.user || 'Creador'} • 🎁 ${l.totalGiftsCoins || 0} 🪙</span>
           </div>
           <h4 style="font-size:15px;color:#fff;">${l.title || 'Transmisión en Vivo'}</h4>
-          <a href="${l.streamUrl}" target="_blank" rel="noopener" class="ad-cta" style="padding:11px;font-size:13.5px;text-align:center;">Entrar al Directo →</a>
+          <button type="button" class="ad-cta" style="padding:11px;font-size:13.5px;text-align:center;">Entrar a la Sala En Vivo →</button>
         `;
+        card.querySelector('button').addEventListener('click', () => openLiveRoom(l));
         list.appendChild(card);
       });
     }, () => {});
+
+    window.openLiveRoom = (liveObj) => {
+      activeLiveRoom = liveObj;
+      document.getElementById('room-creator').textContent = '@' + (liveObj.user || 'Creador');
+      document.getElementById('room-title').textContent = liveObj.title || 'Sala en Vivo';
+      document.getElementById('live-iframe').src = toEmbedStreamUrl(liveObj.streamUrl);
+
+      const offerBar = document.getElementById('room-offer-bar');
+      const offerLink = document.getElementById('room-offer-link');
+      if (liveObj.offerUrl && /^https:\/\//i.test(liveObj.offerUrl)) {
+        offerLink.href = liveObj.offerUrl;
+        offerBar.style.display = 'flex';
+      } else {
+        offerBar.style.display = 'none';
+      }
+
+      updateWalletUI();
+      document.getElementById('live-room-overlay').classList.remove('hidden');
+
+      const chatList = document.getElementById('live-chat-messages');
+      chatList.innerHTML = '<div class="live-msg">Bienvenido al chat en vivo de StarVibe. Envía regalos para apoyar al creador (40% creador / 60% StarVibe).</div>';
+
+      if (unsubLiveChat) unsubLiveChat();
+      const cq = query(collection(db, 'lives', liveObj.id, 'messages'), orderBy('createdAt', 'asc'));
+      unsubLiveChat = onSnapshot(cq, (snap) => {
+        if (snap.empty) return;
+        chatList.innerHTML = '';
+        snap.forEach((mDoc) => {
+          const m = mDoc.data();
+          const div = document.createElement('div');
+          div.className = 'live-msg' + (m.isGift ? ' gift-msg' : '');
+          div.innerHTML = `<strong style="color:#facc15;">@${m.user || 'Espectador'}:</strong> ${m.text}`;
+          chatList.appendChild(div);
+        });
+        chatList.scrollTop = chatList.scrollHeight;
+      });
+    };
+
+    window.closeLiveRoom = () => {
+      document.getElementById('live-room-overlay').classList.add('hidden');
+      document.getElementById('live-iframe').src = '';
+      if (unsubLiveChat) unsubLiveChat();
+      activeLiveRoom = null;
+    };
+
+    window.reportActiveLive = async () => {
+      if (!activeLiveRoom) return;
+      if (!confirm('¿Reportar esta transmisión en vivo por infringir las normas?')) return;
+      const roomId = activeLiveRoom.id;
+      closeLiveRoom();
+      toast('🚩 Directo reportado y enviado a moderación');
+      try {
+        await updateDoc(doc(db, 'lives', roomId), { reports: increment(1) });
+      } catch (e) {}
+    };
+
+    document.getElementById('live-chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!activeLiveRoom) return;
+      const inp = document.getElementById('live-chat-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      inp.value = '';
+      try {
+        await addDoc(collection(db, 'lives', activeLiveRoom.id, 'messages'), {
+          user: getUserName(),
+          text,
+          isGift: false,
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        toast('Error al enviar mensaje');
+      }
+    });
+
+    window.sendVirtualGift = async (giftName, coinCost, brlValue) => {
+      if (!activeLiveRoom) return;
+      const currentCoins = getCoinsBalance();
+      if (currentCoins < coinCost) {
+        toast('Monedas insuficientes. Recarga para enviar ' + giftName);
+        return openRechargeModal();
+      }
+      setCoinsBalance(currentCoins - coinCost);
+
+      const creatorPct = getCreatorSplitPct();
+      const appPct = 100 - creatorPct;
+      const creatorShare = +(brlValue * (creatorPct / 100)).toFixed(2);
+      const appShare = +(brlValue * (appPct / 100)).toFixed(2);
+
+      // Si el creador es el mismo usuario local, sumar a su vista previa de ganancias
+      if (currentUser && activeLiveRoom.uid === currentUser.uid) {
+        addCreatorEarnings(creatorShare);
+      }
+
+      // Animación visual del regalo en pantalla
+      const emoji = giftName.split(' ')[0];
+      const burst = document.getElementById('live-gift-burst');
+      document.getElementById('burst-gift-emoji').textContent = emoji;
+      document.getElementById('burst-gift-text').textContent = `¡${getUserName()} envió ${giftName} (${coinCost} 🪙)!`;
+      burst.classList.add('show');
+      clearTimeout(window._gTimer);
+      window._gTimer = setTimeout(() => burst.classList.remove('show'), 1800);
+
+      try {
+        await addDoc(collection(db, 'lives', activeLiveRoom.id, 'messages'), {
+          user: getUserName(),
+          text: `envió ${giftName} (${coinCost} 🪙 • R$ ${brlValue.toFixed(2)})`,
+          isGift: true,
+          giftName,
+          coinCost,
+          brlValue,
+          creatorShare,
+          appShare,
+          createdAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'lives', activeLiveRoom.id), {
+          totalGiftsCoins: increment(coinCost),
+          totalCreatorBRL: increment(creatorShare),
+          totalAppBRL: increment(appShare)
+        });
+      } catch (e) {}
+    };
 
     function getFilteredVideos() {
       let list = [...allVideosCache];
@@ -737,7 +1184,6 @@
           <div class="seek-feedback" id="seekfb-${v.id}">⏪ -5s</div>
           <div class="heart-burst" id="burst-${v.id}">❤️</div>
 
-          <!-- Barra arrastrable para adelantar/atrasar con precisión -->
           <div class="seek-zone" id="szone-${v.id}">
             <div class="time-pill" id="tpill-${v.id}">0:00 / 0:00</div>
             <div class="vid-progress" id="prog-${v.id}">
@@ -823,7 +1269,6 @@
           }
         });
 
-        // Deslizar (scrubbing) en la barra de progreso para adelantar/atrasar
         let isScrubbing = false;
         function scrubToClientX(clientX) {
           const rect = sZone.getBoundingClientRect();
@@ -856,7 +1301,6 @@
           if (sZone.hasPointerCapture(e.pointerId)) sZone.releasePointerCapture(e.pointerId);
         });
 
-        // Doble toque: izquierda -5s, derecha +5s, centro Like; mantener presionado 2x
         let lastTap = 0;
         let holdTimer = null;
         vidEl.addEventListener('pointerdown', () => {
@@ -899,7 +1343,6 @@
 
         feedEl.appendChild(slide);
 
-        // Tarjeta patrocinada nativa cada 4 videos
         if ((idx + 1) % 4 === 0) {
           const adSlide = document.createElement('div');
           adSlide.className = 'slide ad-slide';
@@ -1051,18 +1494,32 @@
       e.preventDefault();
       const title = document.getElementById('live-title-input').value.trim();
       const streamUrl = document.getElementById('live-url-input').value.trim();
+      const offerUrl = document.getElementById('live-offer-url-input').value.trim();
       if (!/^https:\/\//i.test(streamUrl)) return toast('Ingresa un enlace HTTPS válido');
       try {
-        await addDoc(collection(db, 'lives'), {
+        const docRef = await addDoc(collection(db, 'lives'), {
           title,
           streamUrl,
+          offerUrl,
           user: getUserName(),
           uid: currentUser ? currentUser.uid : 'guest',
+          totalGiftsCoins: 0,
+          totalCreatorBRL: 0,
+          totalAppBRL: 0,
+          reports: 0,
           createdAt: serverTimestamp()
         });
         document.getElementById('live-form').reset();
         closeLiveModal();
-        toast('📡 ¡Sala En Vivo publicada!');
+        toast('📡 ¡Sala En Vivo activada!');
+        openLiveRoom({
+          id: docRef.id,
+          title,
+          streamUrl,
+          offerUrl,
+          user: getUserName(),
+          uid: currentUser ? currentUser.uid : 'guest'
+        });
       } catch (err) {
         toast('Error al publicar sala');
       }
@@ -1284,6 +1741,8 @@
         alert('Política DMCA / Copyright: Si un contenido infringe derechos de autor, repórtalo con el botón 🚩 o escribe a suporte@starvibeapp.sbs para su retirada inmediata.');
       }
     };
+
+    updateWalletUI();
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
