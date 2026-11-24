@@ -911,7 +911,7 @@
 
       <!-- 2. Solicitudes de Retiro PIX de Creadores -->
       <div class="wallet-card" style="border-color:rgba(16,185,129,0.5);margin-bottom:12px;">
-        <strong style="font-size:13px;color:#6ee7b7;display:block;margin-bottom:8px;">💸 Solicitudes de Retiro PIX (Mín. R$ 50,00)</strong>
+        <strong style="font-size:13px;color:#6ee7b7;display:block;margin-bottom:8px;">💸 Solicitudes de Retiro (PIX • PayPal • Binance Solana)</strong>
         <div id="admin-payouts-list" style="font-size:11.5px;color:#d1d5db;display:flex;flex-direction:column;gap:8px;">
           Cargando solicitudes PIX...
         </div>
@@ -995,7 +995,7 @@
         <input id="form-fullname" type="text" maxlength="80" placeholder="Nombre completo (igual que documento)..." class="text-input" required />
         <input id="form-doc" type="text" maxlength="25" placeholder="CPF / DNI / Documento de identidad..." class="text-input" required />
         <input id="form-email" type="email" maxlength="90" placeholder="Correo electrónico de contacto..." class="text-input" required />
-        <input id="form-pix" type="text" maxlength="90" placeholder="Clave PIX para recibir pagos (CPF, correo, celular o aleatoria)..." class="text-input" required />
+        <input id="form-pix" type="text" maxlength="90" placeholder="Cuenta de cobro (Clave PIX, correo PayPal o dirección/UID Binance USDC/USDT Solana)..." class="text-input" required />
         <label class="check-row">
           <input id="form-age18" type="checkbox" required />
           <span>Declaro ser mayor de 18 años y acepto el tratamiento de mis datos bajo la LGPD para operaciones y pagos en StarVibe.</span>
@@ -1004,23 +1004,30 @@
       </form>
     </div>
 
-    <!-- MODAL RETIRO DE GANANCIAS DEL CREADOR -->
+    <!-- MODAL RETIRO DE GANANCIAS DEL CREADOR (PIX, PAYPAL Y BINANCE SOLANA) -->
     <div id="withdraw-modal" class="modal hidden">
       <div class="modal-header">
         <div class="modal-title">💸 Retirar Ganancias de Creador</div>
         <button onclick="closeWithdrawModal()" class="close-btn">✕</button>
       </div>
-      <div class="wallet-card" style="margin-bottom:12px;">
+      <div class="wallet-card" style="margin-bottom:12px;border-color:rgba(250,204,21,0.45);">
         <div style="display:flex;justify-content:space-between;">
           <span style="font-size:12.5px;color:#d1d5db;">Saldo disponible (Lives 35% + Videos):</span>
           <strong id="withdraw-avail-lbl" style="color:#6ee7b7;font-size:15px;">R$ 0,00</strong>
         </div>
-        <p style="font-size:11px;color:#9ca3af;margin-top:6px;">Retiro mínimo: <strong>R$ 50,00</strong> • Procesamiento en hasta 7 días hábiles tras verificación de vistas y cuenta.</p>
+        <p style="font-size:11px;color:#fde68a;margin-top:6px;">Métodos disponibles: <strong>PIX</strong>, <strong>PayPal</strong> o <strong>Binance (USDC Solana / USDT Solana)</strong>. Retiro mínimo: <strong>R$ 50,00</strong>.</p>
+        <p id="withdraw-method-hint" style="font-size:10.5px;color:#9ca3af;margin-top:4px;">⚠️ Si eliges Binance, usa red <strong>Solana</strong> para <strong>USDC</strong> o <strong>USDT</strong> y verifica bien tu dirección/cuenta.</p>
       </div>
       <form id="withdraw-form">
+        <select id="withdraw-method" class="text-input" onchange="updateWithdrawMethodUI()">
+          <option value="PIX">🇧🇷 PIX (Brasil)</option>
+          <option value="PayPal">🌐 PayPal</option>
+          <option value="Binance USDC (Solana)">🟡 Binance — USDC (Red Solana)</option>
+          <option value="Binance USDT (Solana)">🟡 Binance — USDT (Red Solana)</option>
+        </select>
         <input id="withdraw-amount" type="number" step="0.01" min="50" placeholder="Monto a retirar en R$ (mín. 50.00)..." class="text-input" required />
-        <input id="withdraw-pix" type="text" maxlength="90" placeholder="Tu clave PIX registrada..." class="text-input" required />
-        <button type="submit" class="submit-btn">Solicitar Retiro por PIX</button>
+        <input id="withdraw-pix" type="text" maxlength="110" placeholder="Clave PIX (CPF, correo, celular o aleatoria)..." class="text-input" required />
+        <button id="withdraw-submit-btn" type="submit" class="submit-btn">Solicitar Retiro por PIX</button>
       </form>
     </div>
 
@@ -1785,9 +1792,10 @@
                   <strong style="color:#6ee7b7;">R$ ${Number(p.amountBRL || 0).toFixed(2).replace('.', ',')}</strong>
                   <span style="font-size:10.5px;color:${p.status === 'paid' ? '#6ee7b7' : '#facc15'};">${p.status === 'paid' ? '✅ PAGADO' : '⏳ PENDIENTE'}</span>
                 </div>
-                <div style="margin-top:3px;color:#fff;">Titular: <strong>${p.fullName || p.uid}</strong></div>
-                <div style="font-size:11px;color:#93c5fd;word-break:break-all;margin:3px 0 6px;">PIX: <strong>${p.pixKey}</strong></div>
-                ${p.status !== 'paid' ? `<button type="button" class="pill-btn gold" style="width:100%;" onclick="adminMarkPayoutPaid('${p.id}')">✅ Marcar PIX como Pagado</button>` : ''}
+                <div style="margin-top:3px;color:#fde68a;font-size:11px;">Método: <strong>${p.method || 'PIX / PayPal / Binance Solana'}</strong></div>
+                <div style="margin-top:2px;color:#fff;">Titular: <strong>${p.fullName || p.uid}</strong></div>
+                <div style="font-size:11px;color:#93c5fd;word-break:break-all;margin:3px 0 6px;">Destino / Cuenta: <strong>${p.pixKey}</strong></div>
+                ${p.status !== 'paid' ? `<button type="button" class="pill-btn gold" style="width:100%;" onclick="adminMarkPayoutPaid('${p.id}')">✅ Marcar Retiro como Pagado</button>` : ''}
               </div>
             `).join('');
           }
@@ -2816,21 +2824,56 @@
     window.openCreatorRulesModal = () => document.getElementById('creator-rules-modal').classList.remove('hidden');
     window.closeCreatorRulesModal = () => document.getElementById('creator-rules-modal').classList.add('hidden');
 
+    window.updateWithdrawMethodUI = () => {
+      const method = document.getElementById('withdraw-method')?.value || 'PIX';
+      const destInp = document.getElementById('withdraw-pix');
+      const hintEl = document.getElementById('withdraw-method-hint');
+      const subBtn = document.getElementById('withdraw-submit-btn');
+      if (!destInp || !subBtn) return;
+      if (method === 'PIX') {
+        destInp.placeholder = 'Tu clave PIX (CPF, correo, celular o aleatoria)...';
+        if (hintEl) hintEl.textContent = '🇧🇷 Retiro por PIX en Reales (R$) • Mínimo R$ 50,00.';
+        subBtn.textContent = 'Solicitar Retiro por PIX';
+      } else if (method === 'PayPal') {
+        destInp.placeholder = 'Tu correo electrónico de PayPal...';
+        if (hintEl) hintEl.textContent = '🌐 Retiro por PayPal • Indica el correo exacto de tu cuenta PayPal.';
+        subBtn.textContent = 'Solicitar Retiro por PayPal';
+      } else {
+        const coinLbl = method.includes('USDC') ? 'USDC' : 'USDT';
+        destInp.placeholder = 'Dirección o cuenta Binance en red Solana (' + coinLbl + ')...';
+        if (hintEl) hintEl.textContent = '⚠️ Solo Binance en red Solana (' + coinLbl + '). Verifica bien la dirección/cuenta antes de enviar.';
+        subBtn.textContent = 'Solicitar Retiro ' + method;
+      }
+    };
+
     window.openWithdrawModal = () => {
       const f = getFormalData();
       if (!f || !f.pixKey) {
-        toast('⚠️ Formaliza tu cuenta y clave PIX primero');
+        toast('⚠️ Formaliza tu cuenta y datos de cobro primero');
         return openFormalizeModal();
       }
       const avail = getCreatorEarnings();
       document.getElementById('withdraw-avail-lbl').textContent = 'R$ ' + avail.toFixed(2).replace('.', ',');
-      document.getElementById('withdraw-pix').value = f.pixKey || '';
+      const savedVal = f.pixKey || '';
+      const methodSel = document.getElementById('withdraw-method');
+      if (methodSel) {
+        if (/paypal/i.test(savedVal) || (savedVal.includes('@') && !/^\+?\d{10,15}$/.test(savedVal) && !/^\d{11}$/.test(savedVal.replace(/\D/g,'')))) {
+          methodSel.value = 'PayPal';
+        } else if (/solana|usdc|usdt|binance/i.test(savedVal)) {
+          methodSel.value = /usdc/i.test(savedVal) ? 'Binance USDC (Solana)' : 'Binance USDT (Solana)';
+        } else {
+          methodSel.value = 'PIX';
+        }
+      }
+      updateWithdrawMethodUI();
+      document.getElementById('withdraw-pix').value = savedVal;
       document.getElementById('withdraw-modal').classList.remove('hidden');
     };
     window.closeWithdrawModal = () => document.getElementById('withdraw-modal').classList.add('hidden');
 
     document.getElementById('withdraw-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const method = document.getElementById('withdraw-method')?.value || 'PIX';
       const amount = Number(document.getElementById('withdraw-amount').value || 0);
       const pixKey = document.getElementById('withdraw-pix').value.trim();
       const f = getFormalData() || {};
@@ -2843,6 +2886,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amountBRL: amount,
+            method,
             pixKey,
             fullName: f.fullName || getUserName(),
             uid: getActiveUserId()

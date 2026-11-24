@@ -204,18 +204,19 @@ app.post('/api/wallet/gift', async (req, res) => {
   }
 });
 
-// 4c. Retiros PIX (mínimo R$ 50,00)
+// 4c. Retiros PIX, PayPal y Binance USDC/USDT Solana (mínimo R$ 50,00)
 app.post('/api/payouts/request', async (req, res) => {
   try {
-    const { amountBRL, pixKey, fullName, uid = 'guest' } = req.body || {};
+    const { amountBRL, method = 'PIX', pixKey, fullName, uid = 'guest' } = req.body || {};
     const amount = Number(amountBRL || 0);
     if (amount < 50 || !pixKey) {
-      return res.status(400).json({ ok: false, error: 'Monto mínimo R$ 50,00 y clave PIX requerida.' });
+      return res.status(400).json({ ok: false, error: 'Monto mínimo R$ 50,00 y cuenta de cobro requerida.' });
     }
     if (db) {
       await db.collection('starvibe_payouts').add({
         uid: String(uid),
         fullName: String(fullName || ''),
+        method: String(method || 'PIX'),
         pixKey: String(pixKey),
         amountBRL: amount,
         status: 'pending',
