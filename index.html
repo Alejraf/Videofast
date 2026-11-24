@@ -1329,7 +1329,8 @@
     function setCoinsBalance(n) {
       localStorage.setItem('sv_coins', String(Math.max(0, n)));
       updateWalletUI();
-    refreshAdminAndReferralUI();
+      if (typeof refreshAdminAndReferralUI === 'function') refreshAdminAndReferralUI();
+    }
     // ==========================================
     // SISTEMA DE REFERIDOS CON METAS Y ANTI-FRAUDE
     // ==========================================
@@ -2436,6 +2437,7 @@
         document.querySelectorAll('#video-feed video').forEach((v) => v.pause());
         updateProfileHeader();
         renderProfileGrid();
+        if (typeof refreshAdminAndReferralUI === 'function') refreshAdminAndReferralUI();
       } else {
         setupAutoPlay();
       }
@@ -2927,6 +2929,7 @@
 
     setLanguage(currentLang);
     updateWalletUI();
+    refreshAdminAndReferralUI();
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
