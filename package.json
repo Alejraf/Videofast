@@ -1,12 +1,16 @@
 {
-  "name": "starvibe-shielded-server",
-  "version": "5.0.0",
-  "description": "StarVibe Shielded Server with Keep-Alive, Persistent Payments, Payouts & Legal/Creator Compliance",
+  "name": "starvibe-server",
+  "version": "1.1.0",
+  "description": "Backend de StarVibe con Mercado Pago Checkout Pro y Firebase Firestore",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.1"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.0",
+    "mercadopago": "^2.0.15"
   }
 }

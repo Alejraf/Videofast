@@ -1,0 +1,11 @@
+INSTRUCCIONES RÁPIDAS PARA STARVIBE + FIREBASE FIRESTORE
+
+1. Sube `package.json` y `server.js` a tu repositorio de GitHub (reemplazando los anteriores).
+2. En Firebase Console -> Configuración del proyecto -> Cuentas de servicio -> Generar nueva clave privada (descarga el .json).
+3. En Render -> Videofast light -> Environment, agrega estas 3 variables usando los datos de ese archivo .json:
+   - FIREBASE_PROJECT_ID  (el valor de "project_id")
+   - FIREBASE_CLIENT_EMAIL (el valor de "client_email")
+   - FIREBASE_PRIVATE_KEY  (todo el texto de "private_key", desde -----BEGIN PRIVATE KEY----- hasta -----END PRIVATE KEY-----\n)
+4. Guarda los cambios en Render para que se redespliegue el servidor.
+5. Verifica en https://videofast-light.onrender.com/api/health que aparezca:
+   "firebaseConfigured": true

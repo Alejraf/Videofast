@@ -1,216 +1,305 @@
+require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
+const admin = require('firebase-admin');
+const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 
 const app = express();
-app.use(express.json({ limit: '1mb' }));
-app.use(express.static(path.join(__dirname)));
-
 const PORT = process.env.PORT || 3000;
-const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
-const PUBLIC_APP_URL = process.env.PUBLIC_APP_URL || '';
-const DATA_FILE = path.join(__dirname, 'starvibe_data.json');
 
-const COIN_PACKS = {
-  50: { coins: 50, title: 'StarVibe — 50 Monedas', unit_price: 5.0 },
-  150: { coins: 150, title: 'StarVibe — 150 Monedas', unit_price: 15.0 },
-  500: { coins: 500, title: 'StarVibe — 500 Monedas', unit_price: 50.0 },
-  1000: { coins: 1000, title: 'StarVibe — 1000 Monedas', unit_price: 100.0 }
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 1. Inicializar Firebase Admin (Firestore)
+let db = null;
+const hasFirebaseEnv =
+  Boolean(process.env.FIREBASE_PROJECT_ID) &&
+  Boolean(process.env.FIREBASE_CLIENT_EMAIL) &&
+  Boolean(process.env.FIREBASE_PRIVATE_KEY);
+
+if (hasFirebaseEnv) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+      })
+    });
+    db = admin.firestore();
+    console.log('✅ Firebase Firestore conectado correctamente.');
+  } catch (err) {
+    console.error('❌ Error inicializando Firebase Admin:', err.message);
+  }
+} else {
+  console.warn('⚠️ Variables de Firebase no configuradas. Usando respaldo temporal en memoria.');
+}
+
+// Respaldo en memoria por si aún no se cargan las variables de Firebase
+const memoryBalances = new Map();
+const processedPayments = new Set();
+
+// 2. Configurar Mercado Pago
+const mpAccessToken = process.env.MP_ACCESS_TOKEN || '';
+const publicAppUrl = (process.env.PUBLIC_APP_URL || '').replace(/\/$/, '');
+const mpClient = mpAccessToken ? new MercadoPagoConfig({ accessToken: mpAccessToken }) : null;
+
+// Paquetes oficiales de monedas StarVibe
+const COIN_PACKAGES = {
+  pack_50: { id: 'pack_50', title: '50 Monedas StarVibe', coins: 50, price: 5.0 },
+  pack_150: { id: 'pack_150', title: '150 Monedas StarVibe', coins: 150, price: 14.0 },
+  pack_500: { id: 'pack_500', title: '500 Monedas StarVibe', coins: 500, price: 45.0 },
+  pack_1200: { id: 'pack_1200', title: '1200 Monedas StarVibe', coins: 1200, price: 99.0 }
 };
 
-function loadPersistentState() {
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      const raw = fs.readFileSync(DATA_FILE, 'utf8');
-      const parsed = JSON.parse(raw);
-      return {
-        payments: parsed.payments || {},
-        withdrawals: parsed.withdrawals || []
-      };
+// Funciones auxiliares para leer y sumar monedas en Firestore
+async function getUserBalance(userId) {
+  const safeUserId = String(userId || 'guest').trim();
+  if (db) {
+    const userRef = db.collection('starvibe_users').doc(safeUserId);
+    const snap = await userRef.get();
+    if (!snap.exists) {
+      await userRef.set({
+        coins: 100,
+        creatorEarnings: 0,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      return { coins: 100, creatorEarnings: 0 };
     }
-  } catch (e) {}
-  return { payments: {}, withdrawals: [] };
+    const data = snap.data() || {};
+    return {
+      coins: Number(data.coins ?? 100),
+      creatorEarnings: Number(data.creatorEarnings ?? 0)
+    };
+  }
+  if (!memoryBalances.has(safeUserId)) {
+    memoryBalances.set(safeUserId, { coins: 100, creatorEarnings: 0 });
+  }
+  return memoryBalances.get(safeUserId);
 }
 
-let dbState = loadPersistentState();
+async function creditCoinsOnce({ paymentId, userId, coins, amountBRL }) {
+  const safePaymentId = String(paymentId);
+  const safeUserId = String(userId || 'guest').trim();
+  const coinsToAdd = Number(coins || 0);
 
-function savePersistentState() {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(dbState, null, 2), 'utf8');
-  } catch (e) {}
+  if (!safePaymentId || coinsToAdd <= 0) return { credited: false, reason: 'invalid_data' };
+
+  if (db) {
+    const paymentRef = db.collection('starvibe_payments').doc(safePaymentId);
+    const userRef = db.collection('starvibe_users').doc(safeUserId);
+
+    return await db.runTransaction(async (tx) => {
+      const paymentDoc = await tx.get(paymentRef);
+      if (paymentDoc.exists && paymentDoc.data()?.credited) {
+        return { credited: false, reason: 'already_processed' };
+      }
+
+      const userDoc = await tx.get(userRef);
+      const currentCoins = userDoc.exists ? Number(userDoc.data()?.coins ?? 100) : 100;
+      const newBalance = currentCoins + coinsToAdd;
+
+      tx.set(
+        userRef,
+        {
+          coins: newBalance,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      tx.set(paymentRef, {
+        paymentId: safePaymentId,
+        userId: safeUserId,
+        coins: coinsToAdd,
+        amountBRL: Number(amountBRL || 0),
+        credited: true,
+        processedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      return { credited: true, newBalance };
+    });
+  }
+
+  // Respaldo en memoria si no hay Firestore
+  if (processedPayments.has(safePaymentId)) {
+    return { credited: false, reason: 'already_processed' };
+  }
+  processedPayments.add(safePaymentId);
+  const current = await getUserBalance(safeUserId);
+  current.coins += coinsToAdd;
+  memoryBalances.set(safeUserId, current);
+  return { credited: true, newBalance: current.coins };
 }
 
-// Health check endpoint (used by external monitors like UptimeRobot/Cron and self-keepalive)
+// 3. Endpoint de diagnóstico (/api/health)
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
-    service: 'StarVibe Shielded Server',
-    timestamp: new Date().toISOString(),
-    mpConfigured: Boolean(MP_ACCESS_TOKEN)
+    mpConfigured: Boolean(mpClient),
+    firebaseConfigured: Boolean(db),
+    publicAppUrl: publicAppUrl || null
   });
 });
 
-// Anti-sleep keep-alive ping every 10 minutes
-setInterval(() => {
-  const targetUrl = PUBLIC_APP_URL || `http://127.0.0.1:${PORT}/api/health`;
-  fetch(targetUrl, { method: 'GET' }).catch(() => {});
-}, 10 * 60 * 1000);
-
-// Create Mercado Pago order
-app.post('/api/mercadopago/create-order', async (req, res) => {
+// 4. Consultar saldo actual del usuario
+app.get('/api/wallet/:userId', async (req, res) => {
   try {
-    const packId = Number(req.body.packCoins);
-    const userId = String(req.body.userId || 'guest').slice(0, 80);
-    const pack = COIN_PACKS[packId];
+    const balance = await getUserBalance(req.params.userId);
+    res.json({ ok: true, userId: req.params.userId, ...balance });
+  } catch (error) {
+    console.error('Error consultando saldo:', error);
+    res.status(500).json({ ok: false, error: 'Error consultando saldo' });
+  }
+});
 
-    if (!pack) {
-      return res.status(400).json({ error: 'Paquete de monedas no válido' });
+// 5. Crear preferencia de pago en Mercado Pago
+app.post('/api/mercadopago/create-preference', async (req, res) => {
+  try {
+    if (!mpClient) {
+      return res.status(500).json({ ok: false, error: 'MP_ACCESS_TOKEN no configurado en el servidor.' });
     }
-    if (!MP_ACCESS_TOKEN) {
-      return res.status(500).json({ error: 'Falta configurar MP_ACCESS_TOKEN en Render' });
-    }
 
-    const baseUrl = PUBLIC_APP_URL || `${req.protocol}://${req.get('host')}`;
-    const externalRef = `sv_${userId}_${pack.coins}_${Date.now()}`;
+    const { packageId, userId = 'guest', coins: customCoins, price: customPrice, title: customTitle } = req.body || {};
+    const selected = COIN_PACKAGES[packageId] || {
+      id: packageId || 'custom',
+      title: customTitle || `${customCoins || 50} Monedas StarVibe`,
+      coins: Number(customCoins || 50),
+      price: Number(customPrice || 5.0)
+    };
 
-    const mpResp = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+    const baseUrl = publicAppUrl || `${req.protocol}://${req.get('host')}`;
+    const preference = new Preference(mpClient);
+
+    const response = await preference.create({
+      body: {
         items: [
           {
-            title: pack.title,
+            id: selected.id,
+            title: selected.title,
             quantity: 1,
             currency_id: 'BRL',
-            unit_price: pack.unit_price
+            unit_price: Number(selected.price)
           }
         ],
-        external_reference: externalRef,
+        external_reference: JSON.stringify({
+          userId: String(userId),
+          coins: Number(selected.coins),
+          packageId: selected.id
+        }),
         notification_url: `${baseUrl}/api/mercadopago/webhook`,
         back_urls: {
-          success: `${baseUrl}/?mp_status=approved&ref=${encodeURIComponent(externalRef)}`,
-          pending: `${baseUrl}/?mp_status=pending&ref=${encodeURIComponent(externalRef)}`,
-          failure: `${baseUrl}/?mp_status=failure&ref=${encodeURIComponent(externalRef)}`
+          success: `${baseUrl}/?payment=success&coins=${selected.coins}`,
+          failure: `${baseUrl}/?payment=failure`,
+          pending: `${baseUrl}/?payment=pending`
         },
-        auto_return: 'approved',
-        payment_methods: {
-          excluded_payment_types: [],
-          installments: 1
-        }
-      })
-    });
-
-    const data = await mpResp.json();
-    if (!mpResp.ok) {
-      return res.status(mpResp.status).json({ error: data.message || 'Error en Mercado Pago' });
-    }
-
-    dbState.payments[externalRef] = {
-      userId,
-      coins: pack.coins,
-      amountBRL: pack.unit_price,
-      status: 'pending',
-      approved: false,
-      createdAt: new Date().toISOString()
-    };
-    savePersistentState();
-
-    return res.json({
-      ref: externalRef,
-      checkoutUrl: data.init_point,
-      sandboxUrl: data.sandbox_init_point
-    });
-  } catch (err) {
-    return res.status(500).json({ error: err.message || 'Error interno del servidor' });
-  }
-});
-
-// Mercado Pago Webhook
-app.post('/api/mercadopago/webhook', async (req, res) => {
-  try {
-    const topic = req.query.type || req.body.type;
-    const paymentId = req.query['data.id'] || (req.body.data && req.body.data.id);
-
-    if (topic === 'payment' && paymentId && MP_ACCESS_TOKEN) {
-      const checkResp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: { 'Authorization': `Bearer ${MP_ACCESS_TOKEN}` }
-      });
-      if (checkResp.ok) {
-        const payment = await checkResp.json();
-        const ref = payment.external_reference;
-        if (ref && dbState.payments[ref]) {
-          dbState.payments[ref].status = payment.status;
-          dbState.payments[ref].approved = payment.status === 'approved';
-          dbState.payments[ref].updatedAt = new Date().toISOString();
-          savePersistentState();
-        }
+        auto_return: 'approved'
       }
-    }
-    return res.status(200).send('OK');
-  } catch (err) {
-    return res.status(200).send('OK');
+    });
+
+    res.json({
+      ok: true,
+      id: response.id,
+      init_point: response.init_point,
+      sandbox_init_point: response.sandbox_init_point
+    });
+  } catch (error) {
+    console.error('Error creando preferencia de Mercado Pago:', error);
+    res.status(500).json({
+      ok: false,
+      error: error?.message || 'No se pudo iniciar el pago en Mercado Pago'
+    });
   }
 });
 
-// Check order status
-app.get('/api/mercadopago/status', (req, res) => {
-  const ref = String(req.query.ref || '');
-  const entry = dbState.payments[ref];
-  if (!entry) {
-    return res.status(404).json({ status: 'not_found' });
-  }
-  return res.json({
-    status: entry.status,
-    approved: entry.status === 'approved',
-    coins: entry.coins,
-    amountBRL: entry.amountBRL
-  });
-});
+// 6. Webhook de Mercado Pago (acredita monedas automáticamente al aprobarse el pago)
+app.post('/api/mercadopago/webhook', async (req, res) => {
+  // Responder 200 inmediato para evitar reintentos innecesarios
+  res.status(200).json({ received: true });
 
-// Register creator payout / withdrawal request
-app.post('/api/payouts/request', (req, res) => {
   try {
-    const amountBRL = Number(req.body.amountBRL || 0);
-    const pixKey = String(req.body.pixKey || '').trim();
-    const fullName = String(req.body.fullName || '').trim();
-    const uid = String(req.body.uid || 'guest');
+    const topic = req.body?.type || req.query?.topic || req.query?.type;
+    const paymentId = req.body?.data?.id || req.query?.['data.id'] || req.query?.id;
 
-    if (!fullName || fullName.length < 4) {
-      return res.status(400).json({ error: 'Nombre completo del titular obligatorio' });
-    }
-    if (!pixKey || pixKey.length < 4) {
-      return res.status(400).json({ error: 'Clave PIX válida obligatoria' });
-    }
-    if (!isFinite(amountBRL) || amountBRL < 20) {
-      return res.status(400).json({ error: 'El retiro mínimo es de R$ 20,00' });
+    if (topic !== 'payment' || !paymentId || !mpClient) {
+      return;
     }
 
-    const requestRecord = {
-      id: 'wd_' + Date.now(),
-      uid,
-      fullName,
-      pixKey,
-      amountBRL: Number(amountBRL.toFixed(2)),
-      status: 'pending_review',
-      createdAt: new Date().toISOString()
-    };
+    const paymentApi = new Payment(mpClient);
+    const paymentInfo = await paymentApi.get({ id: String(paymentId) });
 
-    dbState.withdrawals.push(requestRecord);
-    savePersistentState();
+    if (paymentInfo.status === 'approved') {
+      let meta = { userId: 'guest', coins: 50 };
+      try {
+        if (paymentInfo.external_reference) {
+          meta = JSON.parse(paymentInfo.external_reference);
+        }
+      } catch (_) {
+        meta.userId = String(paymentInfo.external_reference || 'guest');
+      }
 
-    return res.json({ ok: true, request: requestRecord });
-  } catch (err) {
-    return res.status(500).json({ error: 'Error al registrar solicitud de retiro' });
+      const result = await creditCoinsOnce({
+        paymentId: paymentInfo.id,
+        userId: meta.userId,
+        coins: meta.coins,
+        amountBRL: paymentInfo.transaction_amount
+      });
+
+      console.log(`💰 Pago ${paymentInfo.id} aprobado -> usuario: ${meta.userId}, monedas: +${meta.coins}`, result);
+    }
+  } catch (error) {
+    console.error('❌ Error procesando webhook de Mercado Pago:', error);
   }
 });
 
+// 7. Endpoint manual para acreditar un pago aprobado por ID (útil para recuperar pagos anteriores)
+app.post('/api/mercadopago/verify-payment', async (req, res) => {
+  try {
+    const { paymentId, userId = 'guest', coins = 50 } = req.body || {};
+    if (!paymentId || !mpClient) {
+      return res.status(400).json({ ok: false, error: 'Falta paymentId o configuración de Mercado Pago' });
+    }
+
+    const paymentApi = new Payment(mpClient);
+    const paymentInfo = await paymentApi.get({ id: String(paymentId) });
+
+    if (paymentInfo.status !== 'approved') {
+      return res.json({ ok: false, status: paymentInfo.status, message: 'El pago aún no está aprobado' });
+    }
+
+    let meta = { userId: String(userId), coins: Number(coins) };
+    try {
+      if (paymentInfo.external_reference) {
+        const parsed = JSON.parse(paymentInfo.external_reference);
+        meta = {
+          userId: parsed.userId || meta.userId,
+          coins: Number(parsed.coins || meta.coins)
+        };
+      }
+    } catch (_) {}
+
+    const result = await creditCoinsOnce({
+      paymentId: paymentInfo.id,
+      userId: meta.userId,
+      coins: meta.coins,
+      amountBRL: paymentInfo.transaction_amount
+    });
+
+    const updated = await getUserBalance(meta.userId);
+    res.json({ ok: true, result, balance: updated });
+  } catch (error) {
+    console.error('Error verificando pago manual:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Fallback para servir el frontend
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`StarVibe Shielded Server running on port ${PORT}`);
+  console.log(`🚀 Servidor StarVibe activo en puerto ${PORT}`);
 });
