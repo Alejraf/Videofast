@@ -689,7 +689,41 @@
           <div class="studio-btns">
             <button class="pill-btn gold" onclick="openRechargeModal()" data-i18n="recharge_btn">➕ Recargar Monedas (PIX)</button>
             <button class="pill-btn gold" onclick="openWithdrawModal()">💸 Retirar Ganancias</button>
-            <button class="pill-btn" onclick="openSplitSettingsModal()" data-i18n="split_settings_btn">⚙️ Ajustes de Reparto</button>
+            <button id="admin-split-btn" class="pill-btn hidden" onclick="openSplitSettingsModal()" data-i18n="split_settings_btn">⚙️ Ajustes Admin & Monetag</button>
+          </div>
+        </div>
+
+        <!-- Programa de Referidos con Metas (Estilo TikTok Bonus) -->
+        <div class="wallet-card" style="border-color:rgba(250,204,21,0.45);">
+          <div class="wallet-header">
+            <strong style="font-size:14px;color:#fef08a;">🎁 Invita y Gana (Metas de Referidos)</strong>
+            <span class="split-pill" id="ref-count-pill">0 / 5 Referidos</span>
+          </div>
+          <p style="font-size:11.5px;color:#d1d5db;line-height:1.45;margin-bottom:10px;">
+            Gana <strong>R$ 0,25 por cada amigo validado</strong> (que vea al menos 2 minutos de video) + <strong>Bonos extra</strong> al cumplir metas. Se suma directo a tu saldo retirable por PIX (mín. R$ 50,00).
+          </p>
+          <div style="background:#0f1117;border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:10px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div>
+                <div style="font-size:10.5px;color:#9ca3af;">Tu código de invitación:</div>
+                <strong id="my-ref-code" style="font-size:16px;color:#facc15;letter-spacing:1px;">SV-CARGANDO</strong>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button type="button" class="pill-btn" onclick="copyReferralLink()">📋 Copiar Link</button>
+                <button type="button" class="pill-btn gold" onclick="shareReferralLink()">📲 Invitar</button>
+              </div>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:#6ee7b7;" id="ref-milestone-status">
+              🎯 Meta 1 (5 amigos): +R$ 1,50 bono • Meta 2 (15 amigos): +R$ 5,00 bono • Meta 3 (50 amigos): +R$ 20,00 bono
+            </div>
+          </div>
+
+          <div id="redeem-ref-box" style="display:flex;gap:6px;align-items:center;">
+            <input id="redeem-ref-input" type="text" maxlength="20" placeholder="¿Te invitaron? Pega el código aquí..." class="text-input" style="margin-bottom:0;flex:1;padding:9px 11px;font-size:12px;" />
+            <button type="button" class="pill-btn gold" style="padding:9px 12px;white-space:nowrap;" onclick="submitReferralCode()">Canjear</button>
+          </div>
+          <div id="redeem-ref-done" class="hidden" style="font-size:11.5px;color:#6ee7b7;margin-top:4px;">
+            ✅ Código de invitación vinculado correctamente.
           </div>
         </div>
 
@@ -838,7 +872,7 @@
         <input id="creator-share-range" type="range" min="25" max="45" step="5" value="35" style="width:100%;accent-color:#facc15;" oninput="previewSplitChange(this.value)" />
       </div>
       <button class="submit-btn" onclick="saveSplitSettings()" data-i18n="save_split_btn">Guardar Configuración</button>
-      <div class="wallet-card" style="margin-top:12px;">
+      <div id="admin-monetag-box" class="wallet-card hidden" style="margin-top:12px;">
         <strong style="font-size:13px;color:#fef08a;display:block;margin-bottom:6px;">📢 Configuración de Anuncios Monetag</strong>
         <p style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Pega tu Direct Link o Zone URL de Monetag para la pantalla de entrada y el feed (se guarda en el servidor).</p>
         <input id="monetag-url-input" type="url" placeholder="https://... (Direct Link de Monetag)" class="text-input" />
@@ -1295,6 +1329,151 @@
     function setCoinsBalance(n) {
       localStorage.setItem('sv_coins', String(Math.max(0, n)));
       updateWalletUI();
+    refreshAdminAndReferralUI();
+    // ==========================================
+    // SISTEMA DE REFERIDOS CON METAS Y ANTI-FRAUDE
+    // ==========================================
+    function getMyReferralCode() {
+      const uid = getActiveUserId();
+      if (uid === OWNER_USER_ID) return 'SV-ADMIN1';
+      let hash = 0;
+      for (let i = 0; i < uid.length; i++) {
+        hash = ((hash << 5) - hash) + uid.charCodeAt(i);
+        hash |= 0;
+      }
+      return 'SV-' + Math.abs(hash).toString(36).toUpperCase().padStart(5, '0').slice(0, 6);
+    }
+
+    function getDeviceFingerprint() {
+      let fp = localStorage.getItem('sv_device_fp');
+      if (!fp) {
+        fp = 'dev_' + Math.random().toString(36).slice(2) + '_' + screen.width + 'x' + screen.height;
+        localStorage.setItem('sv_device_fp', fp);
+      }
+      return fp;
+    }
+
+    function refreshAdminAndReferralUI() {
+      const isAdmin = getActiveUserId() === OWNER_USER_ID;
+      const adminBtn = document.getElementById('admin-split-btn');
+      const adminMonetagBox = document.getElementById('admin-monetag-box');
+      if (adminBtn) adminBtn.classList.toggle('hidden', !isAdmin);
+      if (adminMonetagBox) adminMonetagBox.classList.toggle('hidden', !isAdmin);
+
+      const codeEl = document.getElementById('my-ref-code');
+      if (codeEl) codeEl.textContent = getMyReferralCode();
+
+      const usedRef = localStorage.getItem('sv_redeemed_ref');
+      const box = document.getElementById('redeem-ref-box');
+      const done = document.getElementById('redeem-ref-done');
+      if (usedRef) {
+        if (box) box.classList.add('hidden');
+        if (done) {
+          done.classList.remove('hidden');
+          done.textContent = '✅ Invitado con código ' + usedRef + ' (ve 2 min de videos para validar el bono).';
+        }
+      }
+
+      fetch('/api/referrals/status/' + encodeURIComponent(getActiveUserId()))
+        .then(r => r.json())
+        .then(d => {
+          if (!d || !d.ok) return;
+          const count = Number(d.validReferrals || 0);
+          const nextGoal = count < 5 ? 5 : count < 15 ? 15 : count < 50 ? 50 : 100;
+          const pill = document.getElementById('ref-count-pill');
+          if (pill) pill.textContent = count + ' / ' + nextGoal + ' Referidos';
+          const statusEl = document.getElementById('ref-milestone-status');
+          if (statusEl) {
+            statusEl.innerHTML = '✅ Validados: <strong>' + count + '</strong> • Ganado por referidos: <strong>R$ ' + Number(d.referralEarnings || 0).toFixed(2).replace('.', ',') + '</strong><br>🎯 Metas: 5 amigos (+R$ 1,50) • 15 amigos (+R$ 5,00) • 50 amigos (+R$ 20,00)';
+          }
+        }).catch(() => {});
+    }
+
+    window.copyReferralLink = async () => {
+      const link = window.location.origin + '/?ref=' + encodeURIComponent(getMyReferralCode());
+      try {
+        await navigator.clipboard.writeText(link);
+        toast('📋 Link de invitación copiado: ' + getMyReferralCode());
+      } catch (e) {
+        toast('Tu código es: ' + getMyReferralCode());
+      }
+    };
+
+    window.shareReferralLink = async () => {
+      const code = getMyReferralCode();
+      const link = window.location.origin + '/?ref=' + encodeURIComponent(code);
+      const text = '¡Entra a StarVibe con mi código ' + code + ' y gana recompensas viendo videos y en Lives! ' + link;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'StarVibe Invitación', text, url: link }); return; } catch (e) {}
+      }
+      window.copyReferralLink();
+    };
+
+    window.submitReferralCode = async (overrideCode) => {
+      const raw = (overrideCode || document.getElementById('redeem-ref-input')?.value || '').trim().toUpperCase();
+      if (!raw || raw.length < 4) return toast('Ingresa un código de referido válido');
+      if (raw === getMyReferralCode()) return toast('No puedes usar tu propio código');
+      if (localStorage.getItem('sv_redeemed_ref')) return toast('Ya canjeaste un código de invitación');
+
+      try {
+        const resp = await fetch('/api/referrals/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            referralCode: raw,
+            invitedUserId: getActiveUserId(),
+            deviceFp: getDeviceFingerprint()
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          return toast('⚠️ ' + (data.error || 'Código inválido'));
+        }
+        localStorage.setItem('sv_redeemed_ref', raw);
+        refreshAdminAndReferralUI();
+        toast('🎁 Código ' + raw + ' registrado. ¡Mira 2 min de videos para validarlo!');
+      } catch (e) {
+        toast('Error al registrar código');
+      }
+    };
+
+    (function checkUrlReferral() {
+      const params = new URLSearchParams(window.location.search);
+      const refParam = (params.get('ref') || '').trim().toUpperCase();
+      if (refParam && !localStorage.getItem('sv_redeemed_ref') && refParam !== getMyReferralCode()) {
+        setTimeout(() => window.submitReferralCode(refParam), 1200);
+      }
+      fetch('/api/referrals/bind-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: getActiveUserId(), referralCode: getMyReferralCode() })
+      }).catch(() => {});
+    })();
+
+    setInterval(() => {
+      const pendingRef = localStorage.getItem('sv_redeemed_ref');
+      if (!pendingRef || localStorage.getItem('sv_ref_validated') === '1') return;
+      const anyPlaying = Array.from(document.querySelectorAll('#video-feed video')).some(v => !v.paused && !v.ended);
+      if (!anyPlaying) return;
+      const watched = Number(localStorage.getItem('sv_ref_watch_sec') || 0) + 5;
+      localStorage.setItem('sv_ref_watch_sec', String(watched));
+      if (watched >= 120) {
+        localStorage.setItem('sv_ref_validated', '1');
+        fetch('/api/referrals/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            invitedUserId: getActiveUserId(),
+            deviceFp: getDeviceFingerprint()
+          })
+        }).then(r => r.json()).then(d => {
+          if (d && d.ok && d.validated) {
+            toast('🎉 ¡Tu invitación fue validada y sumó recompensa!');
+          }
+        }).catch(() => {});
+      }
+    }, 5000);
+
     refreshFormalStatusUI();
       refreshFormalStatusUI();
     }
@@ -1489,6 +1668,7 @@
     checkMercadoPagoReturn();
 
     window.openSplitSettingsModal = () => {
+      if (getActiveUserId() !== OWNER_USER_ID) return;
       const cSplit = getCreatorSplitPct();
       document.getElementById('creator-share-range').value = cSplit;
       previewSplitChange(cSplit);

@@ -318,6 +318,141 @@ app.post('/api/config/monetag', async (req, res) => {
   }
 });
 
+// 4f. Sistema de Referidos con Metas y Anti-Fraude (R$ 0,25 por amigo validado + bonos por meta)
+const REFERRAL_MILESTONES = {
+  5: 1.50,
+  15: 5.00,
+  50: 20.00,
+  100: 50.00
+};
+
+app.post('/api/referrals/bind-code', async (req, res) => {
+  try {
+    const { userId, referralCode } = req.body || {};
+    if (!db || !userId || !referralCode) return res.json({ ok: true });
+    const cleanCode = String(referralCode).trim().toUpperCase();
+    await db.collection('starvibe_ref_codes').doc(cleanCode).set({
+      userId: String(userId).trim(),
+      referralCode: cleanCode,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    await db.collection('starvibe_users').doc(String(userId).trim()).set({
+      referralCode: cleanCode
+    }, { merge: true });
+    res.json({ ok: true });
+  } catch (e) {
+    res.json({ ok: false });
+  }
+});
+
+app.get('/api/referrals/status/:userId', async (req, res) => {
+  try {
+    const uid = String(req.params.userId || '').trim();
+    if (!db || !uid) return res.json({ ok: true, validReferrals: 0, referralEarnings: 0 });
+    const snap = await db.collection('starvibe_users').doc(uid).get();
+    const data = snap.exists ? snap.data() : {};
+    res.json({
+      ok: true,
+      validReferrals: Number(data.validReferrals || 0),
+      referralEarnings: Number(data.referralEarnings || 0)
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/api/referrals/register', async (req, res) => {
+  try {
+    const { referralCode, invitedUserId, deviceFp } = req.body || {};
+    if (!db) return res.status(500).json({ ok: false, error: 'Base de datos no disponible' });
+    const cleanCode = String(referralCode || '').trim().toUpperCase();
+    const invitedId = String(invitedUserId || '').trim();
+    const fp = String(deviceFp || '').trim();
+    if (!cleanCode || !invitedId) return res.status(400).json({ ok: false, error: 'Datos incompletos' });
+
+    const codeSnap = await db.collection('starvibe_ref_codes').doc(cleanCode).get();
+    if (!codeSnap.exists) {
+      return res.status(404).json({ ok: false, error: 'Código de invitación no encontrado' });
+    }
+    const inviterId = codeSnap.data().userId;
+    if (inviterId === invitedId) {
+      return res.status(400).json({ ok: false, error: 'No puedes usar tu propio código' });
+    }
+
+    const inviteRef = db.collection('starvibe_referrals').doc(invitedId);
+    const existing = await inviteRef.get();
+    if (existing.exists) {
+      return res.status(400).json({ ok: false, error: 'Este usuario ya registró un código de referido' });
+    }
+    if (fp) {
+      const fpSnap = await db.collection('starvibe_referrals').where('deviceFp', '==', fp).limit(1).get();
+      if (!fpSnap.empty) {
+        return res.status(400).json({ ok: false, error: 'Este dispositivo ya participó en el programa de referidos' });
+      }
+    }
+
+    await inviteRef.set({
+      invitedUserId: invitedId,
+      inviterUserId: inviterId,
+      referralCode: cleanCode,
+      deviceFp: fp,
+      validated: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.json({ ok: true, pendingValidation: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/api/referrals/validate', async (req, res) => {
+  try {
+    const { invitedUserId } = req.body || {};
+    if (!db || !invitedUserId) return res.json({ ok: true, validated: false });
+    const invitedId = String(invitedUserId).trim();
+    const inviteRef = db.collection('starvibe_referrals').doc(invitedId);
+
+    const out = await db.runTransaction(async (tx) => {
+      const invSnap = await tx.get(inviteRef);
+      if (!invSnap.exists) return { validated: false };
+      const invData = invSnap.data();
+      if (invData.validated) return { validated: true, already: true };
+
+      const inviterRef = db.collection('starvibe_users').doc(invData.inviterUserId);
+      const inviterSnap = await tx.get(inviterRef);
+      const uData = inviterSnap.exists ? inviterSnap.data() : {};
+
+      const newCount = Number(uData.validReferrals || 0) + 1;
+      const baseReward = 0.25;
+      const milestoneBonus = REFERRAL_MILESTONES[newCount] || 0;
+      const totalAdded = +(baseReward + milestoneBonus).toFixed(2);
+
+      const newRefEarnings = +(Number(uData.referralEarnings || 0) + totalAdded).toFixed(2);
+      const newCreatorEarnings = +(Number(uData.creatorEarnings || 0) + totalAdded).toFixed(2);
+
+      tx.set(inviteRef, {
+        validated: true,
+        rewardGranted: totalAdded,
+        validatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      tx.set(inviterRef, {
+        validReferrals: newCount,
+        referralEarnings: newRefEarnings,
+        creatorEarnings: newCreatorEarnings,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      return { validated: true, newCount, totalAdded, milestoneBonus };
+    });
+
+    res.json({ ok: true, ...out });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // 5. Crear preferencia de pago en Mercado Pago
 app.post('/api/mercadopago/create-preference', async (req, res) => {
   try {
