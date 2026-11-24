@@ -92,21 +92,59 @@
       background: rgba(0,0,0,0.78); border: 1px solid var(--gold-2); color: var(--gold-2);
       font-size: 11px; font-weight: 900; padding: 4px 12px; border-radius: 999px; z-index: 18; display: none;
     }
+    .seek-feedback {
+      position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(5,5,7,0.82); border: 1px solid var(--gold-2); color: var(--gold-1);
+      font-size: 15px; font-weight: 900; padding: 8px 18px; border-radius: 999px;
+      pointer-events: none; opacity: 0; transition: opacity 0.2s ease; z-index: 22;
+    }
+    .seek-feedback.show { opacity: 1; }
     .heart-burst {
       position: absolute; font-size: 86px; pointer-events: none; opacity: 0;
       transform: scale(0.4); transition: all 0.35s ease; z-index: 15;
     }
     .heart-burst.show { opacity: 1; transform: scale(1.15); }
 
-    /* Interactive Progress Bar */
-    .vid-progress {
-      position: absolute; left: 0; right: 0; bottom: 64px; height: 4px;
-      background: rgba(255,255,255,0.22); z-index: 18; cursor: pointer;
+    /* Interactive Scrubbable Progress Bar + Time Pill */
+    .seek-zone {
+      position: absolute; left: 0; right: 0; bottom: 64px; height: 26px;
+      z-index: 24; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer;
+      touch-action: none;
     }
-    .vid-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-1), var(--gold-2)); transition: width 0.1s linear; }
+    .time-pill {
+      align-self: center; margin-bottom: 6px;
+      background: rgba(5,5,7,0.85); border: 1px solid var(--border-gold); color: var(--gold-1);
+      font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 999px;
+      opacity: 0; transition: opacity 0.15s; pointer-events: none;
+    }
+    .seek-zone.dragging .time-pill, .seek-zone:hover .time-pill { opacity: 1; }
+    .vid-progress {
+      width: 100%; height: 4px; background: rgba(255,255,255,0.25); position: relative; transition: height 0.15s;
+    }
+    .seek-zone.dragging .vid-progress { height: 7px; }
+    .vid-progress-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+      position: relative;
+    }
+    .vid-progress-thumb {
+      position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
+      width: 13px; height: 13px; border-radius: 50%; background: #fff;
+      box-shadow: 0 0 8px var(--gold-2); opacity: 0.9;
+    }
+
+    /* Quick Rewind / Forward Controls */
+    .skip-controls {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 7px;
+    }
+    .skip-btn {
+      background: rgba(5,5,7,0.68); backdrop-filter: blur(8px);
+      border: 1px solid rgba(250,204,21,0.38); color: var(--gold-1);
+      font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px; cursor: pointer;
+    }
+    .skip-btn:active { background: var(--gold-2); color: #000; }
 
     /* Right Action Rail */
-    .actions { position: absolute; right: 12px; bottom: 86px; z-index: 14; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .actions { position: absolute; right: 12px; bottom: 92px; z-index: 14; display: flex; flex-direction: column; align-items: center; gap: 12px; }
     .act-item { display: flex; flex-direction: column; align-items: center; }
     .act-btn {
       background: rgba(5,5,7,0.58); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.16);
@@ -118,7 +156,7 @@
     .act-count { font-size: 11px; font-weight: 700; margin-top: 3px; text-shadow: 0 1px 3px #000; }
 
     /* Bottom Video Info + StarVibe Shop/Offer CTA */
-    .info { position: absolute; left: 14px; bottom: 78px; right: 74px; z-index: 14; text-shadow: 0 1px 4px rgba(0,0,0,0.92); }
+    .info { position: absolute; left: 14px; bottom: 86px; right: 74px; z-index: 14; text-shadow: 0 1px 4px rgba(0,0,0,0.92); }
     .creator-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
     .username { font-weight: 900; font-size: 15px; color: var(--gold-2); cursor: pointer; }
     .follow-btn {
@@ -329,7 +367,7 @@
       <button id="nav-profile" onclick="switchTab('profile')" class="nav-btn"><span>👤</span><span>Perfil</span></button>
     </div>
 
-    <!-- MODAL SUBIR VIDEO (CON ENLACE SHOP / AFILIADO) -->
+    <!-- MODAL SUBIR VIDEO -->
     <div id="upload-modal" class="modal hidden">
       <div class="modal-header">
         <div class="modal-title">Publicar en StarVibe</div>
@@ -394,7 +432,7 @@
       </form>
     </div>
 
-    <!-- MODAL ANUNCIAR MARCA (BRAND PORTAL) -->
+    <!-- MODAL ANUNCIAR MARCA -->
     <div id="brand-modal" class="modal hidden">
       <div class="modal-header">
         <div class="modal-title">💼 Anuncia tu Marca en StarVibe</div>
@@ -409,7 +447,7 @@
       </form>
     </div>
 
-    <!-- MODAL REPORTE LEGAL (DMCA / MARCO CIVIL / LGPD) -->
+    <!-- MODAL REPORTE LEGAL -->
     <div id="report-modal" class="modal hidden">
       <div class="modal-header">
         <div class="modal-title">🚩 Reportar Contenido</div>
@@ -475,6 +513,13 @@
     let deferredInstallPrompt = null;
 
     const feedEl = document.getElementById('video-feed');
+
+    function formatTime(sec) {
+      if (!isFinite(sec) || sec < 0) return '0:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
 
     // PWA Install Prompt
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -590,7 +635,6 @@
       renderFeed();
     };
 
-    // Videos Realtime Feed
     const q = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snapshot) => {
       const hidden = getHiddenSet();
@@ -608,7 +652,6 @@
       feedEl.innerHTML = `<div class="empty-state" style="color:#f87171;">⚠️ Error al cargar feed: ${err.message}</div>`;
     });
 
-    // Live Rooms Realtime
     const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
     onSnapshot(lq, (snap) => {
       const list = document.getElementById('live-rooms-list');
@@ -691,8 +734,18 @@
         slide.innerHTML = `
           <video src="${v.videoUrl}" loop playsinline ${isMuted ? 'muted' : ''} preload="metadata"></video>
           <div class="speed-badge" id="spd-${v.id}">⏩ 2x Velocidad</div>
+          <div class="seek-feedback" id="seekfb-${v.id}">⏪ -5s</div>
           <div class="heart-burst" id="burst-${v.id}">❤️</div>
-          <div class="vid-progress" id="prog-${v.id}"><div class="vid-progress-fill" id="pfill-${v.id}"></div></div>
+
+          <!-- Barra arrastrable para adelantar/atrasar con precisión -->
+          <div class="seek-zone" id="szone-${v.id}">
+            <div class="time-pill" id="tpill-${v.id}">0:00 / 0:00</div>
+            <div class="vid-progress" id="prog-${v.id}">
+              <div class="vid-progress-fill" id="pfill-${v.id}">
+                <div class="vid-progress-thumb"></div>
+              </div>
+            </div>
+          </div>
 
           <div class="actions">
             <div class="act-item">
@@ -730,27 +783,80 @@
               <span class="tag-pill">★ ${v.category || 'StarVibe Original'}</span>
               ${v.isSponsored ? `<span class="sponsor-pill">🤝 Patrocinado por marca</span>` : ''}
             </div>
-            ${hasShopLink ? `<a href="${v.shopUrl}" target="_blank" rel="noopener" class="shop-cta-btn">🛍️ ${v.shopLabel || 'Ver Oferta / Enlace'} →</a>` : ''}
+            <div class="skip-controls">
+              <button type="button" class="skip-btn" id="rew-${v.id}">⏪ -5s</button>
+              <button type="button" class="skip-btn" id="fwd-${v.id}">+5s ⏩</button>
+            </div>
+            ${hasShopLink ? `<br><a href="${v.shopUrl}" target="_blank" rel="noopener" class="shop-cta-btn">🛍️ ${v.shopLabel || 'Ver Oferta / Enlace'} →</a>` : ''}
           </div>
         `;
 
         const vidEl = slide.querySelector('video');
         const pFill = slide.querySelector('#pfill-' + v.id);
-        const pBar = slide.querySelector('#prog-' + v.id);
+        const sZone = slide.querySelector('#szone-' + v.id);
+        const tPill = slide.querySelector('#tpill-' + v.id);
         const spdBadge = slide.querySelector('#spd-' + v.id);
+        const seekFb = slide.querySelector('#seekfb-' + v.id);
+        const rewBtn = slide.querySelector('#rew-' + v.id);
+        const fwdBtn = slide.querySelector('#fwd-' + v.id);
+
+        function showSeekFeedback(label) {
+          seekFb.textContent = label;
+          seekFb.classList.add('show');
+          clearTimeout(vidEl._fbTimer);
+          vidEl._fbTimer = setTimeout(() => seekFb.classList.remove('show'), 550);
+        }
+
+        function jumpSeconds(delta) {
+          if (!vidEl.duration) return;
+          vidEl.currentTime = Math.max(0, Math.min(vidEl.duration, vidEl.currentTime + delta));
+          showSeekFeedback(delta < 0 ? `⏪ ${delta}s (${formatTime(vidEl.currentTime)})` : `⏩ +${delta}s (${formatTime(vidEl.currentTime)})`);
+        }
+
+        rewBtn.addEventListener('click', (e) => { e.stopPropagation(); jumpSeconds(-5); });
+        fwdBtn.addEventListener('click', (e) => { e.stopPropagation(); jumpSeconds(5); });
 
         vidEl.addEventListener('timeupdate', () => {
           if (vidEl.duration) {
             pFill.style.width = ((vidEl.currentTime / vidEl.duration) * 100) + '%';
+            tPill.textContent = `${formatTime(vidEl.currentTime)} / ${formatTime(vidEl.duration)}`;
           }
         });
 
-        pBar.addEventListener('click', (e) => {
-          const rect = pBar.getBoundingClientRect();
-          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-          if (vidEl.duration) vidEl.currentTime = ratio * vidEl.duration;
+        // Deslizar (scrubbing) en la barra de progreso para adelantar/atrasar
+        let isScrubbing = false;
+        function scrubToClientX(clientX) {
+          const rect = sZone.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+          pFill.style.width = (ratio * 100) + '%';
+          if (vidEl.duration) {
+            const targetTime = ratio * vidEl.duration;
+            vidEl.currentTime = targetTime;
+            tPill.textContent = `${formatTime(targetTime)} / ${formatTime(vidEl.duration)}`;
+          }
+        }
+
+        sZone.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          isScrubbing = true;
+          sZone.classList.add('dragging');
+          sZone.setPointerCapture(e.pointerId);
+          scrubToClientX(e.clientX);
+        });
+        sZone.addEventListener('pointermove', (e) => {
+          if (!isScrubbing) return;
+          e.stopPropagation();
+          scrubToClientX(e.clientX);
+        });
+        sZone.addEventListener('pointerup', (e) => {
+          if (!isScrubbing) return;
+          e.stopPropagation();
+          isScrubbing = false;
+          sZone.classList.remove('dragging');
+          if (sZone.hasPointerCapture(e.pointerId)) sZone.releasePointerCapture(e.pointerId);
         });
 
+        // Doble toque: izquierda -5s, derecha +5s, centro Like; mantener presionado 2x
         let lastTap = 0;
         let holdTimer = null;
         vidEl.addEventListener('pointerdown', () => {
@@ -766,16 +872,23 @@
             spdBadge.style.display = 'none';
           }
         });
-        vidEl.addEventListener('click', () => {
+        vidEl.addEventListener('click', (e) => {
           const now = Date.now();
           if (now - lastTap < 280) {
-            const burst = document.getElementById('burst-' + v.id);
-            if (burst) {
-              burst.classList.add('show');
-              setTimeout(() => burst.classList.remove('show'), 450);
-            }
-            if (!getLikedSet().has(v.id)) {
-              window.likeVideo(v.id, slide.querySelector('.act-btn'));
+            const w = window.innerWidth;
+            if (e.clientX < w * 0.28) {
+              jumpSeconds(-5);
+            } else if (e.clientX > w * 0.72) {
+              jumpSeconds(5);
+            } else {
+              const burst = document.getElementById('burst-' + v.id);
+              if (burst) {
+                burst.classList.add('show');
+                setTimeout(() => burst.classList.remove('show'), 450);
+              }
+              if (!getLikedSet().has(v.id)) {
+                window.likeVideo(v.id, slide.querySelector('.act-btn'));
+              }
             }
           } else {
             if (vidEl.paused) vidEl.play().catch(() => {});
