@@ -725,6 +725,25 @@ app.post('/api/mercadopago/verify-payment', handleVerifyPayment);
 app.get('/api/mercadopago/verify-payment', handleVerifyPayment);
 
 // Fallback universal
+// Rutas SEO para indexación en Google Search
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(
+    'User-agent: *\nAllow: /\nSitemap: https://videofast-light.onrender.com/sitemap.xml\n'
+  );
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://videofast-light.onrender.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+  res.type('application/xml').send(xml);
+});
+
 app.get('*', (req, res) => {
   const pubIndex = path.join(__dirname, 'public', 'index.html');
   const rootIndex = path.join(__dirname, 'index.html');
