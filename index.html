@@ -629,7 +629,7 @@
           <span class="live-badge"><span class="live-dot"></span> LIVE</span>
           <div>
             <strong id="room-creator" style="font-size:13px;color:var(--gold-2);display:block;">@Creador ✅</strong>
-            <span id="room-elapsed-badge" style="font-size:10.5px;color:#fca5a5;font-weight:800;display:block;">🔴 En live ahora</span>
+            <span id="room-elapsed-badge" style="font-size:10.5px;color:#fca5a5;font-weight:800;display:block;">🔴 En live ahora • 👁️ <span id="room-viewers-count">1</span></span>
             <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala oficial • Regalos: 35% creador / 65% app</span>
           </div>
         </div>
@@ -1339,7 +1339,7 @@
       <button class="btn-primary" style="width:100%;" onclick="closeCreatorRulesModal()">Entendido</button>
     </div>
 
-    <!-- MODAL NOTIFICACIONES (LIVES Y NUEVOS VIDEOS DE CREADORES SEGUIDOS) -->
+    <!-- MODAL NOTIFICACIONES -->
     <div id="notifications-modal" class="modal hidden">
       <div class="modal-header">
         <div class="modal-title">🔔 Notificaciones</div>
@@ -1354,6 +1354,7 @@
 
     <div id="toast"></div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -2335,6 +2336,62 @@
 
     let knownVideoIds = new Set();
     let initialVideosLoaded = false;
+    let svSocket = null;
+    let svWakeLock = null;
+
+    async function requestLiveWakeLock() {
+      try {
+        if ('wakeLock' in navigator && !svWakeLock) {
+          svWakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (e) {}
+    }
+    function releaseLiveWakeLock() {
+      try {
+        if (svWakeLock) { svWakeLock.release(); svWakeLock = null; }
+      } catch (e) {}
+    }
+
+    function ensureSocket() {
+      if (svSocket) return svSocket;
+      if (typeof window.io === 'function') {
+        svSocket = window.io({ transports: ['websocket', 'polling'] });
+        svSocket.on('actualizar_espectadores', (count) => {
+          const el = document.getElementById('room-viewers-count');
+          if (el) el.textContent = String(Math.max(1, Number(count || 1)));
+        });
+        svSocket.on('mostrar_comentario', ({ usuario, texto }) => {
+          const chatList = document.getElementById('live-chat-messages');
+          if (!chatList) return;
+          const div = document.createElement('div');
+          div.className = 'live-msg';
+          div.innerHTML = `<strong style="color:#facc15;">@${usuario || 'User'}:</strong> ${texto}`;
+          chatList.appendChild(div);
+          chatList.scrollTop = chatList.scrollHeight;
+        });
+        svSocket.on('animacion_regalo', ({ usuario, regaloNombre, emoji, tier, tierLabel, coinCost, brlValue }) => {
+          if (!activeLiveRoom) return;
+          const burst = document.getElementById('live-gift-burst');
+          if (burst) {
+            burst.className = 'live-gift-burst tier-' + (tier || 'basic') + ' show';
+            document.getElementById('burst-tier-pill').textContent = '★ ' + (tierLabel || 'REGALO') + ' • ' + (coinCost || 10) + ' 🪙';
+            document.getElementById('burst-gift-emoji').textContent = emoji || '🎁';
+            document.getElementById('burst-gift-text').textContent = '@' + (usuario || 'User') + ' envió ' + (regaloNombre || 'Regalo');
+            document.getElementById('burst-gift-sub').textContent = 'Valor: R$ ' + Number(brlValue || 1).toFixed(2).replace('.', ',');
+            spawnGiftParticles(emoji || '🎁', 6);
+            clearTimeout(window._gTimer);
+            window._gTimer = setTimeout(() => burst.classList.remove('show'), 2400);
+          }
+        });
+        svSocket.on('sala_finalizada', ({ liveId }) => {
+          if (activeLiveRoom && activeLiveRoom.id === liveId) {
+            closeLiveRoom();
+            toast('⏹️ El creador finalizó la sala en vivo');
+          }
+        });
+      }
+      return svSocket;
+    }
 
     function getNotificationsStore() {
       try { return JSON.parse(localStorage.getItem('sv_notifications_v1') || '[]'); } catch { return []; }
@@ -2551,7 +2608,8 @@
 
       if (activeLiveRoom) {
         const roomElapsed = document.getElementById('room-elapsed-badge');
-        if (roomElapsed) roomElapsed.textContent = '🔴 @' + (activeLiveRoom.user || 'Creador') + ' ' + formatLiveElapsed(getLiveStartMs(activeLiveRoom));
+        const curV = document.getElementById('room-viewers-count')?.textContent || '1';
+        if (roomElapsed) roomElapsed.innerHTML = `🔴 @${activeLiveRoom.user || 'Creador'} ${formatLiveElapsed(getLiveStartMs(activeLiveRoom))} • 👁️ <span id="room-viewers-count">${curV}</span>`;
       }
     }
 
@@ -2569,11 +2627,9 @@
         if ((l.reports || 0) >= 3 || l.ended === true) return;
         const startMs = getLiveStartMs(l);
         const lastBeat = Number(l.heartbeatAt || l.liveFrameUpdatedAt || startMs);
-        // Only keep lives that sent a heartbeat within the last 45 seconds (or started < 45s ago)
         if (nowMs - lastBeat <= 45 * 1000) {
           freshLives.push(l);
         } else {
-          // Delete dead/abandoned old live rooms automatically so stale rooms never pile up
           deleteDoc(doc(db, 'lives', docSnap.id)).catch(() => {});
         }
       });
@@ -2807,7 +2863,7 @@
       if (rewindBtn) rewindBtn.classList.toggle('hidden', isBroadcaster);
       if (pauseBtn) pauseBtn.classList.remove('hidden');
       const roomElapsed = document.getElementById('room-elapsed-badge');
-      if (roomElapsed) roomElapsed.textContent = '🔴 @' + (liveObj.user || 'Creador') + ' ' + formatLiveElapsed(getLiveStartMs(liveObj));
+      if (roomElapsed) roomElapsed.innerHTML = `🔴 @${liveObj.user || 'Creador'} ${formatLiveElapsed(getLiveStartMs(liveObj))} • 👁️ <span id="room-viewers-count">1</span>`;
     }
 
     window.rewindViewerLive = () => {
@@ -2940,11 +2996,20 @@
       viewerLivePaused = false;
       syncLiveHostControls(liveObj);
 
+      const sock = ensureSocket();
+      if (sock) {
+        sock.emit('unirse_al_live', {
+          liveId: liveObj.id,
+          userId: getActiveUserId(),
+          isHost: isCurrentBroadcaster(liveObj)
+        });
+      }
       if (window._svHeartbeatInterval) {
         clearInterval(window._svHeartbeatInterval);
         window._svHeartbeatInterval = null;
       }
       if (isCurrentBroadcaster(liveObj)) {
+        requestLiveWakeLock();
         window._svHeartbeatInterval = setInterval(() => {
           if (activeLiveRoom && activeLiveRoom.id === liveObj.id) {
             updateDoc(doc(db, 'lives', liveObj.id), { heartbeatAt: Date.now() }).catch(() => {});
@@ -3007,13 +3072,20 @@
     };
 
     window.closeLiveRoom = () => {
+      releaseLiveWakeLock();
       if (window._svHeartbeatInterval) {
         clearInterval(window._svHeartbeatInterval);
         window._svHeartbeatInterval = null;
       }
-      if (activeLiveRoom && isCurrentBroadcaster(activeLiveRoom)) {
+      if (activeLiveRoom) {
         const closingId = activeLiveRoom.id;
-        deleteDoc(doc(db, 'lives', closingId)).catch(() => {});
+        const wasHost = isCurrentBroadcaster(activeLiveRoom);
+        if (svSocket) {
+          svSocket.emit(wasHost ? 'finalizar_live' : 'salir_del_live', { liveId: closingId });
+        }
+        if (wasHost) {
+          deleteDoc(doc(db, 'lives', closingId)).catch(() => {});
+        }
       }
       stopActiveLiveCamera();
       hostLivePaused = false;
@@ -3049,6 +3121,25 @@
       const text = inp.value.trim();
       if (!text) return;
       inp.value = '';
+      if (svSocket) {
+        svSocket.emit('nuevo_comentario', {
+          liveId: activeLiveRoom.id,
+          usuario: getUserName(),
+          texto: text
+        });
+      }
+      if (svSocket) {
+        svSocket.emit('enviar_regalo', {
+          liveId: activeLiveRoom.id,
+          usuario: getUserName(),
+          regaloNombre: giftName,
+          emoji,
+          tier,
+          tierLabel,
+          coinCost,
+          brlValue
+        });
+      }
       try {
         await addDoc(collection(db, 'lives', activeLiveRoom.id, 'messages'), {
           user: getUserName(),
@@ -3340,7 +3431,6 @@
       } else if (feedMode === 'trending') {
         list.sort((a, b) => ((b.likes || 0) * 2 + (b.commentsCount || 0) * 3) - ((a.likes || 0) * 2 + (a.commentsCount || 0) * 3));
       } else if (feedMode === 'foryou' && !searchQuery && activeTopicFilter === 'all') {
-        // TikTok-style session-seeded shuffle so each device gets a fresh personalized order
         let seedStr = sessionStorage.getItem('sv_feed_seed');
         if (!seedStr) {
           seedStr = String(Math.floor(Math.random() * 1000000) + 1);
@@ -4977,6 +5067,7 @@
 
     window.addEventListener('beforeunload', () => {
       if (activeLiveRoom && isCurrentBroadcaster(activeLiveRoom)) {
+        if (svSocket) svSocket.emit('finalizar_live', { liveId: activeLiveRoom.id });
         deleteDoc(doc(db, 'lives', activeLiveRoom.id)).catch(() => {});
       }
     });
