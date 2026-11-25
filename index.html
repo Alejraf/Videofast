@@ -570,6 +570,7 @@
             <option value="en">🇺🇸 EN</option>
           </select>
           <button id="install-app-btn" class="pill-btn gold hidden" onclick="triggerInstallApp()" data-i18n="install_btn">📲 Instalar</button>
+          <button class="pill-btn" id="notif-bell-btn" onclick="openNotificationsDrawer()" style="position:relative;">🔔<span id="notif-unread-dot" class="hidden" style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span></button>
           <button class="pill-btn" onclick="toggleSearchBar()">🔍</button>
           <button id="sound-toggle" class="pill-btn gold" onclick="toggleMuteAll()">🔇</button>
         </div>
@@ -587,6 +588,7 @@
         <button type="button" class="pill-btn" data-topic="series" onclick="setTopicFilter('series', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎬 Series</button>
         <button type="button" class="pill-btn" data-topic="musica" onclick="setTopicFilter('musica', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎵 Música</button>
       </div>
+      <div id="sv-live-now-bar" class="hidden" style="display:flex;gap:6px;overflow-x:auto;padding:5px 2px 2px;scrollbar-width:none;pointer-events:auto;"></div>
       <div id="search-bar" class="search-bar hidden">
         <input id="search-input" type="text" data-i18n-ph="search_ph" placeholder="Buscar #hashtag, @creador o serie..." oninput="applySearchFilter()" />
         <button onclick="clearSearch()" data-i18n="clear_btn">Limpiar</button>
@@ -611,7 +613,10 @@
           <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE • 65% / 35%</div>
           <h3 style="font-size:17px;margin:8px 0 4px;color:#fff;" data-i18n="live_banner_title">Transmisiones en Vivo y Regalos Virtuales</h3>
           <p style="font-size:12.5px;color:#d1d5db;line-height:1.4;" data-i18n="live_banner_desc">Mira directos integrados dentro de StarVibe, envía regalos virtuales al creador (35% para quien transmite / 65% plataforma) y compra ofertas en vivo.</p>
-          <button class="btn-primary" style="padding:10px 18px;font-size:12.5px;" onclick="openLiveModal()" data-i18n="start_live_btn">📡 Iniciar / Publicar Sala Live</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn-primary" style="margin-top:0;padding:10px 16px;font-size:12.5px;" onclick="openLiveModal()" data-i18n="start_live_btn">📡 Iniciar / Publicar Sala Live</button>
+            <button type="button" class="pill-btn" style="padding:9px 13px;font-size:12px;border-color:#ef4444;color:#fca5a5;" onclick="clearAllOldLives()">🧹 Limpiar salas viejas</button>
+          </div>
         </div>
         <div id="live-rooms-list"></div>
       </div>
@@ -624,6 +629,7 @@
           <span class="live-badge"><span class="live-dot"></span> LIVE</span>
           <div>
             <strong id="room-creator" style="font-size:13px;color:var(--gold-2);display:block;">@Creador ✅</strong>
+            <span id="room-elapsed-badge" style="font-size:10.5px;color:#fca5a5;font-weight:800;display:block;">🔴 En live ahora</span>
             <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala oficial • Regalos: 35% creador / 65% app</span>
           </div>
         </div>
@@ -1333,6 +1339,19 @@
       <button class="btn-primary" style="width:100%;" onclick="closeCreatorRulesModal()">Entendido</button>
     </div>
 
+    <!-- MODAL NOTIFICACIONES (LIVES Y NUEVOS VIDEOS DE CREADORES SEGUIDOS) -->
+    <div id="notifications-modal" class="modal hidden">
+      <div class="modal-header">
+        <div class="modal-title">🔔 Notificaciones</div>
+        <button onclick="closeNotificationsDrawer()" class="close-btn">✕</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:11.5px;color:#9ca3af;">Avisos en tiempo real de Lives activas y videos de creadores que sigues.</span>
+        <button type="button" class="pill-btn" style="padding:4px 9px;font-size:11px;" onclick="clearNotificationsList()">Limpiar</button>
+      </div>
+      <div id="notifications-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
     <div id="toast"></div>
 
   <script type="module">
@@ -1689,11 +1708,13 @@
     const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
 
     function getOrCreateDeviceUserId() {
-      let did = localStorage.getItem('sv_device_uid');
+      let did = localStorage.getItem('sv_device_uid_v2');
       if (!did) {
-        const rand = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+        const rand = (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+          : (Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4));
         did = 'usr_' + rand;
-        localStorage.setItem('sv_device_uid', did);
+        localStorage.setItem('sv_device_uid_v2', did);
       }
       return did;
     }
@@ -2218,7 +2239,12 @@
     }
 
     function getUserName() {
-      return localStorage.getItem('sv_username') || localStorage.getItem('gs_username') || 'Creador_' + (currentUser ? currentUser.uid.slice(0, 4) : 'Star');
+      const saved = localStorage.getItem('sv_username');
+      if (saved && saved.trim()) return saved.trim();
+      const devId = getOrCreateDeviceUserId().replace(/^usr_/, '');
+      const autoName = 'User_' + devId.slice(0, 5).toUpperCase();
+      localStorage.setItem('sv_username', autoName);
+      return autoName;
     }
 
     window.saveUsername = () => {
@@ -2307,16 +2333,93 @@
       renderFeed();
     };
 
+    let knownVideoIds = new Set();
+    let initialVideosLoaded = false;
+
+    function getNotificationsStore() {
+      try { return JSON.parse(localStorage.getItem('sv_notifications_v1') || '[]'); } catch { return []; }
+    }
+    function pushAppNotification(item) {
+      const list = getNotificationsStore();
+      if (item.dedupeKey && list.some(x => x.dedupeKey === item.dedupeKey)) return;
+      list.unshift({
+        id: 'n_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+        createdAt: Date.now(),
+        ...item
+      });
+      localStorage.setItem('sv_notifications_v1', JSON.stringify(list.slice(0, 40)));
+      const dot = document.getElementById('notif-unread-dot');
+      if (dot) dot.classList.remove('hidden');
+    }
+    window.openNotificationsDrawer = () => {
+      const dot = document.getElementById('notif-unread-dot');
+      if (dot) dot.classList.add('hidden');
+      renderNotificationsDrawer();
+      document.getElementById('notifications-modal').classList.remove('hidden');
+    };
+    window.closeNotificationsDrawer = () => {
+      document.getElementById('notifications-modal').classList.add('hidden');
+    };
+    window.clearNotificationsList = () => {
+      localStorage.removeItem('sv_notifications_v1');
+      renderNotificationsDrawer();
+    };
+    function renderNotificationsDrawer() {
+      const box = document.getElementById('notifications-list');
+      if (!box) return;
+      const list = getNotificationsStore();
+      if (list.length === 0) {
+        box.innerHTML = '<div style="font-size:12.5px;color:#9ca3af;text-align:center;padding:18px;">No tienes notificaciones nuevas. Sigue a creadores para recibir avisos cuando publiquen videos o entren en Live.</div>';
+        return;
+      }
+      box.innerHTML = list.map((n) => `
+        <div style="background:#0f1117;border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>
+            <div style="font-size:12.5px;font-weight:800;color:#fef08a;">${n.title}</div>
+            <div style="font-size:11.5px;color:#d1d5db;margin-top:2px;">${n.body}</div>
+          </div>
+          ${n.liveId ? `<button type="button" class="pill-btn gold" onclick="closeNotificationsDrawer(); joinLiveById('${n.liveId}')">Ver Live</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function formatLiveElapsed(startedMs) {
+      if (!startedMs || !isFinite(startedMs)) return 'en live ahora';
+      const diffSec = Math.max(0, Math.floor((Date.now() - startedMs) / 1000));
+      if (diffSec < 60) return 'en live ahora';
+      const mins = Math.floor(diffSec / 60);
+      if (mins < 60) return 'en live hace ' + mins + ' min';
+      const hrs = Math.floor(mins / 60);
+      const remMins = mins % 60;
+      return 'en live hace ' + hrs + 'h ' + remMins + 'm';
+    }
+
     const q = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snapshot) => {
       const hidden = getHiddenSet();
+      const following = getFollowingSet();
+      const myUid = getActiveUserId();
       allVideosCache = [];
       snapshot.forEach((d) => {
         const data = d.data();
         if (!hidden.has(d.id) && (data.reports || 0) < 5) {
           allVideosCache.push({ id: d.id, ...data });
+          if (initialVideosLoaded && !knownVideoIds.has(d.id)) {
+            const creatorKey = data.uid || data.user || '';
+            if (creatorKey && creatorKey !== myUid && (following.has(creatorKey) || following.has(data.user))) {
+              const cName = data.user || 'Creador';
+              toast('🎬 @' + cName + ' publicó un nuevo video');
+              pushAppNotification({
+                dedupeKey: 'vid_' + d.id,
+                title: '🎬 Nuevo video de @' + cName,
+                body: data.caption || 'Mira su nuevo video en StarVibe'
+              });
+            }
+          }
         }
       });
+      knownVideoIds = new Set(allVideosCache.map(v => v.id));
+      initialVideosLoaded = true;
       updateProfileHeader();
       renderFeed();
       renderProfileGrid();
@@ -2359,29 +2462,85 @@
       return parseExternalLiveUrl(url).embedUrl;
     }
 
-    const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
-    onSnapshot(lq, (snap) => {
+    let liveRoomsCache = [];
+    let knownLiveIds = new Set();
+    let initialLivesLoaded = false;
+
+    window.joinLiveById = (liveId) => {
+      const found = liveRoomsCache.find(x => x.id === liveId);
+      if (found) openLiveRoom(found);
+      else toast('Esta transmisión en vivo ya finalizó');
+    };
+
+    window.clearAllOldLives = async () => {
+      try {
+        const { getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        const snapAll = await getDocs(collection(db, 'lives'));
+        const deletions = [];
+        snapAll.forEach((d) => deletions.push(deleteDoc(doc(db, 'lives', d.id))));
+        await Promise.all(deletions);
+        liveRoomsCache = [];
+        knownLiveIds.clear();
+        renderLiveRoomsUI();
+        toast('🧹 Todas las salas viejas fueron eliminadas');
+      } catch (e) {
+        toast('Error al limpiar salas');
+      }
+    };
+
+    function getLiveStartMs(liveObj) {
+      if (!liveObj) return Date.now();
+      if (typeof liveObj.startedAtMs === 'number' && liveObj.startedAtMs > 0) return liveObj.startedAtMs;
+      if (liveObj.createdAt && typeof liveObj.createdAt.toMillis === 'function') return liveObj.createdAt.toMillis();
+      if (typeof liveObj.createdAt === 'number') return liveObj.createdAt;
+      return Date.now();
+    }
+
+    function renderLiveRoomsUI() {
       const list = document.getElementById('live-rooms-list');
+      const liveNowBar = document.getElementById('sv-live-now-bar');
+
+      if (liveNowBar) {
+        if (liveRoomsCache.length === 0) {
+          liveNowBar.classList.add('hidden');
+          liveNowBar.innerHTML = '';
+        } else {
+          liveNowBar.classList.remove('hidden');
+          liveNowBar.innerHTML = liveRoomsCache.map((item) => {
+            const elapsed = formatLiveElapsed(getLiveStartMs(item));
+            return `
+              <button type="button" class="pill-btn gold sv-quick-live-chip" data-live-id="${item.id}" style="padding:5px 11px;font-size:11px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
+                <span class="live-dot"></span>
+                <span>@${(item.user || 'Live').replace(/</g, '')} • ${elapsed}</span>
+              </button>
+            `;
+          }).join('');
+          liveNowBar.querySelectorAll('.sv-quick-live-chip').forEach((btnChip) => {
+            btnChip.addEventListener('click', () => window.joinLiveById(btnChip.dataset.liveId));
+          });
+        }
+      }
+
       if (!list) return;
-      if (snap.empty) {
+      if (liveRoomsCache.length === 0) {
         list.innerHTML = `<div class="live-card"><p style="font-size:13px;color:#9ca3af;">${t('no_lives')}</p></div>`;
         return;
       }
+
       list.innerHTML = '';
-      snap.forEach((docSnap) => {
-        const l = { id: docSnap.id, ...docSnap.data() };
-        if ((l.reports || 0) >= 3) return;
+      liveRoomsCache.forEach((l) => {
+        const elapsed = formatLiveElapsed(getLiveStartMs(l));
         const card = document.createElement('div');
         card.className = 'live-card';
         card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span class="live-badge"><span class="live-dot"></span> LIVE • ${elapsed}</span>
             <span style="font-size:12px;color:#facc15;font-weight:800;">@${l.user || 'Creador'} • 🎁 ${l.totalGiftsCoins || 0} 🪙</span>
           </div>
           <h4 style="font-size:15px;color:#fff;">${l.title || 'Live'}</h4>
           <div style="display:flex;gap:8px;align-items:center;">
             <button type="button" class="ad-cta enter-live-action" style="flex:1;padding:11px;font-size:13.5px;text-align:center;">${t('enter_live_btn')}</button>
-            ${((l.uid && l.uid === getActiveUserId()) || getActiveUserId() === OWNER_USER_ID) ? `<button type="button" class="pill-btn end-card-live-btn" style="padding:10px 12px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;">⏹️ Finalizar Sala</button>` : ''}
+            ${((l.uid && l.uid === getActiveUserId()) || isOwnerAccount()) ? `<button type="button" class="pill-btn end-card-live-btn" style="padding:10px 12px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;">⏹️ Finalizar Sala</button>` : ''}
           </div>
         `;
         card.querySelector('.enter-live-action').addEventListener('click', () => openLiveRoom(l));
@@ -2389,6 +2548,58 @@
         if (endCardBtn) endCardBtn.addEventListener('click', () => terminateLiveById(l.id));
         list.appendChild(card);
       });
+
+      if (activeLiveRoom) {
+        const roomElapsed = document.getElementById('room-elapsed-badge');
+        if (roomElapsed) roomElapsed.textContent = '🔴 @' + (activeLiveRoom.user || 'Creador') + ' ' + formatLiveElapsed(getLiveStartMs(activeLiveRoom));
+      }
+    }
+
+    setInterval(renderLiveRoomsUI, 30000);
+
+    const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
+    onSnapshot(lq, (snap) => {
+      const nowMs = Date.now();
+      const following = getFollowingSet();
+      const myUid = getActiveUserId();
+      const freshLives = [];
+
+      snap.forEach((docSnap) => {
+        const l = { id: docSnap.id, ...docSnap.data() };
+        if ((l.reports || 0) >= 3 || l.ended === true) return;
+        const startMs = getLiveStartMs(l);
+        const lastBeat = Number(l.heartbeatAt || l.liveFrameUpdatedAt || startMs);
+        // Only keep lives that sent a heartbeat within the last 45 seconds (or started < 45s ago)
+        if (nowMs - lastBeat <= 45 * 1000) {
+          freshLives.push(l);
+        } else {
+          // Delete dead/abandoned old live rooms automatically so stale rooms never pile up
+          deleteDoc(doc(db, 'lives', docSnap.id)).catch(() => {});
+        }
+      });
+
+      if (initialLivesLoaded) {
+        freshLives.forEach((l) => {
+          if (!knownLiveIds.has(l.id) && l.uid !== myUid) {
+            const cName = l.user || 'Creador';
+            const elapsed = formatLiveElapsed(getLiveStartMs(l));
+            const isFollower = following.has(l.uid || '') || following.has(cName);
+            const prefix = isFollower ? '🔔 Tu seguido @' : '🔴 @';
+            toast(prefix + cName + ' está ' + elapsed + '!');
+            pushAppNotification({
+              dedupeKey: 'live_' + l.id,
+              liveId: l.id,
+              title: (isFollower ? '🔔 ' : '🔴 ') + '@' + cName + ' está ' + elapsed,
+              body: l.title || 'Toca para entrar a la transmisión en vivo'
+            });
+          }
+        });
+      }
+
+      knownLiveIds = new Set(freshLives.map(x => x.id));
+      initialLivesLoaded = true;
+      liveRoomsCache = freshLives;
+      renderLiveRoomsUI();
     }, () => {});
 
     let hostLivePaused = false;
@@ -2595,18 +2806,15 @@
       if (endBtn) endBtn.classList.toggle('hidden', !isBroadcaster);
       if (rewindBtn) rewindBtn.classList.toggle('hidden', isBroadcaster);
       if (pauseBtn) pauseBtn.classList.remove('hidden');
+      const roomElapsed = document.getElementById('room-elapsed-badge');
+      if (roomElapsed) roomElapsed.textContent = '🔴 @' + (liveObj.user || 'Creador') + ' ' + formatLiveElapsed(getLiveStartMs(liveObj));
     }
 
     window.rewindViewerLive = () => {
       if (!activeLiveRoom) return;
       const camVid = document.getElementById('live-camera-video');
-      const viewerImg = document.getElementById('sv-viewer-live-img');
       if (camVid && !camVid.paused && isFinite(camVid.duration) && camVid.duration > 0) {
         camVid.currentTime = Math.max(0, camVid.currentTime - 10);
-      }
-      if (viewerImg && activeLiveRoom.liveFrame) {
-        viewerImg.style.opacity = '0.72';
-        setTimeout(() => { viewerImg.style.opacity = '1'; }, 180);
       }
       toast('⏪ Atrasado 10s en el directo');
     };
@@ -2671,7 +2879,7 @@
         applyCombinedPauseUI();
         toast(nextPaused ? '⏸️ Live en pausa' : '▶️ Live reanudada');
         try {
-          await updateDoc(doc(db, 'lives', activeLiveRoom.id), { paused: nextPaused });
+          await updateDoc(doc(db, 'lives', activeLiveRoom.id), { paused: nextPaused, heartbeatAt: Date.now() });
         } catch (e) {}
       } else {
         viewerLivePaused = !viewerLivePaused;
@@ -2732,8 +2940,19 @@
       viewerLivePaused = false;
       syncLiveHostControls(liveObj);
 
+      if (window._svHeartbeatInterval) {
+        clearInterval(window._svHeartbeatInterval);
+        window._svHeartbeatInterval = null;
+      }
+      if (isCurrentBroadcaster(liveObj)) {
+        window._svHeartbeatInterval = setInterval(() => {
+          if (activeLiveRoom && activeLiveRoom.id === liveObj.id) {
+            updateDoc(doc(db, 'lives', liveObj.id), { heartbeatAt: Date.now() }).catch(() => {});
+          }
+        }, 12000);
+      }
       if (isCam) {
-        const isHost = isLiveHostOrAdmin(liveObj);
+        const isHost = isCurrentBroadcaster(liveObj);
         startLiveCameraBroadcast(liveObj.id, isHost, liveObj.cameraFacing || 'user');
       } else {
         stopActiveLiveCamera();
@@ -2788,6 +3007,14 @@
     };
 
     window.closeLiveRoom = () => {
+      if (window._svHeartbeatInterval) {
+        clearInterval(window._svHeartbeatInterval);
+        window._svHeartbeatInterval = null;
+      }
+      if (activeLiveRoom && isCurrentBroadcaster(activeLiveRoom)) {
+        const closingId = activeLiveRoom.id;
+        deleteDoc(doc(db, 'lives', closingId)).catch(() => {});
+      }
       stopActiveLiveCamera();
       hostLivePaused = false;
       viewerLivePaused = false;
@@ -3112,6 +3339,23 @@
         list = list.filter((v) => following.has(v.uid || v.user));
       } else if (feedMode === 'trending') {
         list.sort((a, b) => ((b.likes || 0) * 2 + (b.commentsCount || 0) * 3) - ((a.likes || 0) * 2 + (a.commentsCount || 0) * 3));
+      } else if (feedMode === 'foryou' && !searchQuery && activeTopicFilter === 'all') {
+        // TikTok-style session-seeded shuffle so each device gets a fresh personalized order
+        let seedStr = sessionStorage.getItem('sv_feed_seed');
+        if (!seedStr) {
+          seedStr = String(Math.floor(Math.random() * 1000000) + 1);
+          sessionStorage.setItem('sv_feed_seed', seedStr);
+        }
+        const seedNum = Number(seedStr) || 17;
+        const scoreFor = (id) => {
+          let h = seedNum;
+          const s = String(id || '');
+          for (let i = 0; i < s.length; i++) {
+            h = ((h * 31) + s.charCodeAt(i)) % 1000003;
+          }
+          return h;
+        };
+        list = [...list].sort((a, b) => scoreFor(a.id) - scoreFor(b.id));
       }
 
       if (activeTopicFilter === 'gaming') {
@@ -3818,6 +4062,8 @@
           totalCreatorBRL: 0,
           totalAppBRL: 0,
           reports: 0,
+          startedAtMs: Date.now(),
+          heartbeatAt: Date.now(),
           createdAt: serverTimestamp()
         });
         document.getElementById('live-form').reset();
@@ -4729,6 +4975,12 @@
     setTimeout(dismissBrandSplash, 600);
     setTimeout(dismissBrandSplash, 1800);
 
+    window.addEventListener('beforeunload', () => {
+      if (activeLiveRoom && isCurrentBroadcaster(activeLiveRoom)) {
+        deleteDoc(doc(db, 'lives', activeLiveRoom.id)).catch(() => {});
+      }
+    });
+    getOrCreateDeviceUserId();
     setLanguage(currentLang);
     updateWalletUI();
     refreshAdminAndReferralUI();
