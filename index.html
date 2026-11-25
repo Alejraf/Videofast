@@ -1642,9 +1642,9 @@
         <div class="modal-title" data-i18n="live_modal_title">📡 Publicar Mi Sala En Vivo</div>
         <button onclick="closeLiveModal()" class="close-btn">✕</button>
       </div>
-      <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);border-radius:12px;padding:10px;margin-bottom:10px;font-size:11.5px;color:#a7f3d0;line-height:1.4;">
-        ✅ <strong>Titular verificado:</strong> <span id="live-owner-verified-lbl">Creador Formalizado</span><br>
-        Los regalos enviados en esta sala se acreditan <strong>35% a tu cuenta PIX formalizada</strong> y <strong>65% a StarVibe</strong>.
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:10px;font-size:11.5px;color:#111827;line-height:1.45;">
+        ✅ <strong>Cuenta verificada:</strong> <span id="live-owner-verified-lbl">Creador Verificado</span><br>
+        Configura tu cámara, orientación, moderación de chat y cuenta regresiva antes de iniciar la sala.
       </div>
       <form id="live-form">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px;">
@@ -1707,6 +1707,18 @@
             <option value="vertical">Vertical (9:16 Móvil)</option>
             <option value="horizontal">Horizontal (16:9 Pantalla Completa)</option>
           </select>
+        </div>
+                <div style="background:#121520;border:1px solid #262c3d;border-radius:12px;padding:9px;margin-bottom:9px;">
+          <div style="font-size:11.5px;font-weight:800;color:#fef08a;margin-bottom:6px;">🛡️ Preparación y Moderación en Vivo</div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#e5e7eb;margin-bottom:6px;">
+            <input id="live-countdown-check" type="checkbox" checked />
+            <span>Cuenta regresiva <strong>3 - 2 - 1</strong> antes de abrir la cámara</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#e5e7eb;margin-bottom:6px;">
+            <input id="live-age18-check" type="checkbox" />
+            <span>Restringir audiencia a mayores de 18 años</span>
+          </label>
+          <input id="live-blocked-words-input" type="text" maxlength="100" placeholder="Palabras bloqueadas en chat (separadas por coma, opcional)..." class="text-input" style="margin-bottom:0;font-size:11px;padding:7px 9px;" />
         </div>
         <button type="submit" class="submit-btn" data-i18n="activate_live_btn">Activar Mi Sala En Vivo</button>
       </form>
@@ -2975,6 +2987,10 @@
 
         svSocket.on('mostrar_comentario', ({ usuario, texto }) => {
           const chatList = document.getElementById('live-chat-messages');
+          const lowerT = String(texto || '').toLowerCase();
+          if (Array.isArray(window._svLiveBlockedWords) && window._svLiveBlockedWords.some(w => w && lowerT.includes(w))) {
+            return;
+          }
           if (!chatList) return;
           const div = document.createElement('div');
           div.className = 'live-msg';
@@ -5266,6 +5282,17 @@
 
     document.getElementById('live-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const useCountdown = Boolean(document.getElementById('live-countdown-check')?.checked);
+      const blockedRaw = (document.getElementById('live-blocked-words-input')?.value || '').trim();
+      window._svLiveBlockedWords = blockedRaw
+        ? blockedRaw.split(',').map(w => w.trim().toLowerCase()).filter(Boolean)
+        : [];
+      if (useCountdown) {
+        for (const n of ['3...', '2...', '1... ¡EN VIVO!']) {
+          toast('📡 ' + n);
+          await new Promise(r => setTimeout(r, 420));
+        }
+      }
       const title = document.getElementById('live-title-input').value.trim();
       const sourceType = selectedLiveSourceMode === 'link' ? 'link' : 'camera';
       const cameraFacing = document.getElementById('live-camera-facing-select')?.value || 'user';

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'starvibe-v14-2-editor-lights-audio';
+const CACHE_NAME = 'starvibe-v14-3-live-prep-mod';
 
 self.addEventListener('install', () => self.skipWaiting());
 
