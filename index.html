@@ -628,9 +628,9 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
-          <button id="viewer-pause-btn" class="pill-btn" style="padding:5px 9px;font-size:11px;border-color:#facc15;color:#fef08a;" onclick="toggleViewerPauseLive()">⏸️ Pausar</button>
-          <button id="live-pause-btn" class="pill-btn hidden" style="padding:5px 9px;font-size:11px;border-color:#60a5fa;color:#93c5fd;" onclick="toggleHostPauseLive()">⏸️ Pausar Sala</button>
-          <button id="live-end-btn" class="pill-btn hidden" style="padding:5px 9px;font-size:11px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;" onclick="endActiveLiveRoom()">⏹️ Terminar Live</button>
+          <button id="viewer-rewind-live-btn" class="pill-btn" style="padding:5px 9px;font-size:11px;border-color:#93c5fd;color:#bfdbfe;" onclick="rewindViewerLive()">⏪ Atrasar</button>
+          <button id="live-pause-btn" class="pill-btn" style="padding:5px 10px;font-size:11px;border-color:#facc15;color:#fef08a;" onclick="toggleUnifiedLivePause()">⏸️ Pausar</button>
+          <button id="live-end-btn" class="pill-btn hidden" style="padding:5px 10px;font-size:11px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;" onclick="endActiveLiveRoom()">⏹️ Finalizar Sala</button>
           <button class="pill-btn gold" style="padding:5px 9px;font-size:11px;" onclick="openRechargeModal()">🪙 <span id="room-coins-badge">100</span></button>
           <button class="pill-btn" style="padding:5px 9px;font-size:11px;" onclick="reportActiveLive()" title="Reportar Sala">🚩</button>
           <button class="pill-btn" style="padding:5px 9px;font-size:11px;border-color:#ef4444;color:#fca5a5;" onclick="blockActiveLiveCreator()" title="Bloquear Creador">🚫</button>
@@ -2359,54 +2359,18 @@
       return parseExternalLiveUrl(url).embedUrl;
     }
 
-    window.clearAllOldLives = async () => {
-      const list = document.getElementById('live-rooms-list');
-      try {
-        const { getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-        const snapAll = await getDocs(collection(db, 'lives'));
-        const deletions = [];
-        snapAll.forEach((d) => deletions.push(deleteDoc(doc(db, 'lives', d.id))));
-        await Promise.all(deletions);
-        if (list) list.innerHTML = `<div class="live-card"><p style="font-size:13px;color:#9ca3af;">${t('no_lives')}</p></div>`;
-        toast('🧹 Lives anteriores eliminadas');
-      } catch (e) {
-        toast('Error al limpiar lives');
-      }
-    };
-
     const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
     onSnapshot(lq, (snap) => {
       const list = document.getElementById('live-rooms-list');
       if (!list) return;
-
-      const nowMs = Date.now();
-      const activeLives = [];
-
-      snap.forEach((docSnap) => {
-        const l = { id: docSnap.id, ...docSnap.data() };
-        if ((l.reports || 0) >= 3) return;
-        let createdMs = nowMs;
-        if (l.createdAt && typeof l.createdAt.toMillis === 'function') {
-          createdMs = l.createdAt.toMillis();
-        } else if (typeof l.createdAt === 'number') {
-          createdMs = l.createdAt;
-        }
-        const lastBeat = Number(l.liveFrameUpdatedAt || l.heartbeatAt || createdMs);
-        // Only consider live if created or active within the last 10 minutes
-        if (nowMs - lastBeat <= 10 * 60 * 1000) {
-          activeLives.push(l);
-        } else if (isOwnerAccount() || (l.uid && l.uid === getActiveUserId())) {
-          // Automatically remove stale/finished old lives so they stop showing up
-          deleteDoc(doc(db, 'lives', docSnap.id)).catch(() => {});
-        }
-      });
-
-      if (activeLives.length === 0) {
+      if (snap.empty) {
         list.innerHTML = `<div class="live-card"><p style="font-size:13px;color:#9ca3af;">${t('no_lives')}</p></div>`;
         return;
       }
       list.innerHTML = '';
-      activeLives.forEach((l) => {
+      snap.forEach((docSnap) => {
+        const l = { id: docSnap.id, ...docSnap.data() };
+        if ((l.reports || 0) >= 3) return;
         const card = document.createElement('div');
         card.className = 'live-card';
         card.innerHTML = `
@@ -2417,7 +2381,7 @@
           <h4 style="font-size:15px;color:#fff;">${l.title || 'Live'}</h4>
           <div style="display:flex;gap:8px;align-items:center;">
             <button type="button" class="ad-cta enter-live-action" style="flex:1;padding:11px;font-size:13.5px;text-align:center;">${t('enter_live_btn')}</button>
-            ${((l.uid && l.uid === getActiveUserId()) || isOwnerAccount()) ? `<button type="button" class="pill-btn end-card-live-btn" style="padding:10px 12px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;">⏹️ Terminar</button>` : ''}
+            ${((l.uid && l.uid === getActiveUserId()) || getActiveUserId() === OWNER_USER_ID) ? `<button type="button" class="pill-btn end-card-live-btn" style="padding:10px 12px;background:#7f1d1d;border-color:#ef4444;color:#fecaca;font-weight:800;">⏹️ Finalizar Sala</button>` : ''}
           </div>
         `;
         card.querySelector('.enter-live-action').addEventListener('click', () => openLiveRoom(l));
@@ -2455,18 +2419,6 @@
     };
 
     function stopActiveLiveCamera() {
-      if (typeof window._svStopFrameLoop === 'function') {
-        try { window._svStopFrameLoop(); } catch (e) {}
-        window._svStopFrameLoop = null;
-      }
-      const viewerImg = document.getElementById('sv-viewer-live-img');
-      if (viewerImg) {
-        try { viewerImg.remove(); } catch (e) {}
-      }
-      const viewerWait = document.getElementById('sv-viewer-live-wait');
-      if (viewerWait) {
-        try { viewerWait.remove(); } catch (e) {}
-      }
       if (activeLiveMediaStream) {
         try {
           activeLiveMediaStream.getTracks().forEach((tr) => tr.stop());
@@ -2500,7 +2452,7 @@
       if (extFallback) extFallback.classList.add('hidden');
       if (!camVid) return;
 
-      if (isHost && activeLiveRoom && activeLiveRoom.uid === getActiveUserId()) {
+      if (isHost && activeLiveRoom && isCurrentBroadcaster(activeLiveRoom)) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           toast('⚠️ Tu navegador no permite acceso directo a la cámara');
           return;
@@ -2521,80 +2473,90 @@
           const micBtn = document.getElementById('live-mic-toggle-btn');
           if (micBtn) micBtn.textContent = '🎙️ Mic ON';
 
-          let hostFrameTimer = null;
-          const frameCanvas = document.createElement('canvas');
-          frameCanvas.width = 240;
-          frameCanvas.height = 320;
-          const frameCtx = frameCanvas.getContext('2d');
-
-          const pushCameraFrame = async () => {
-            if (!activeLiveRoom || activeLiveRoom.id !== roomId || !activeLiveMediaStream || hostLivePaused) return;
-            const payload = { heartbeatAt: Date.now() };
-            if (camVid.readyState >= 2 && camVid.videoWidth > 0 && camVid.videoHeight > 0) {
-              try {
-                frameCtx.drawImage(camVid, 0, 0, frameCanvas.width, frameCanvas.height);
-                const dataUrl = frameCanvas.toDataURL('image/jpeg', 0.45);
-                if (dataUrl && dataUrl.length < 420000) {
-                  payload.liveFrame = dataUrl;
-                  payload.liveFrameUpdatedAt = Date.now();
+          // Listen for viewer WebRTC join requests in Firestore signaling subcollection
+          const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
+          unsubLiveSignals = onSnapshot(sigCol, (snap) => {
+            snap.docChanges().forEach(async (chg) => {
+              if (chg.type !== 'added') return;
+              const sig = chg.doc.data() || {};
+              if (sig.type === 'viewer_join' && sig.viewerId && activeLiveMediaStream) {
+                const viewerId = sig.viewerId;
+                try {
+                  if (livePeerConnections.has(viewerId)) {
+                    try { livePeerConnections.get(viewerId).close(); } catch (e) {}
+                  }
+                  const pc = new RTCPeerConnection(RTC_CFG);
+                  livePeerConnections.set(viewerId, pc);
+                  activeLiveMediaStream.getTracks().forEach((track) => pc.addTrack(track, activeLiveMediaStream));
+                  pc.onicecandidate = async (ev) => {
+                    if (ev.candidate) {
+                      try {
+                        await addDoc(sigCol, { type: 'host_ice', viewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
+                      } catch (e) {}
+                    }
+                  };
+                  const offer = await pc.createOffer();
+                  await pc.setLocalDescription(offer);
+                  await addDoc(sigCol, { type: 'host_offer', viewerId, sdp: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
+                } catch (err) {}
+              } else if (sig.type === 'viewer_answer' && sig.viewerId && sig.sdp) {
+                const pc = livePeerConnections.get(sig.viewerId);
+                if (pc && pc.signalingState !== 'stable') {
+                  try { await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp)); } catch (e) {}
                 }
-              } catch (e) {}
-            }
-            try {
-              await updateDoc(doc(db, 'lives', roomId), payload);
-            } catch (e) {}
-          };
-
-          setTimeout(pushCameraFrame, 250);
-          hostFrameTimer = setInterval(pushCameraFrame, 750);
-          const origStopFn = window._svStopFrameLoop;
-          window._svStopFrameLoop = () => {
-            if (hostFrameTimer) { clearInterval(hostFrameTimer); hostFrameTimer = null; }
-            if (typeof origStopFn === 'function') origStopFn();
-          };
+              } else if (sig.type === 'viewer_ice' && sig.viewerId && sig.candidate) {
+                const pc = livePeerConnections.get(sig.viewerId);
+                if (pc) {
+                  try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
+                }
+              }
+            });
+          });
         } catch (err) {
           toast('⚠️ Permite acceso a Cámara y Micrófono para transmitir en vivo');
         }
       } else {
-        camVid.classList.add('hidden');
+        // Viewer connecting to host's live camera via WebRTC
+        camVid.muted = false;
+        camVid.classList.remove('hidden');
         if (camCtrls) camCtrls.classList.add('hidden');
-        const stage = document.getElementById('sv-live-player-box');
-        let viewerImg = document.getElementById('sv-viewer-live-img');
-        let viewerWait = document.getElementById('sv-viewer-live-wait');
-        if (stage) {
-          if (!viewerImg) {
-            viewerImg = document.createElement('img');
-            viewerImg.id = 'sv-viewer-live-img';
-            viewerImg.alt = 'Transmisión en vivo';
-            viewerImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:#050507;position:relative;z-index:2;';
-            stage.insertBefore(viewerImg, document.getElementById('live-iframe'));
+        const myViewerId = getActiveUserId() + '_' + Math.random().toString(36).slice(2, 6);
+        const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
+        const pc = new RTCPeerConnection(RTC_CFG);
+        livePeerConnections.set('host', pc);
+        pc.ontrack = (ev) => {
+          if (ev.streams && ev.streams[0]) {
+            camVid.srcObject = ev.streams[0];
+            camVid.play().catch(() => {});
           }
-          if (!viewerWait) {
-            viewerWait = document.createElement('div');
-            viewerWait.id = 'sv-viewer-live-wait';
-            viewerWait.style.cssText = 'position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#090b12;color:#fef08a;font-size:12px;font-weight:800;gap:6px;padding:12px;text-align:center;';
-            viewerWait.innerHTML = '<span>📡 Conectando con la cámara del creador...</span><span style="font-size:10.5px;color:#9ca3af;font-weight:600;">Si el creador cerró su transmisión, esta sala se cerrará automáticamente.</span>';
-            stage.insertBefore(viewerWait, document.getElementById('live-iframe'));
+        };
+        pc.onicecandidate = async (ev) => {
+          if (ev.candidate) {
+            try {
+              await addDoc(sigCol, { type: 'viewer_ice', viewerId: myViewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
+            } catch (e) {}
           }
-        }
-        if (viewerImg && activeLiveRoom && activeLiveRoom.liveFrame) {
-          viewerImg.src = activeLiveRoom.liveFrame;
-        }
-        unsubLiveSignals = onSnapshot(doc(db, 'lives', roomId), (snap) => {
-          const imgEl = document.getElementById('sv-viewer-live-img');
-          const waitEl = document.getElementById('sv-viewer-live-wait');
-          if (!snap.exists()) {
-            closeLiveRoom();
-            toast('⏹️ La transmisión finalizó');
-            return;
-          }
-          if (viewerLivePaused || hostLivePaused) return;
-          const d = snap.data() || {};
-          if (d.liveFrame && imgEl) {
-            imgEl.src = d.liveFrame;
-            if (waitEl) waitEl.style.display = 'none';
-          }
-        }, () => {});
+        };
+        unsubLiveSignals = onSnapshot(sigCol, (snap) => {
+          snap.docChanges().forEach(async (chg) => {
+            if (chg.type !== 'added') return;
+            const sig = chg.doc.data() || {};
+            if (sig.viewerId !== myViewerId) return;
+            if (sig.type === 'host_offer' && sig.sdp) {
+              try {
+                await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                await addDoc(sigCol, { type: 'viewer_answer', viewerId: myViewerId, sdp: { type: answer.type, sdp: answer.sdp }, createdAt: serverTimestamp() });
+              } catch (e) {}
+            } else if (sig.type === 'host_ice' && sig.candidate) {
+              try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
+            }
+          });
+        });
+        try {
+          await addDoc(sigCol, { type: 'viewer_join', viewerId: myViewerId, createdAt: serverTimestamp() });
+        } catch (e) {}
       }
     }
 
@@ -2614,19 +2576,40 @@
       toast(activeLiveMicMuted ? '🔇 Micrófono silenciado' : '🎙️ Micrófono activado');
     };
 
-    function isLiveHostOrAdmin(liveObj) {
+    function isCurrentBroadcaster(liveObj) {
       if (!liveObj) return false;
       const uid = getActiveUserId();
-      return Boolean((liveObj.uid && liveObj.uid === uid) || uid === OWNER_USER_ID);
+      const authUid = currentUser && currentUser.uid ? currentUser.uid : '';
+      return Boolean(liveObj.uid && (liveObj.uid === uid || (authUid && liveObj.uid === authUid)));
+    }
+
+    function isLiveHostOrAdmin(liveObj) {
+      return isCurrentBroadcaster(liveObj);
     }
 
     function syncLiveHostControls(liveObj) {
-      const canControl = isLiveHostOrAdmin(liveObj);
-      const pauseBtn = document.getElementById('live-pause-btn');
+      const isBroadcaster = isCurrentBroadcaster(liveObj);
       const endBtn = document.getElementById('live-end-btn');
-      if (pauseBtn) pauseBtn.classList.toggle('hidden', !canControl);
-      if (endBtn) endBtn.classList.toggle('hidden', !canControl);
+      const rewindBtn = document.getElementById('viewer-rewind-live-btn');
+      const pauseBtn = document.getElementById('live-pause-btn');
+      if (endBtn) endBtn.classList.toggle('hidden', !isBroadcaster);
+      if (rewindBtn) rewindBtn.classList.toggle('hidden', isBroadcaster);
+      if (pauseBtn) pauseBtn.classList.remove('hidden');
     }
+
+    window.rewindViewerLive = () => {
+      if (!activeLiveRoom) return;
+      const camVid = document.getElementById('live-camera-video');
+      const viewerImg = document.getElementById('sv-viewer-live-img');
+      if (camVid && !camVid.paused && isFinite(camVid.duration) && camVid.duration > 0) {
+        camVid.currentTime = Math.max(0, camVid.currentTime - 10);
+      }
+      if (viewerImg && activeLiveRoom.liveFrame) {
+        viewerImg.style.opacity = '0.72';
+        setTimeout(() => { viewerImg.style.opacity = '1'; }, 180);
+      }
+      toast('⏪ Atrasado 10s en el directo');
+    };
 
     function applyCombinedPauseUI() {
       const effectivePaused = Boolean(hostLivePaused || viewerLivePaused);
@@ -2641,7 +2624,7 @@
       const hostPauseBtn = document.getElementById('live-pause-btn');
       const viewerPauseBtn = document.getElementById('viewer-pause-btn');
 
-      if (hostPauseBtn) hostPauseBtn.textContent = hostLivePaused ? '▶️ Reanudar Sala' : '⏸️ Pausar Sala';
+      if (hostPauseBtn) hostPauseBtn.textContent = (hostLivePaused || viewerLivePaused) ? '▶️ Reanudar' : '⏸️ Pausar';
       if (viewerPauseBtn) viewerPauseBtn.textContent = viewerLivePaused ? '▶️ Reanudar' : '⏸️ Pausar';
 
       if (effectivePaused) {
@@ -2679,23 +2662,25 @@
       }
     }
 
-    window.toggleViewerPauseLive = () => {
+    window.toggleUnifiedLivePause = async () => {
       if (!activeLiveRoom) return;
-      viewerLivePaused = !viewerLivePaused;
-      applyCombinedPauseUI();
-      toast(viewerLivePaused ? '⏸️ Pausaste el Live' : '▶️ Reanudaste el Live');
+      if (isCurrentBroadcaster(activeLiveRoom)) {
+        const nextPaused = !hostLivePaused;
+        hostLivePaused = nextPaused;
+        viewerLivePaused = nextPaused;
+        applyCombinedPauseUI();
+        toast(nextPaused ? '⏸️ Live en pausa' : '▶️ Live reanudada');
+        try {
+          await updateDoc(doc(db, 'lives', activeLiveRoom.id), { paused: nextPaused });
+        } catch (e) {}
+      } else {
+        viewerLivePaused = !viewerLivePaused;
+        applyCombinedPauseUI();
+        toast(viewerLivePaused ? '⏸️ Live en pausa' : '▶️ Live reanudada');
+      }
     };
-
-    window.toggleHostPauseLive = async () => {
-      if (!activeLiveRoom || !isLiveHostOrAdmin(activeLiveRoom)) return;
-      const nextPaused = !hostLivePaused;
-      hostLivePaused = nextPaused;
-      applyCombinedPauseUI();
-      toast(nextPaused ? '⏸️ Sala pausada para todos' : '▶️ Sala reanudada');
-      try {
-        await updateDoc(doc(db, 'lives', activeLiveRoom.id), { paused: nextPaused });
-      } catch (e) {}
-    };
+    window.toggleViewerPauseLive = window.toggleUnifiedLivePause;
+    window.toggleHostPauseLive = window.toggleUnifiedLivePause;
 
     window.resumeAnyLivePause = async () => {
       if (!activeLiveRoom) return;
@@ -4744,7 +4729,6 @@
     setTimeout(dismissBrandSplash, 600);
     setTimeout(dismissBrandSplash, 1800);
 
-    getOrCreateDeviceUserId();
     setLanguage(currentLang);
     updateWalletUI();
     refreshAdminAndReferralUI();
