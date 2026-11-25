@@ -587,11 +587,6 @@
         <button type="button" class="pill-btn" data-topic="series" onclick="setTopicFilter('series', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎬 Series</button>
         <button type="button" class="pill-btn" data-topic="musica" onclick="setTopicFilter('musica', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎵 Música</button>
       </div>
-      <div id="sv-live-now-bar" class="hidden" style="display:flex;gap:6px;overflow-x:auto;padding:5px 2px 2px;scrollbar-width:none;pointer-events:auto;"></div>
-      <div id="sv-live-alert-banner" class="hidden" style="margin-top:6px;background:rgba(239,68,68,0.18);border:1px solid rgba(248,113,113,0.65);border-radius:12px;padding:7px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:auto;backdrop-filter:blur(8px);">
-        <span id="sv-live-alert-text" style="font-size:11.5px;font-weight:800;color:#fecaca;">🔴 ¡Hay una transmisión en vivo activa ahora!</span>
-        <button type="button" id="sv-live-alert-join-btn" class="pill-btn gold" style="padding:4px 10px;font-size:11px;white-space:nowrap;">Ver Live →</button>
-      </div>
       <div id="search-bar" class="search-bar hidden">
         <input id="search-input" type="text" data-i18n-ph="search_ph" placeholder="Buscar #hashtag, @creador o serie..." oninput="applySearchFilter()" />
         <button onclick="clearSearch()" data-i18n="clear_btn">Limpiar</button>
@@ -616,10 +611,7 @@
           <div class="live-badge"><span class="live-dot"></span> STARVIBE LIVE • 65% / 35%</div>
           <h3 style="font-size:17px;margin:8px 0 4px;color:#fff;" data-i18n="live_banner_title">Transmisiones en Vivo y Regalos Virtuales</h3>
           <p style="font-size:12.5px;color:#d1d5db;line-height:1.4;" data-i18n="live_banner_desc">Mira directos integrados dentro de StarVibe, envía regalos virtuales al creador (35% para quien transmite / 65% plataforma) y compra ofertas en vivo.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-            <button class="btn-primary" style="margin-top:0;padding:10px 16px;font-size:12.5px;" onclick="openLiveModal()" data-i18n="start_live_btn">📡 Iniciar / Publicar Sala Live</button>
-            <button type="button" class="pill-btn" style="padding:9px 13px;font-size:12px;border-color:#ef4444;color:#fca5a5;" onclick="clearAllOldLives()">🧹 Borrar lives viejas</button>
-          </div>
+          <button class="btn-primary" style="padding:10px 18px;font-size:12.5px;" onclick="openLiveModal()" data-i18n="start_live_btn">📡 Iniciar / Publicar Sala Live</button>
         </div>
         <div id="live-rooms-list"></div>
       </div>
@@ -2367,9 +2359,6 @@
       return parseExternalLiveUrl(url).embedUrl;
     }
 
-    let knownLiveIds = new Set();
-    let initialLivesLoaded = false;
-
     window.clearAllOldLives = async () => {
       const list = document.getElementById('live-rooms-list');
       try {
@@ -2378,13 +2367,8 @@
         const deletions = [];
         snapAll.forEach((d) => deletions.push(deleteDoc(doc(db, 'lives', d.id))));
         await Promise.all(deletions);
-        knownLiveIds.clear();
-        const alertBanner = document.getElementById('sv-live-alert-banner');
-        if (alertBanner) alertBanner.classList.add('hidden');
-        const liveNowBar = document.getElementById('sv-live-now-bar');
-        if (liveNowBar) { liveNowBar.classList.add('hidden'); liveNowBar.innerHTML = ''; }
         if (list) list.innerHTML = `<div class="live-card"><p style="font-size:13px;color:#9ca3af;">${t('no_lives')}</p></div>`;
-        toast('🧹 Lives viejas eliminadas');
+        toast('🧹 Lives anteriores eliminadas');
       } catch (e) {
         toast('Error al limpiar lives');
       }
@@ -2393,13 +2377,9 @@
     const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
     onSnapshot(lq, (snap) => {
       const list = document.getElementById('live-rooms-list');
-      const liveNowBar = document.getElementById('sv-live-now-bar');
-      const alertBanner = document.getElementById('sv-live-alert-banner');
-      const alertText = document.getElementById('sv-live-alert-text');
-      const alertJoinBtn = document.getElementById('sv-live-alert-join-btn');
+      if (!list) return;
 
       const nowMs = Date.now();
-      const maxAgeMs = 2 * 60 * 60 * 1000; // 2 hours max for active live sessions
       const activeLives = [];
 
       snap.forEach((docSnap) => {
@@ -2411,60 +2391,16 @@
         } else if (typeof l.createdAt === 'number') {
           createdMs = l.createdAt;
         }
-        if (nowMs - createdMs <= maxAgeMs) {
+        const lastBeat = Number(l.liveFrameUpdatedAt || l.heartbeatAt || createdMs);
+        // Only consider live if created or active within the last 10 minutes
+        if (nowMs - lastBeat <= 10 * 60 * 1000) {
           activeLives.push(l);
+        } else if (isOwnerAccount() || (l.uid && l.uid === getActiveUserId())) {
+          // Automatically remove stale/finished old lives so they stop showing up
+          deleteDoc(doc(db, 'lives', docSnap.id)).catch(() => {});
         }
       });
 
-      // Notify when a brand-new live starts after initial load
-      if (initialLivesLoaded) {
-        const newestLive = activeLives.find((item) => !knownLiveIds.has(item.id));
-        if (newestLive && itemUserNotSelf(newestLive)) {
-          toast('🔴 ¡Live activa de @' + (newestLive.user || 'Creador') + ': ' + (newestLive.title || 'En vivo') + '!');
-        }
-      }
-      knownLiveIds = new Set(activeLives.map((x) => x.id));
-      initialLivesLoaded = true;
-
-      if (alertBanner) {
-        if (activeLives.length > 0) {
-          const topLive = activeLives[0];
-          alertBanner.classList.remove('hidden');
-          if (alertText) {
-            alertText.textContent = '🔴 EN VIVO: @' + (topLive.user || 'Creador') + ' — ' + (topLive.title || 'Transmisión activa');
-          }
-          if (alertJoinBtn) {
-            alertJoinBtn.onclick = () => openLiveRoom(topLive);
-          }
-        } else {
-          alertBanner.classList.add('hidden');
-        }
-      }
-
-      function itemUserNotSelf(liveItem) {
-        return liveItem && liveItem.uid !== getActiveUserId();
-      }
-
-      if (liveNowBar) {
-        if (activeLives.length === 0) {
-          liveNowBar.classList.add('hidden');
-          liveNowBar.innerHTML = '';
-        } else {
-          liveNowBar.classList.remove('hidden');
-          liveNowBar.innerHTML = activeLives.map((item) => `
-            <button type="button" class="pill-btn gold sv-quick-live-chip" data-live-id="${item.id}" style="padding:4px 10px;font-size:11px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
-              <span class="live-dot"></span>
-              <span>@${(item.user || 'Live').replace(/</g, '')}</span>
-            </button>
-          `).join('');
-          liveNowBar.querySelectorAll('.sv-quick-live-chip').forEach((btnChip) => {
-            const targetObj = activeLives.find((x) => x.id === btnChip.dataset.liveId);
-            if (targetObj) btnChip.addEventListener('click', () => openLiveRoom(targetObj));
-          });
-        }
-      }
-
-      if (!list) return;
       if (activeLives.length === 0) {
         list.innerHTML = `<div class="live-card"><p style="font-size:13px;color:#9ca3af;">${t('no_lives')}</p></div>`;
         return;
@@ -2526,6 +2462,10 @@
       const viewerImg = document.getElementById('sv-viewer-live-img');
       if (viewerImg) {
         try { viewerImg.remove(); } catch (e) {}
+      }
+      const viewerWait = document.getElementById('sv-viewer-live-wait');
+      if (viewerWait) {
+        try { viewerWait.remove(); } catch (e) {}
       }
       if (activeLiveMediaStream) {
         try {
@@ -2589,21 +2529,24 @@
 
           const pushCameraFrame = async () => {
             if (!activeLiveRoom || activeLiveRoom.id !== roomId || !activeLiveMediaStream || hostLivePaused) return;
+            const payload = { heartbeatAt: Date.now() };
             if (camVid.readyState >= 2 && camVid.videoWidth > 0 && camVid.videoHeight > 0) {
               try {
                 frameCtx.drawImage(camVid, 0, 0, frameCanvas.width, frameCanvas.height);
                 const dataUrl = frameCanvas.toDataURL('image/jpeg', 0.45);
                 if (dataUrl && dataUrl.length < 420000) {
-                  await updateDoc(doc(db, 'lives', roomId), {
-                    liveFrame: dataUrl,
-                    liveFrameUpdatedAt: Date.now()
-                  });
+                  payload.liveFrame = dataUrl;
+                  payload.liveFrameUpdatedAt = Date.now();
                 }
               } catch (e) {}
             }
+            try {
+              await updateDoc(doc(db, 'lives', roomId), payload);
+            } catch (e) {}
           };
 
-          hostFrameTimer = setInterval(pushCameraFrame, 900);
+          setTimeout(pushCameraFrame, 250);
+          hostFrameTimer = setInterval(pushCameraFrame, 750);
           const origStopFn = window._svStopFrameLoop;
           window._svStopFrameLoop = () => {
             if (hostFrameTimer) { clearInterval(hostFrameTimer); hostFrameTimer = null; }
@@ -2617,26 +2560,39 @@
         if (camCtrls) camCtrls.classList.add('hidden');
         const stage = document.getElementById('sv-live-player-box');
         let viewerImg = document.getElementById('sv-viewer-live-img');
-        if (!viewerImg && stage) {
-          viewerImg = document.createElement('img');
-          viewerImg.id = 'sv-viewer-live-img';
-          viewerImg.alt = 'Transmisión en vivo';
-          viewerImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:#050507;';
-          stage.insertBefore(viewerImg, document.getElementById('live-iframe'));
-        }
-        if (viewerImg) {
-          viewerImg.classList.remove('hidden');
-          if (activeLiveRoom && activeLiveRoom.liveFrame) {
-            viewerImg.src = activeLiveRoom.liveFrame;
+        let viewerWait = document.getElementById('sv-viewer-live-wait');
+        if (stage) {
+          if (!viewerImg) {
+            viewerImg = document.createElement('img');
+            viewerImg.id = 'sv-viewer-live-img';
+            viewerImg.alt = 'Transmisión en vivo';
+            viewerImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:#050507;position:relative;z-index:2;';
+            stage.insertBefore(viewerImg, document.getElementById('live-iframe'));
           }
+          if (!viewerWait) {
+            viewerWait = document.createElement('div');
+            viewerWait.id = 'sv-viewer-live-wait';
+            viewerWait.style.cssText = 'position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#090b12;color:#fef08a;font-size:12px;font-weight:800;gap:6px;padding:12px;text-align:center;';
+            viewerWait.innerHTML = '<span>📡 Conectando con la cámara del creador...</span><span style="font-size:10.5px;color:#9ca3af;font-weight:600;">Si el creador cerró su transmisión, esta sala se cerrará automáticamente.</span>';
+            stage.insertBefore(viewerWait, document.getElementById('live-iframe'));
+          }
+        }
+        if (viewerImg && activeLiveRoom && activeLiveRoom.liveFrame) {
+          viewerImg.src = activeLiveRoom.liveFrame;
         }
         unsubLiveSignals = onSnapshot(doc(db, 'lives', roomId), (snap) => {
           const imgEl = document.getElementById('sv-viewer-live-img');
-          if (!imgEl || viewerLivePaused || hostLivePaused) return;
-          if (!snap.exists()) return;
+          const waitEl = document.getElementById('sv-viewer-live-wait');
+          if (!snap.exists()) {
+            closeLiveRoom();
+            toast('⏹️ La transmisión finalizó');
+            return;
+          }
+          if (viewerLivePaused || hostLivePaused) return;
           const d = snap.data() || {};
-          if (d.liveFrame) {
+          if (d.liveFrame && imgEl) {
             imgEl.src = d.liveFrame;
+            if (waitEl) waitEl.style.display = 'none';
           }
         }, () => {});
       }
@@ -4788,6 +4744,7 @@
     setTimeout(dismissBrandSplash, 600);
     setTimeout(dismissBrandSplash, 1800);
 
+    getOrCreateDeviceUserId();
     setLanguage(currentLang);
     updateWalletUI();
     refreshAdminAndReferralUI();
