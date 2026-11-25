@@ -893,7 +893,7 @@
       <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:#facc15;text-transform:uppercase;margin-bottom:6px;">StarVibe Destacado</div>
       <h3 style="font-size:21px;font-weight:900;color:#fff;margin-bottom:8px;max-width:320px;">Crea, Transmite y Gana con tu Comunidad</h3>
       <p style="font-size:13px;color:#d1d5db;max-width:310px;line-height:1.5;margin-bottom:20px;">
-        Videos de +45s a R$ 0,50 / 1.000 vistas, regalos en vivo y edición en StarVibe Studio Pro.
+        Videos de +45s, regalos virtuales en vivo y edición en StarVibe Studio Pro.
       </p>
       <a id="entry-promo-cta" href="https://uplcm.com/4/12342382" target="_blank" rel="noopener sponsored" onclick="dismissEntryPromo()" class="promo-cta-btn" style="max-width:290px;">
         ↗️ Ver Oferta Patrocinada
@@ -933,7 +933,7 @@
       <div id="topic-chips-bar" style="display:flex;gap:6px;overflow-x:auto;padding:7px 2px 2px;scrollbar-width:none;pointer-events:auto;">
         <button type="button" class="pill-btn gold" data-topic="all" onclick="setTopicFilter('all', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">✨ Todo</button>
         <button type="button" class="pill-btn" data-topic="gaming" onclick="setTopicFilter('gaming', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎮 Gaming</button>
-        <button type="button" class="pill-btn" data-topic="monetizable" onclick="setTopicFilter('monetizable', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">💰 +45s Pagos</button>
+        <button type="button" class="pill-btn" data-topic="monetizable" onclick="setTopicFilter('monetizable', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎬 +45s Destacados</button>
         <button type="button" class="pill-btn" data-topic="series" onclick="setTopicFilter('series', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎬 Series</button>
         <button type="button" class="pill-btn" data-topic="musica" onclick="setTopicFilter('musica', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎵 Música</button>
       </div>
@@ -1256,7 +1256,7 @@
             <span class="split-pill">65% App • 35% Creador</span>
           </div>
           <p style="font-size:11.5px;line-height:1.45;" data-i18n="wallet_desc">
-            Gana <strong>35%</strong> en regalos En Vivo y <strong>R$ 0,50 por cada 1.000 vistas</strong> en videos de +45s. Retiro mínimo por PIX: <strong>R$ 50,00</strong>.
+            Administra tus monedas virtuales y recompensas de comunidad en StarVibe. Consulta las condiciones de cuenta y elegibilidad en tu perfil.
           </p>
           <div class="wallet-grid">
             <div class="wallet-box">
@@ -1265,12 +1265,12 @@
             </div>
             <div class="wallet-box">
               <strong id="wallet-creator-earnings">R$ 0,00</strong>
-              <span data-i18n="wallet_earn_lbl">Saldo Estimado (BRL)</span>
+              <span data-i18n="wallet_earn_lbl">Recompensas Acumuladas</span>
             </div>
           </div>
           <div class="studio-btns">
-            <button class="pill-btn gold" onclick="openRechargeModal()" data-i18n="recharge_btn">➕ Obtener Monedas (PIX)</button>
-            <button class="pill-btn" onclick="openWithdrawModal()">💸 Retirar por PIX</button>
+            <button class="pill-btn gold" onclick="openRechargeModal()" data-i18n="recharge_btn">➕ Obtener Monedas</button>
+            <button class="pill-btn" onclick="openWithdrawModal()">💳 Solicitar Canje</button>
             <button id="admin-split-btn" class="pill-btn gold hidden" onclick="openSplitSettingsModal()">🛡️ Panel Admin (Denuncias, PIX y Monetag)</button>
           </div>
         </div>
@@ -1282,7 +1282,7 @@
             <span class="split-pill" id="ref-count-pill">0 / 5 Referidos</span>
           </div>
           <p style="font-size:11.5px;line-height:1.45;margin-bottom:10px;">
-            Gana <strong>R$ 0,25 por cada amigo validado</strong> (que vea al menos 2 minutos de video) + <strong>Bonos extra</strong> al cumplir metas.
+            Comparte tu código de invitación con amigos y consulta el estado de participación en tu cuenta.
           </p>
           <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:10px;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -1296,7 +1296,7 @@
               </div>
             </div>
             <div style="margin-top:8px;font-size:11px;color:#059669;font-weight:700;" id="ref-milestone-status">
-              🎯 Meta 1 (5 amigos): +R$ 1,50 • Meta 2 (15 amigos): +R$ 5,00 • Meta 3 (50 amigos): +R$ 20,00
+              🎯 Participa en las actividades de comunidad de StarVibe con tu código de invitación.
             </div>
           </div>
 
@@ -1436,15 +1436,15 @@
 
       <form id="upload-form">
         <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.4);border-radius:12px;padding:10px;margin-bottom:10px;font-size:11.5px;color:#d1fae5;line-height:1.45;">
-          💰 <strong>Reglas de Monetización por Video:</strong><br>
-          • <strong>Duración mínima:</strong> 45 segundos (videos más cortos se publican pero no monetizan).<br>
+          🎬 <strong>Requisitos de Publicación:</strong><br>
+          • <strong>Duración recomendada:</strong> 45 segundos o más para contenido extendido.<br>
           • <strong>Formato y peso:</strong> MP4 / WebM vertical, máximo <strong>45 MB</strong>.<br>
-          • <strong>Pago:</strong> <strong>R$ 0,50 por cada 1.000 vistas válidas</strong> (mínimo 1.000 vistas para activar pago).
+          • <strong>Comunidad:</strong> Contenido original sujeto a normas de comunidad y verificación de cuenta.
         </div>
 
         <label class="dropzone">
           <span style="font-size: 32px; margin-bottom: 5px;">🎬</span>
-          <span id="file-label" style="font-size: 13px; color: #d1d5db;" data-i18n="pick_video_lbl">Toca aquí para elegir un video (.mp4 / máx. 45 MB / +45s para monetizar)</span>
+          <span id="file-label" style="font-size: 13px; color: #d1d5db;" data-i18n="pick_video_lbl">Toca aquí para elegir un video (.mp4 / máx. 45 MB / +45s)</span>
           <span id="video-meta-badge" style="font-size: 11px; color: #facc15; margin-top: 4px; display: none;"></span>
           <input id="video-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" style="display: none;" required />
         </label>
@@ -1808,7 +1808,7 @@
         <button onclick="closeFormalizeModal()" class="close-btn">✕</button>
       </div>
       <p style="font-size:12px;color:#9ca3af;margin-bottom:10px;line-height:1.4;">
-        Para activar retiros de ganancias y transmisiones en vivo con cumplimiento LGPD y prevención de fraude, registra tus datos formales:
+        Para habilitar funciones de creador, transmisiones en vivo y solicitudes de cuenta con cumplimiento LGPD y prevención de fraude, registra tus datos formales:
       </p>
       <form id="formalize-form">
         <input id="form-fullname" type="text" maxlength="80" placeholder="Nombre completo (igual que documento)..." class="text-input" required />
@@ -1826,7 +1826,7 @@
     <!-- MODAL RETIRO DE GANANCIAS DEL CREADOR (PIX, PAYPAL Y BINANCE SOLANA) -->
     <div id="withdraw-modal" class="modal hidden">
       <div class="modal-header">
-        <div class="modal-title">💸 Retirar Ganancias de Creador</div>
+        <div class="modal-title">💳 Solicitud de Recompensas de Creador</div>
         <button onclick="closeWithdrawModal()" class="close-btn">✕</button>
       </div>
       <div class="wallet-card" style="margin-bottom:12px;border-color:rgba(250,204,21,0.45);">
@@ -1853,11 +1853,11 @@
     <!-- MODAL REGLAS EXPLÍCITAS PARA SER CREADOR -->
     <div id="creator-rules-modal" class="modal hidden">
       <div class="modal-header">
-        <div class="modal-title">📜 Reglas Oficiales de Monetización StarVibe</div>
+        <div class="modal-title">📜 Reglas de Creadores y Comunidad StarVibe</div>
         <button onclick="closeCreatorRulesModal()" class="close-btn">✕</button>
       </div>
       <div style="background:#0f1117;border:1px solid rgba(250,204,21,0.35);border-radius:16px;padding:15px;font-size:12.5px;color:#e5e7eb;line-height:1.55;">
-        <p style="margin-bottom:8px;"><strong>1. Monetización de Videos (+45 segundos):</strong> Videos originales en MP4/WebM (máx. <strong>45 MB</strong>) con duración mínima de <strong>45 segundos</strong> pagan <strong>R$ 0,50 por cada 1.000 visualizaciones válidas</strong> (mínimo 1.000 vistas para activar cobro).</p>
+        <p style="margin-bottom:8px;"><strong>1. Monetización de Videos (+45 segundos):</strong> Videos originales en MP4/WebM (máx. <strong>45 MB</strong>) con duración mínima de <strong>45 segundos</strong> forman parte del catálogo de contenido extendido sujeto a elegibilidad de cuenta y normas de la comunidad.</p>
         <p style="margin-bottom:8px;"><strong>2. Salas En Vivo (65% App / 35% Creador):</strong> Requiere cuenta formalizada (+18 años, documento y PIX) y transmisión propia. El creador recibe el <strong>35%</strong> de los regalos virtuales.</p>
         <p style="margin-bottom:8px;"><strong>3. Retiro Mínimo por PIX:</strong> El saldo mínimo acumulado para solicitar retiro es de <strong>R$ 50,00</strong>.</p>
         <p style="margin-bottom:8px;"><strong>4. Propiedad intelectual (DMCA):</strong> Solo videos 100% originales o con licencia. Prohibido subir contenido de terceros.</p>
@@ -1927,14 +1927,14 @@
         username_ph: "Tu nombre de usuario...",
         save_btn: "Guardar",
         lang_title: "🌐 Idioma de la App",
-        wallet_title: "💰 Billetera & Reparto de Ganancias",
-        wallet_desc: "Reparto transparente mejorado frente a TikTok: 35% directo para quien transmite en vivo y 65% para la plataforma StarVibe.",
+        wallet_title: "💰 Wallet y Recompensas",
+        wallet_desc: "Gestiona tus monedas virtuales y recompensas de comunidad dentro de StarVibe.",
         wallet_coins_lbl: "Mis Monedas (Regalos)",
-        wallet_earn_lbl: "Ganancia Creador (35%)",
-        recharge_btn: "➕ Recargar Monedas (PIX)",
-        split_settings_btn: "⚙️ Ajustes de Reparto",
+        wallet_earn_lbl: "Recompensas Acumuladas",
+        recharge_btn: "➕ Obtener Monedas",
+        split_settings_btn: "⚙️ Configuración de Recompensas",
         studio_title: "🤝 StarVibe Creator & Brand Studio",
-        studio_desc: "Monetiza tus videos añadiendo enlaces directos de producto/afiliado (estilo Shop) o conecta tu marca con nuestra audiencia.",
+        studio_desc: "Agrega enlaces de producto o conecta tu marca con la audiencia de StarVibe según las normas vigentes.",
         brand_btn: "💼 Anunciar mi Marca",
         fullscreen_btn: "📲 Abrir sin barra del navegador",
         my_videos_tab: "🎬 Mis Videos",
@@ -2333,7 +2333,7 @@
         if (box) box.classList.add('hidden');
         if (done) {
           done.classList.remove('hidden');
-          done.textContent = '✅ Invitado con código ' + usedRef + ' (ve 2 min de videos para validar el bono).';
+          done.textContent = '✅ Invitado con código ' + usedRef + '.';
         }
       }
 
@@ -4481,7 +4481,7 @@
             <div class="badges-row">
               <span class="tag-pill">★ ${v.category || 'StarVibe Original'}</span>
               <span class="tag-pill">👁️ ${Number(v.views || 0).toLocaleString('es-ES')} vistas</span>
-              ${Number(v.durationSec || 0) >= 45 ? `<span class="monetize-pill">💰 Monetizable (${Math.round(v.durationSec)}s)</span>` : ''}
+              ${Number(v.durationSec || 0) >= 45 ? `<span class="monetize-pill">🎬 +45s (${Math.round(v.durationSec)}s)</span>` : ''}
               ${v.isSponsored ? `<span class="sponsor-pill">${t('sponsored_badge')}</span>` : ''}
             </div>
             <div class="skip-controls">
@@ -5452,10 +5452,10 @@
       const rounded = Math.round(secVal || 0);
       if (rounded >= 45) {
         badge.style.color = '#6ee7b7';
-        badge.textContent = '✅ Duración: ' + rounded + 's • APTO PARA MONETIZAR (R$ 0,50 / 1.000 vistas)';
+        badge.textContent = '✅ Duración: ' + rounded + 's • Formato largo (+45s)';
       } else {
         badge.style.color = '#fbbf24';
-        badge.textContent = 'ℹ️ Duración: ' + rounded + 's • Se publicará normal (requiere +45s para monetizar)';
+        badge.textContent = 'ℹ️ Duración: ' + rounded + 's • Video corto (menos de 45s)';
       }
     }
 
