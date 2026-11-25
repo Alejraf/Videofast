@@ -206,13 +206,33 @@
       padding: 3px 9px; border-radius: 999px; width: fit-content;
     }
 
-    .live-room-overlay { position: absolute; inset: 0; z-index: 42; background: #050507; display: flex; flex-direction: column; }
+    .live-room-overlay {
+      position: fixed; inset: 0; width: 100%; height: 100dvh; max-height: 100dvh;
+      z-index: 42; background: #050507; display: flex; flex-direction: column; overflow: hidden;
+    }
     .live-room-top {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+      padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
       background: rgba(15,17,23,0.96); border-bottom: 1px solid var(--border-gold);
     }
-    .live-player-box { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; border-bottom: 1px solid #1f2937; }
+    .live-player-box {
+      width: 100%; flex: 1 1 auto; min-height: 210px; background: #000;
+      position: relative; border-bottom: 1px solid #1f2937; overflow: hidden;
+    }
+    .live-room-overlay.sv-landscape-mode {
+      flex-direction: row;
+    }
+    .live-room-overlay.sv-landscape-mode .live-room-top {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 30;
+      background: linear-gradient(180deg, rgba(5,5,7,0.88), transparent);
+      border-bottom: none; padding-top: calc(6px + env(safe-area-inset-top));
+    }
+    .live-room-overlay.sv-landscape-mode .live-player-box {
+      width: 62%; height: 100dvh; min-height: 100dvh; flex: none; border-bottom: none; border-right: 1px solid #1f2937;
+    }
+    .live-room-overlay.sv-landscape-mode .sv-live-side-panel {
+      width: 38%; height: 100dvh; display: flex; flex-direction: column; padding-top: 46px; background: #07080c;
+    }
     .live-player-box iframe { width: 100%; height: 100%; border: none; }
     /* Tiered Virtual Gifts & Spectacle Notifications */
     .live-gift-burst {
@@ -510,6 +530,18 @@
       background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.55);
       color: #6ee7b7; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px;
     }
+  
+    @keyframes svFloatHeart {
+      0% { transform: translateY(0) scale(0.7); opacity: 1; }
+      60% { transform: translateY(-95px) scale(1.2); opacity: 0.95; }
+      100% { transform: translateY(-170px) scale(0.95); opacity: 0; }
+    }
+    .sv-floating-heart {
+      position: absolute; bottom: 44px; right: 18px; z-index: 28;
+      font-size: 24px; pointer-events: none;
+      animation: svFloatHeart 1.35s ease-out forwards;
+    }
+
   </style>
 </head>
 <body>
@@ -630,7 +662,7 @@
           <div>
             <strong id="room-creator" style="font-size:13px;color:var(--gold-2);display:block;">@Creador ✅</strong>
             <span id="room-elapsed-badge" style="font-size:10.5px;color:#fca5a5;font-weight:800;display:block;">🔴 En live ahora • 👁️ <span id="room-viewers-count">1</span></span>
-            <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala oficial • Regalos: 35% creador / 65% app</span>
+            <span id="room-title" style="font-size:11px;color:#9ca3af;">Sala en vivo • StarVibe Live</span>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
@@ -722,7 +754,8 @@
         <a id="room-offer-link" href="#" target="_blank" rel="noopener" class="follow-btn" style="text-decoration:none;" data-i18n="view_offer_btn">Ver Oferta →</a>
       </div>
 
-      <div id="live-chat-messages" class="live-chat-area"></div>
+      <div class="sv-live-side-panel" style="display:flex;flex-direction:column;flex:0 0 auto;max-height:46dvh;">
+      <div id="live-chat-messages" class="live-chat-area" style="flex:1;min-height:64px;max-height:130px;overflow-y:auto;"></div>
 
       <div class="live-gift-bar">
         <button class="gift-chip" onclick="sendVirtualGift('✨ Chispa', 10, 1.00, 'basic', 'REGALO BÁSICO')">
@@ -757,10 +790,14 @@
         </button>
       </div>
 
-      <form id="live-chat-form" class="live-chat-form">
-        <input id="live-chat-input" type="text" maxlength="120" data-i18n-ph="live_chat_ph" placeholder="Escribe en el chat en vivo..." required />
+      <form id="live-chat-form" class="live-chat-form" style="display:flex;gap:6px;align-items:center;padding:6px 10px calc(8px + env(safe-area-inset-bottom));">
+        <input id="live-chat-input" type="text" maxlength="120" data-i18n-ph="live_chat_ph" placeholder="Escribe en el chat en vivo..." required style="flex:1;" />
+        <button type="button" id="sv-live-heart-btn" onclick="sendLiveHeartTap()" aria-label="Dar Me Gusta" style="background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;border:none;border-radius:999px;padding:8px 12px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;box-shadow:0 2px 10px rgba(244,63,94,0.45);flex-shrink:0;">
+          ❤️ <span id="sv-live-likes-count">0</span>
+        </button>
         <button type="submit" data-i18n="send_btn">Enviar</button>
       </form>
+      </div>
     </div>
 
     <!-- VISTA 3: PERFIL, IDIOMAS, WALLET Y STUDIO -->
@@ -2377,7 +2414,10 @@
           if (el) el.textContent = String(Math.max(1, Number(count || 1)));
         });
         svSocket.on('mostrar_comentario', ({ usuario, texto }) => {
-          const chatList = document.getElementById('live-chat-messages');
+          liveRoomLikesCount = Number(liveObj.likesCount || 0);
+      const likesLbl = document.getElementById('sv-live-likes-count');
+      if (likesLbl) likesLbl.textContent = String(liveRoomLikesCount);
+      const chatList = document.getElementById('live-chat-messages');
           if (!chatList) return;
           const div = document.createElement('div');
           div.className = 'live-msg';
@@ -2420,6 +2460,17 @@
             aud.volume = 1.0;
             aud.play().catch(() => {});
           } catch (e) {}
+        });
+        svSocket.on('mostrar_like_live', ({ liveId, totalLikes }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId) return;
+          if (typeof totalLikes === 'number' && totalLikes > liveRoomLikesCount) {
+            liveRoomLikesCount = totalLikes;
+          } else {
+            liveRoomLikesCount += 1;
+          }
+          const lbl = document.getElementById('sv-live-likes-count');
+          if (lbl) lbl.textContent = String(liveRoomLikesCount);
+          renderFloatingLiveHeart();
         });
         svSocket.on('sala_finalizada', ({ liveId }) => {
           if (activeLiveRoom && activeLiveRoom.id === liveId) {
@@ -2793,26 +2844,29 @@
           // Stream real-time video frames + audio chunks through Socket.IO server (works across all mobile networks)
           const sock = ensureSocket();
           const relayCanvas = document.createElement('canvas');
-          relayCanvas.width = 360;
-          relayCanvas.height = 640;
+          relayCanvas.width = 240;
+          relayCanvas.height = 426;
           const relayCtx = relayCanvas.getContext('2d');
 
           const emitFrame = () => {
             if (!activeLiveRoom || activeLiveRoom.id !== roomId || !activeLiveMediaStream || hostLivePaused) return;
+            // Backpressure guard: prevent TCP/WebSocket buffer buildup that causes 2s delay
+            const buffered = sock?.io?.engine?.transport?.ws?.bufferedAmount || 0;
+            if (buffered > 48000) return;
             if (camVid.readyState >= 2 && camVid.videoWidth > 0 && camVid.videoHeight > 0) {
               try {
                 relayCtx.drawImage(camVid, 0, 0, relayCanvas.width, relayCanvas.height);
-                const frame = relayCanvas.toDataURL('image/jpeg', 0.52);
+                const frame = relayCanvas.toDataURL('image/jpeg', 0.42);
                 if (sock && frame) {
-                  sock.emit('live_video_frame', { liveId: roomId, frame });
+                  sock.volatile.emit('live_video_frame', { liveId: roomId, frame });
                 }
               } catch (e) {}
             }
           };
 
-          const frameInterval = setInterval(emitFrame, 140); // ~7 fps smooth low-latency relay
+          const frameInterval = setInterval(emitFrame, 65); // ~15 fps ultra-low latency without queue buildup
 
-          // Capture short audio segments if MediaRecorder is supported
+          // Capture ultra-short 320ms audio segments for near real-time voice
           let audioLoopActive = true;
           const startAudioPulse = () => {
             if (!audioLoopActive || !activeLiveMediaStream) return;
@@ -2830,7 +2884,7 @@
                     const reader = new FileReader();
                     reader.onloadend = () => {
                       if (reader.result && sock) {
-                        sock.emit('live_audio_chunk', { liveId: roomId, audioData: reader.result });
+                        sock.volatile.emit('live_audio_chunk', { liveId: roomId, audioData: reader.result });
                       }
                     };
                     reader.readAsDataURL(blob);
@@ -2838,9 +2892,9 @@
                   if (audioLoopActive) startAudioPulse();
                 };
                 rec.start();
-                setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 950);
+                setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 320);
               } else {
-                setTimeout(startAudioPulse, 800);
+                setTimeout(startAudioPulse, 400);
               }
             } catch (e) {}
           };
@@ -2940,6 +2994,34 @@
       const roomElapsed = document.getElementById('room-elapsed-badge');
       if (roomElapsed) roomElapsed.innerHTML = `🔴 @${liveObj.user || 'Creador'} ${formatLiveElapsed(getLiveStartMs(liveObj))} • 👁️ <span id="room-viewers-count">1</span>`;
     }
+
+    let liveRoomLikesCount = 0;
+    function renderFloatingLiveHeart() {
+      const stage = document.getElementById('sv-live-player-box');
+      if (!stage) return;
+      const icons = ['❤️', '💖', '🧡', '💛', '💜'];
+      const el = document.createElement('div');
+      el.className = 'sv-floating-heart';
+      el.textContent = icons[Math.floor(Math.random() * icons.length)];
+      el.style.right = (14 + Math.floor(Math.random() * 44)) + 'px';
+      stage.appendChild(el);
+      setTimeout(() => { try { el.remove(); } catch (e) {} }, 1400);
+    }
+
+    window.sendLiveHeartTap = () => {
+      if (!activeLiveRoom) return;
+      liveRoomLikesCount += 1;
+      const lbl = document.getElementById('sv-live-likes-count');
+      if (lbl) lbl.textContent = String(liveRoomLikesCount);
+      renderFloatingLiveHeart();
+      const s = ensureSocket();
+      if (s) {
+        s.volatile.emit('enviar_like_live', {
+          liveId: activeLiveRoom.id,
+          totalLikes: liveRoomLikesCount
+        });
+      }
+    };
 
     window.rewindViewerLive = () => {
       if (!activeLiveRoom) return;
@@ -3126,7 +3208,7 @@
       document.getElementById('live-room-overlay').classList.remove('hidden');
 
       const chatList = document.getElementById('live-chat-messages');
-      chatList.innerHTML = '<div class="live-msg">StarVibe Live Chat (35% Creator / 65% StarVibe)</div>';
+      chatList.innerHTML = '<div class="live-msg">Bienvenido al chat en vivo de StarVibe ✨</div>';
 
       if (unsubLiveChat) unsubLiveChat();
       const cq = query(collection(db, 'lives', liveObj.id, 'messages'), orderBy('createdAt', 'asc'));
@@ -3349,18 +3431,39 @@
       }
     };
 
-    window.toggleLiveRoomOrientation = () => {
+    window.toggleLiveRoomOrientation = async () => {
+      const overlay = document.getElementById('live-room-overlay');
       const box = document.getElementById('sv-live-player-box');
-      if (!box) return;
+      const vid = document.getElementById('live-camera-video');
+      const img = document.getElementById('sv-viewer-live-img');
+      if (!overlay || !box) return;
       liveRoomHorizontal = !liveRoomHorizontal;
       if (liveRoomHorizontal) {
-        box.style.height = '260px';
-        box.style.aspectRatio = '16 / 9';
-        toast('📐 Live en formato horizontal');
+        overlay.classList.add('sv-landscape-mode');
+        if (vid) vid.style.objectFit = 'contain';
+        if (img) img.style.objectFit = 'contain';
+        try {
+          if (!document.fullscreenElement && overlay.requestFullscreen) {
+            await overlay.requestFullscreen();
+          }
+          if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock('landscape');
+          }
+        } catch (e) {}
+        toast('📐 Vista horizontal completa');
       } else {
-        box.style.height = '';
-        box.style.aspectRatio = '';
-        toast('📱 Live en formato vertical');
+        overlay.classList.remove('sv-landscape-mode');
+        if (vid) vid.style.objectFit = 'cover';
+        if (img) img.style.objectFit = 'cover';
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+          if (document.fullscreenElement && document.exitFullscreen) {
+            await document.exitFullscreen();
+          }
+        } catch (e) {}
+        toast('📱 Vista vertical completa');
       }
     };
 

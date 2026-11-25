@@ -78,6 +78,11 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('enviar_like_live', ({ liveId, totalLikes } = {}) => {
+    if (!liveId) return;
+    socket.to(liveId).emit('mostrar_like_live', { liveId, totalLikes });
+  });
+
   socket.on('enviar_regalo', (payload = {}) => {
     const { liveId } = payload;
     if (!liveId) return;
