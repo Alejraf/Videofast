@@ -542,6 +542,88 @@
       animation: svFloatHeart 1.35s ease-out forwards;
     }
 
+  
+    /* Compact Single-Row Gift Bar (TikTok Live style) */
+    .live-gift-bar {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      gap: 6px !important;
+      padding: 5px 8px !important;
+      background: rgba(10, 12, 18, 0.96) !important;
+      border-top: 1px solid rgba(250, 204, 21, 0.22) !important;
+      scrollbar-width: none !important;
+      -webkit-overflow-scrolling: touch;
+      flex-shrink: 0 !important;
+    }
+    .live-gift-bar::-webkit-scrollbar { display: none; }
+    .live-gift-bar .gift-chip {
+      flex: 0 0 auto !important;
+      min-width: 58px !important;
+      max-width: 68px !important;
+      padding: 4px 6px !important;
+      border-radius: 10px !important;
+    }
+    .live-gift-bar .gift-chip .g-icon {
+      font-size: 15px !important;
+      line-height: 1.1 !important;
+      margin-bottom: 1px !important;
+    }
+    .live-gift-bar .gift-chip .g-name {
+      font-size: 9.5px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    .live-gift-bar .gift-chip strong {
+      font-size: 9.5px !important;
+      margin-top: 1px !important;
+    }
+    .live-gift-bar .gift-chip span {
+      display: none !important;
+    }
+
+    /* True Fullscreen Landscape Fit (works both in physical rotation & portrait-locked browsers) */
+    .live-room-overlay.sv-landscape-native {
+      flex-direction: row !important;
+    }
+    .live-room-overlay.sv-landscape-native .live-room-top {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 35;
+      background: linear-gradient(180deg, rgba(5,5,7,0.88), transparent);
+      border-bottom: none; padding: 6px 12px;
+    }
+    .live-room-overlay.sv-landscape-native .live-player-box {
+      width: 68% !important; height: 100dvh !important; min-height: 100dvh !important;
+      flex: none !important; border-bottom: none !important; border-right: 1px solid #1f2937;
+    }
+    .live-room-overlay.sv-landscape-native .sv-live-side-panel {
+      width: 32% !important; height: 100dvh !important; max-height: 100dvh !important;
+      padding-top: 44px; background: #07080c;
+    }
+    .live-room-overlay.sv-landscape-rotated .live-player-box {
+      position: fixed !important;
+      top: 50% !important; left: 50% !important;
+      width: 100dvh !important; height: 100vw !important;
+      min-height: 100vw !important;
+      transform: translate(-50%, -50%) rotate(90deg) !important;
+      z-index: 32 !important;
+      border: none !important;
+      background: #000 !important;
+    }
+    .live-room-overlay.sv-landscape-rotated .live-room-top {
+      z-index: 40 !important;
+      background: rgba(5, 5, 7, 0.78) !important;
+    }
+    .live-room-overlay.sv-landscape-rotated .sv-live-side-panel {
+      position: fixed !important;
+      bottom: 0; left: 0; right: 0;
+      z-index: 40 !important;
+      background: linear-gradient(0deg, rgba(5,5,7,0.92), rgba(5,5,7,0.55)) !important;
+      max-height: 34dvh !important;
+    }
+
   </style>
 </head>
 <body>
@@ -2408,59 +2490,40 @@
       } catch (e) {}
     }
 
-    let svPlaybackAudioCtx = null;
-    let svNextAudioTime = 0;
+    const SV_WEBRTC_CFG = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun.cloudflare.com:3478' }
+      ],
+      iceCandidatePoolSize: 4
+    };
+    const svHostPeers = new Map(); // viewerSocketId -> RTCPeerConnection
+    let svViewerPeer = null;
+    let svWebRtcConnected = false;
 
-    function playIncomingPcmChunk(pcmBuffer, sampleRate) {
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const sr = sampleRate || 16000;
-        if (!svPlaybackAudioCtx) {
-          svPlaybackAudioCtx = new AudioCtx({ sampleRate: sr, latencyHint: 'interactive' });
-        }
-        if (svPlaybackAudioCtx.state === 'suspended') {
-          svPlaybackAudioCtx.resume().catch(() => {});
-        }
-        const int16 = new Int16Array(pcmBuffer);
-        if (!int16.length) return;
-        const audioBuf = svPlaybackAudioCtx.createBuffer(1, int16.length, sr);
-        const chan = audioBuf.getChannelData(0);
-        for (let i = 0; i < int16.length; i++) {
-          chan[i] = int16[i] / 32768;
-        }
-        const srcNode = svPlaybackAudioCtx.createBufferSource();
-        srcNode.buffer = audioBuf;
-        srcNode.connect(svPlaybackAudioCtx.destination);
-        const now = svPlaybackAudioCtx.currentTime;
-        if (svNextAudioTime < now || svNextAudioTime > now + 0.064) {
-          svNextAudioTime = now + 0.008;
-        }
-        srcNode.start(svNextAudioTime);
-        svNextAudioTime += audioBuf.duration;
-      } catch (e) {}
+    function closeAllWebRtcPeers() {
+      svHostPeers.forEach((pc) => { try { pc.close(); } catch (e) {} });
+      svHostPeers.clear();
+      if (svViewerPeer) {
+        try { svViewerPeer.close(); } catch (e) {}
+        svViewerPeer = null;
+      }
+      svWebRtcConnected = false;
     }
 
     function ensureSocket() {
       if (svSocket) return svSocket;
       if (typeof window.io === 'function') {
-        svSocket = window.io({ transports: ['websocket'], upgrade: false });
-        svSocket.on('connect_error', () => {
-          if (svSocket && svSocket.io && svSocket.io.opts) {
-            svSocket.io.opts.transports = ['websocket', 'polling'];
-          }
-        });
+        svSocket = window.io({ transports: ['websocket', 'polling'] });
+
         svSocket.on('actualizar_espectadores', (count) => {
           const el = document.getElementById('room-viewers-count');
           if (el) el.textContent = String(Math.max(1, Number(count || 1)));
         });
+
         svSocket.on('mostrar_comentario', ({ usuario, texto }) => {
-          liveRoomLikesCount = Number(liveObj.likesCount || 0);
-      const likesLbl = document.getElementById('sv-live-likes-count');
-      const hostLikesLbl = document.getElementById('sv-host-likes-count');
-      if (likesLbl) likesLbl.textContent = String(liveRoomLikesCount);
-      if (hostLikesLbl) hostLikesLbl.textContent = String(liveRoomLikesCount);
-      const chatList = document.getElementById('live-chat-messages');
+          const chatList = document.getElementById('live-chat-messages');
           if (!chatList) return;
           const div = document.createElement('div');
           div.className = 'live-msg';
@@ -2468,6 +2531,7 @@
           chatList.appendChild(div);
           chatList.scrollTop = chatList.scrollHeight;
         });
+
         svSocket.on('animacion_regalo', ({ usuario, regaloNombre, emoji, tier, tierLabel, coinCost, brlValue }) => {
           if (!activeLiveRoom) return;
           const burst = document.getElementById('live-gift-burst');
@@ -2477,29 +2541,12 @@
             document.getElementById('burst-gift-emoji').textContent = emoji || '🎁';
             document.getElementById('burst-gift-text').textContent = '@' + (usuario || 'User') + ' envió ' + (regaloNombre || 'Regalo');
             document.getElementById('burst-gift-sub').textContent = 'Valor: R$ ' + Number(brlValue || 1).toFixed(2).replace('.', ',');
-            spawnGiftParticles(emoji || '🎁', 6);
+            spawnGiftParticles(emoji || '🎁', tier === 'mythic' ? 18 : tier === 'legendary' ? 12 : tier === 'epic' ? 8 : 5);
             clearTimeout(window._gTimer);
-            window._gTimer = setTimeout(() => burst.classList.remove('show'), 2400);
+            window._gTimer = setTimeout(() => burst.classList.remove('show'), 2600);
           }
         });
-        // Real-time video frame relay from Socket.IO server (works across all mobile networks without STUN/TURN blocks)
-        svSocket.on('live_video_frame', ({ liveId, frame }) => {
-          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !frame) return;
-          if (viewerLivePaused || hostLivePaused) return;
-          const imgEl = document.getElementById('sv-viewer-live-img');
-          const waitEl = document.getElementById('sv-viewer-live-wait');
-          if (imgEl) {
-            imgEl.src = frame;
-            imgEl.classList.remove('hidden');
-          }
-          if (waitEl) waitEl.style.display = 'none';
-        });
-        // Ultra-low latency 16ms PCM audio playback for viewers
-        svSocket.on('live_audio_pcm', ({ liveId, pcm, sr }) => {
-          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !pcm) return;
-          if (viewerLivePaused || hostLivePaused || window._svViewerAudioMuted) return;
-          playIncomingPcmChunk(pcm, sr || 16000);
-        });
+
         svSocket.on('mostrar_like_live', ({ liveId, totalLikes }) => {
           if (!activeLiveRoom || activeLiveRoom.id !== liveId) return;
           if (typeof totalLikes === 'number' && totalLikes > liveRoomLikesCount) {
@@ -2513,6 +2560,97 @@
           if (hLbl) hLbl.textContent = String(liveRoomLikesCount);
           renderFloatingLiveHeart();
         });
+
+        // WebRTC Signaling: Broadcaster receives viewer join request and creates direct Opus+Video peer
+        svSocket.on('webrtc_viewer_ready', async ({ liveId, viewerSocketId }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !isCurrentBroadcaster(activeLiveRoom)) return;
+          if (!activeLiveMediaStream || !viewerSocketId) return;
+          try {
+            if (svHostPeers.has(viewerSocketId)) {
+              try { svHostPeers.get(viewerSocketId).close(); } catch (e) {}
+            }
+            const pc = new RTCPeerConnection(SV_WEBRTC_CFG);
+            svHostPeers.set(viewerSocketId, pc);
+            activeLiveMediaStream.getTracks().forEach((track) => pc.addTrack(track, activeLiveMediaStream));
+            pc.onicecandidate = (ev) => {
+              if (ev.candidate && svSocket) {
+                svSocket.emit('webrtc_ice', { liveId, targetSocketId: viewerSocketId, candidate: ev.candidate });
+              }
+            };
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            svSocket.emit('webrtc_offer', { liveId, targetSocketId: viewerSocketId, sdp: pc.localDescription });
+          } catch (e) {}
+        });
+
+        // WebRTC Signaling: Viewer receives offer from broadcaster
+        svSocket.on('webrtc_offer', async ({ liveId, hostSocketId, sdp }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId || isCurrentBroadcaster(activeLiveRoom)) return;
+          try {
+            if (svViewerPeer) {
+              try { svViewerPeer.close(); } catch (e) {}
+            }
+            const pc = new RTCPeerConnection(SV_WEBRTC_CFG);
+            svViewerPeer = pc;
+            pc.ontrack = (ev) => {
+              const stream = (ev.streams && ev.streams[0]) ? ev.streams[0] : new MediaStream([ev.track]);
+              const camVid = document.getElementById('live-camera-video');
+              const viewerImg = document.getElementById('sv-viewer-live-img');
+              const viewerWait = document.getElementById('sv-viewer-live-wait');
+              if (camVid) {
+                camVid.srcObject = stream;
+                camVid.muted = false;
+                camVid.volume = 1.0;
+                camVid.classList.remove('hidden');
+                camVid.play().catch(() => {});
+              }
+              if (viewerImg) viewerImg.classList.add('hidden');
+              if (viewerWait) viewerWait.style.display = 'none';
+              svWebRtcConnected = true;
+            };
+            pc.onicecandidate = (ev) => {
+              if (ev.candidate && svSocket) {
+                svSocket.emit('webrtc_ice', { liveId, targetSocketId: hostSocketId, candidate: ev.candidate });
+              }
+            };
+            await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            svSocket.emit('webrtc_answer', { liveId, targetSocketId: hostSocketId, sdp: pc.localDescription });
+          } catch (e) {}
+        });
+
+        // WebRTC Signaling: Broadcaster receives answer from viewer
+        svSocket.on('webrtc_answer', async ({ liveId, fromSocketId, sdp }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId) return;
+          const pc = svHostPeers.get(fromSocketId);
+          if (pc && sdp) {
+            try { await pc.setRemoteDescription(new RTCSessionDescription(sdp)); } catch (e) {}
+          }
+        });
+
+        // WebRTC Signaling: ICE candidate exchange
+        svSocket.on('webrtc_ice', async ({ liveId, fromSocketId, candidate }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !candidate) return;
+          const pc = isCurrentBroadcaster(activeLiveRoom) ? svHostPeers.get(fromSocketId) : svViewerPeer;
+          if (pc) {
+            try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) {}
+          }
+        });
+
+        // Fallback visual frame ONLY if WebRTC hasn't connected yet
+        svSocket.on('live_video_frame', ({ liveId, frame }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !frame || svWebRtcConnected) return;
+          if (viewerLivePaused || hostLivePaused) return;
+          const imgEl = document.getElementById('sv-viewer-live-img');
+          const waitEl = document.getElementById('sv-viewer-live-wait');
+          if (imgEl) {
+            imgEl.src = frame;
+            imgEl.classList.remove('hidden');
+          }
+          if (waitEl) waitEl.style.display = 'none';
+        });
+
         svSocket.on('sala_finalizada', ({ liveId }) => {
           if (activeLiveRoom && activeLiveRoom.id === liveId) {
             closeLiveRoom();
@@ -2884,6 +3022,158 @@
 
           // Stream real-time video frames + audio chunks through Socket.IO server (works across all mobile networks)
           const sock = ensureSocket();
+          // Signal readiness to WebRTC peers + lightweight fallback frame every 250ms for strict NAT networks
+          const sock = ensureSocket();
+          if (sock) {
+            sock.emit('webrtc_host_ready', { liveId: roomId });
+          }
+          const relayCanvas = document.createElement('canvas');
+          relayCanvas.width = 216;
+          relayCanvas.height = 384;
+          const relayCtx = relayCanvas.getContext('2d', { alpha: false });
+          const frameInterval = setInterval(() => {
+            if (!activeLiveRoom || activeLiveRoom.id !== roomId || !activeLiveMediaStream || hostLivePaused) return;
+            // Skip canvas fallback if all connected viewers are already receiving direct WebRTC video
+            if (svHostPeers.size > 0) return;
+            const buffered = sock?.io?.engine?.transport?.ws?.bufferedAmount || 0;
+            if (buffered > 16000) return;
+            if (camVid.readyState >= 2 && camVid.videoWidth > 0 && camVid.videoHeight > 0) {
+              try {
+                relayCtx.drawImage(camVid, 0, 0, relayCanvas.width, relayCanvas.height);
+                const frame = relayCanvas.toDataURL('image/jpeg', 0.42);
+                if (sock && frame) {
+                  sock.volatile.emit('live_video_frame', { liveId: roomId, frame });
+                }
+              } catch (e) {}
+            }
+          }, 220);
+
+          window._svStopSocketRelay = () => {
+            clearInterval(frameInterval);
+            closeAllWebRtcPeers();
+          };
+        } catch (err) {
+          toast('⚠️ Permite acceso a Cámara y Micrófono para transmitir en vivo');
+        }
+      } else {
+        // Viewer joins via direct WebRTC (crystal-clear continuous Opus voice + smooth 30fps video)
+        svWebRtcConnected = false;
+        camVid.muted = false;
+        camVid.volume = 1.0;
+        camVid.classList.remove('hidden');
+        if (camCtrls) camCtrls.classList.add('hidden');
+
+        const stage = document.getElementById('sv-live-player-box');
+        let viewerImg = document.getElementById('sv-viewer-live-img');
+        let viewerWait = document.getElementById('sv-viewer-live-wait');
+        if (stage) {
+          if (!viewerImg) {
+            viewerImg = document.createElement('img');
+            viewerImg.id = 'sv-viewer-live-img';
+            viewerImg.alt = 'Transmisión en vivo';
+            viewerImg.className = 'hidden';
+            viewerImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#050507;z-index:2;';
+            stage.insertBefore(viewerImg, document.getElementById('live-iframe'));
+          }
+          if (!viewerWait) {
+            viewerWait = document.createElement('div');
+            viewerWait.id = 'sv-viewer-live-wait';
+            viewerWait.style.cssText = 'position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#090b12;color:#fef08a;font-size:12.5px;font-weight:800;gap:8px;padding:14px;text-align:center;';
+            viewerWait.innerHTML = '<span>📡 Conectando audio y video en vivo...</span><button type="button" id="sv-activate-stream-btn" class="pill-btn gold" style="padding:7px 14px;font-size:11.5px;">🔊 Activar Sonido en Vivo</button>';
+            stage.insertBefore(viewerWait, document.getElementById('live-iframe'));
+            const actBtn = viewerWait.querySelector('#sv-activate-stream-btn');
+            if (actBtn) {
+              actBtn.addEventListener('click', () => {
+                camVid.muted = false;
+                camVid.volume = 1.0;
+                camVid.play().catch(() => {});
+                viewerWait.style.display = 'none';
+                const s = ensureSocket();
+                if (s && activeLiveRoom) {
+                  s.emit('webrtc_viewer_ready', { liveId: activeLiveRoom.id });
+                }
+                toast('🔊 Audio en vivo activado');
+              });
+            }
+          }
+        }
+        const sock = ensureSocket();
+        if (sock) {
+          sock.emit('unirse_al_live', { liveId: roomId, userId: getActiveUserId(), isHost: false });
+          sock.emit('webrtc_viewer_ready', { liveId: roomId });
+        }
+      }
+    }
+
+    function stopActiveLiveCamera() {
+      if (typeof window._svStopSocketRelay === 'function') {
+        try { window._svStopSocketRelay(); } catch (e) {}
+        window._svStopSocketRelay = null;
+      }
+      const viewerImg = document.getElementById('sv-viewer-live-img');
+      if (viewerImg) {
+        try { viewerImg.remove(); } catch (e) {}
+      }
+      const viewerWait = document.getElementById('sv-viewer-live-wait');
+      if (viewerWait) {
+        try { viewerWait.remove(); } catch (e) {}
+      }
+      if (activeLiveMediaStream) {
+        try {
+          activeLiveMediaStream.getTracks().forEach((tr) => tr.stop());
+        } catch (e) {}
+        activeLiveMediaStream = null;
+      }
+      livePeerConnections.forEach((pc) => { try { pc.close(); } catch (e) {} });
+      livePeerConnections.clear();
+      if (unsubLiveSignals) { try { unsubLiveSignals(); } catch (e) {} unsubLiveSignals = null; }
+      const camVid = document.getElementById('live-camera-video');
+      if (camVid) {
+        try { camVid.pause(); camVid.srcObject = null; } catch (e) {}
+        camVid.classList.add('hidden');
+      }
+      const camCtrls = document.getElementById('live-camera-controls');
+      if (camCtrls) camCtrls.classList.add('hidden');
+    }
+
+    const RTC_CFG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+
+    async function startLiveCameraBroadcast(roomId, isHost, facingMode = 'user') {
+      stopActiveLiveCamera();
+      if (!isHost) {
+        activeLiveMediaStream = null;
+      }
+      const camVid = document.getElementById('live-camera-video');
+      const camCtrls = document.getElementById('live-camera-controls');
+      const iframe = document.getElementById('live-iframe');
+      const extFallback = document.getElementById('live-external-fallback');
+      if (iframe) { iframe.src = ''; iframe.classList.add('hidden'); }
+      if (extFallback) extFallback.classList.add('hidden');
+      if (!camVid) return;
+
+      if (isHost && activeLiveRoom && isCurrentBroadcaster(activeLiveRoom)) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          toast('⚠️ Tu navegador no permite acceso directo a la cámara');
+          return;
+        }
+        try {
+          activeLiveFacingMode = facingMode;
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: facingMode }, width: { ideal: 720 }, height: { ideal: 1280 } },
+            audio: true
+          });
+          activeLiveMediaStream = stream;
+          camVid.srcObject = stream;
+          camVid.muted = true;
+          camVid.classList.remove('hidden');
+          await camVid.play().catch(() => {});
+          if (camCtrls) camCtrls.classList.remove('hidden');
+          activeLiveMicMuted = false;
+          const micBtn = document.getElementById('live-mic-toggle-btn');
+          if (micBtn) micBtn.textContent = '🎙️ Mic ON';
+
+          // Stream real-time video frames + audio chunks through Socket.IO server (works across all mobile networks)
+          const sock = ensureSocket();
           const relayCanvas = document.createElement('canvas');
           relayCanvas.width = 192;
           relayCanvas.height = 340;
@@ -3023,6 +3313,7 @@
 
     function isCurrentBroadcaster(liveObj) {
       if (!liveObj) return false;
+      if (window._svHostingRoomId && liveObj.id === window._svHostingRoomId) return true;
       const uid = getActiveUserId();
       const authUid = currentUser && currentUser.uid ? currentUser.uid : '';
       return Boolean(liveObj.uid && (liveObj.uid === uid || (authUid && liveObj.uid === authUid)));
@@ -3043,14 +3334,29 @@
       if (endBtn) endBtn.classList.toggle('hidden', !isBroadcaster);
       if (rewindBtn) rewindBtn.classList.toggle('hidden', isBroadcaster);
       if (pauseBtn) pauseBtn.classList.remove('hidden');
-      if (giftBar) giftBar.classList.toggle('hidden', isBroadcaster);
+      if (giftBar) {
+        giftBar.classList.toggle('hidden', isBroadcaster);
+        if (isBroadcaster) {
+          giftBar.style.setProperty('display', 'none', 'important');
+        } else {
+          giftBar.style.setProperty('display', 'flex', 'important');
+        }
+      }
       if (heartBtn) {
         heartBtn.classList.toggle('hidden', isBroadcaster);
-        heartBtn.style.display = isBroadcaster ? 'none' : 'inline-flex';
+        if (isBroadcaster) {
+          heartBtn.style.setProperty('display', 'none', 'important');
+        } else {
+          heartBtn.style.setProperty('display', 'inline-flex', 'important');
+        }
       }
       if (hostHeartsBadge) {
         hostHeartsBadge.classList.toggle('hidden', !isBroadcaster);
-        hostHeartsBadge.style.display = isBroadcaster ? 'inline-flex' : 'none';
+        if (isBroadcaster) {
+          hostHeartsBadge.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+          hostHeartsBadge.style.setProperty('display', 'none', 'important');
+        }
       }
       const roomElapsed = document.getElementById('room-elapsed-badge');
       if (roomElapsed) roomElapsed.innerHTML = `🔴 @${liveObj.user || 'Creador'} ${formatLiveElapsed(getLiveStartMs(liveObj))} • 👁️ <span id="room-viewers-count">1</span>`;
@@ -3199,6 +3505,9 @@
     };
 
     window.openLiveRoom = (liveObj) => {
+      pauseAllFeedVideos();
+      liveRoomHorizontal = false;
+      applyLandscapeLayoutClasses();
       activeLiveRoom = liveObj;
       const isCam = liveObj.sourceType === 'camera';
       const parsedExt = isCam ? { platform: 'Cámara StarVibe', embedUrl: '', externalOnly: false } : parseExternalLiveUrl(liveObj.streamUrl || '');
@@ -3321,6 +3630,9 @@
 
     window.closeLiveRoom = () => {
       releaseLiveWakeLock();
+      liveRoomHorizontal = false;
+      applyLandscapeLayoutClasses();
+      window._svHostingRoomId = null;
       if (window._svHeartbeatInterval) {
         clearInterval(window._svHeartbeatInterval);
         window._svHeartbeatInterval = null;
@@ -3522,17 +3834,35 @@
       }
     };
 
-    window.toggleLiveRoomOrientation = async () => {
+    function applyLandscapeLayoutClasses() {
       const overlay = document.getElementById('live-room-overlay');
-      const box = document.getElementById('sv-live-player-box');
       const vid = document.getElementById('live-camera-video');
       const img = document.getElementById('sv-viewer-live-img');
-      if (!overlay || !box) return;
+      if (!overlay) return;
+      overlay.classList.remove('sv-landscape-mode', 'sv-landscape-native', 'sv-landscape-rotated');
+      if (!liveRoomHorizontal) {
+        if (vid) vid.style.objectFit = 'cover';
+        if (img) img.style.objectFit = 'cover';
+        return;
+      }
+      if (vid) vid.style.objectFit = 'contain';
+      if (img) img.style.objectFit = 'contain';
+      if (window.innerWidth > window.innerHeight) {
+        overlay.classList.add('sv-landscape-native');
+      } else {
+        overlay.classList.add('sv-landscape-rotated');
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (liveRoomHorizontal) applyLandscapeLayoutClasses();
+    });
+
+    window.toggleLiveRoomOrientation = async () => {
+      const overlay = document.getElementById('live-room-overlay');
+      if (!overlay) return;
       liveRoomHorizontal = !liveRoomHorizontal;
       if (liveRoomHorizontal) {
-        overlay.classList.add('sv-landscape-mode');
-        if (vid) vid.style.objectFit = 'contain';
-        if (img) img.style.objectFit = 'contain';
         try {
           if (!document.fullscreenElement && overlay.requestFullscreen) {
             await overlay.requestFullscreen();
@@ -3541,11 +3871,9 @@
             await screen.orientation.lock('landscape');
           }
         } catch (e) {}
+        applyLandscapeLayoutClasses();
         toast('📐 Vista horizontal completa');
       } else {
-        overlay.classList.remove('sv-landscape-mode');
-        if (vid) vid.style.objectFit = 'cover';
-        if (img) img.style.objectFit = 'cover';
         try {
           if (screen.orientation && screen.orientation.unlock) {
             screen.orientation.unlock();
@@ -3554,6 +3882,7 @@
             await document.exitFullscreen();
           }
         } catch (e) {}
+        applyLandscapeLayoutClasses();
         toast('📱 Vista vertical completa');
       }
     };
@@ -4065,7 +4394,7 @@
         entries.forEach((entry) => {
           const vid = entry.target.querySelector('video');
           if (!vid) return;
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && isFeedCurrentlyVisible()) {
             vid.muted = isMuted;
             vid.play().catch(() => {});
             const adSpotId = entry.target.dataset.adSpotId;
@@ -4130,6 +4459,27 @@
       document.querySelectorAll('video').forEach((v) => { v.muted = isMuted; });
     };
 
+    function isFeedCurrentlyVisible() {
+      const feedView = document.getElementById('view-feed');
+      const liveOverlay = document.getElementById('live-room-overlay');
+      const liveModal = document.getElementById('live-modal');
+      const uploadModal = document.getElementById('upload-modal');
+      const isFeedActive = feedView && feedView.classList.contains('active');
+      const isLiveOpen = liveOverlay && !liveOverlay.classList.contains('hidden');
+      const isLiveModalOpen = liveModal && !liveModal.classList.contains('hidden');
+      const isUploadOpen = uploadModal && !uploadModal.classList.contains('hidden');
+      return Boolean(isFeedActive && !isLiveOpen && !isLiveModalOpen && !isUploadOpen);
+    }
+
+    function pauseAllFeedVideos() {
+      document.querySelectorAll('#video-feed video, .video-slide video').forEach((v) => {
+        try {
+          v.pause();
+          v.muted = true;
+        } catch (e) {}
+      });
+    }
+
     window.switchTab = (tab, skipHistory = false) => {
       if (tab !== 'feed' && !skipHistory) pushNavState('tab-' + tab);
       document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
@@ -4137,12 +4487,14 @@
       document.getElementById('view-' + tab).classList.add('active');
       document.getElementById('nav-' + tab).classList.add('active');
       document.getElementById('feed-tabs').style.display = tab === 'feed' ? 'flex' : 'none';
+      if (tab !== 'feed') {
+        pauseAllFeedVideos();
+      }
       if (tab === 'profile') {
-        document.querySelectorAll('#video-feed video').forEach((v) => v.pause());
         updateProfileHeader();
         renderProfileGrid();
         if (typeof refreshAdminAndReferralUI === 'function') refreshAdminAndReferralUI();
-      } else {
+      } else if (tab === 'feed') {
         setupAutoPlay();
       }
     };
@@ -4375,6 +4727,7 @@
     });
 
     window.openLiveModal = () => {
+      pauseAllFeedVideos();
       const f = getFormalData();
       if (!f || !f.fullName || !f.pixKey) {
         toast('🪪 Formaliza tu cuenta (+18 y PIX) antes de abrir tu sala en vivo');

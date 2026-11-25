@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 });
 app.use(express.static(__dirname));
 
-const activeSocketLives = new Map();
+const activeSocketLives = new Map(); // liveId -> { hostSocketId, startedAt }
 const latestFrameByRoom = new Map();
 
 io.on('connection', (socket) => {
@@ -37,6 +37,7 @@ io.on('connection', (socket) => {
         hostSocketId: socket.id,
         startedAt: Date.now()
       });
+      socket.to(liveId).emit('webrtc_host_ready', { liveId });
     } else if (latestFrameByRoom.has(liveId)) {
       socket.emit('live_video_frame', { liveId, frame: latestFrameByRoom.get(liveId) });
     }
@@ -45,20 +46,59 @@ io.on('connection', (socket) => {
     io.to(liveId).emit('actualizar_espectadores', espectadores);
   });
 
+  // WebRTC Peer Signaling (Opus continuous voice + 30fps video)
+  socket.on('webrtc_host_ready', ({ liveId } = {}) => {
+    if (!liveId) return;
+    activeSocketLives.set(liveId, {
+      hostSocketId: socket.id,
+      startedAt: Date.now()
+    });
+    socket.to(liveId).emit('webrtc_host_ready', { liveId });
+  });
+
+  socket.on('webrtc_viewer_ready', ({ liveId } = {}) => {
+    if (!liveId) return;
+    const roomMeta = activeSocketLives.get(liveId);
+    if (roomMeta && roomMeta.hostSocketId && roomMeta.hostSocketId !== socket.id) {
+      io.to(roomMeta.hostSocketId).emit('webrtc_viewer_ready', {
+        liveId,
+        viewerSocketId: socket.id
+      });
+    }
+  });
+
+  socket.on('webrtc_offer', ({ liveId, targetSocketId, sdp } = {}) => {
+    if (!liveId || !targetSocketId || !sdp) return;
+    io.to(targetSocketId).emit('webrtc_offer', {
+      liveId,
+      hostSocketId: socket.id,
+      sdp
+    });
+  });
+
+  socket.on('webrtc_answer', ({ liveId, targetSocketId, sdp } = {}) => {
+    if (!liveId || !targetSocketId || !sdp) return;
+    io.to(targetSocketId).emit('webrtc_answer', {
+      liveId,
+      fromSocketId: socket.id,
+      sdp
+    });
+  });
+
+  socket.on('webrtc_ice', ({ liveId, targetSocketId, candidate } = {}) => {
+    if (!liveId || !targetSocketId || !candidate) return;
+    io.to(targetSocketId).emit('webrtc_ice', {
+      liveId,
+      fromSocketId: socket.id,
+      candidate
+    });
+  });
+
+  // Fallback visual frame relay
   socket.on('live_video_frame', ({ liveId, frame } = {}) => {
     if (!liveId || !frame) return;
     latestFrameByRoom.set(liveId, frame);
     socket.volatile.to(liveId).emit('live_video_frame', { liveId, frame });
-  });
-
-  socket.on('live_audio_pcm', ({ liveId, pcm, sr } = {}) => {
-    if (!liveId || !pcm) return;
-    socket.volatile.to(liveId).emit('live_audio_pcm', { liveId, pcm, sr });
-  });
-
-  socket.on('live_audio_chunk', ({ liveId, audioData } = {}) => {
-    if (!liveId || !audioData) return;
-    socket.volatile.to(liveId).emit('live_audio_chunk', { liveId, audioData });
   });
 
   socket.on('salir_del_live', ({ liveId } = {}) => {
@@ -119,5 +159,5 @@ app.get('*', (_req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log('StarVibe server + Socket.IO Live Relay running on port', PORT);
+  console.log('StarVibe WebRTC + Socket.IO Live Server running on port', PORT);
 });

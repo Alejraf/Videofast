@@ -1,4 +1,4 @@
-const CACHE_NAME = 'starvibe-v12-6-16ms-pcm';
+const CACHE_NAME = 'starvibe-v13-0-webrtc-pro';
 
 self.addEventListener('install', () => self.skipWaiting());
 
