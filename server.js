@@ -291,25 +291,27 @@ app.post('/api/videos/track-view', async (req, res) => {
   }
 });
 
-// 4e. Configuración dinámica de Monetag Direct Link / Zone URL
+// 4e. Configuración dinámica de Monetag Direct Link + Video Patrocinado Nativo
 let cachedMonetagUrl = process.env.MONETAG_DIRECT_LINK || 'https://uplcm.com/4/12342382';
+let cachedMonetagVideoUrl = process.env.MONETAG_VIDEO_URL || 'https://assets.mixkit.co/videos/preview/mixkit-gamer-playing-video-games-in-a-dark-room-43547-large.mp4';
 app.get('/api/config/monetag', async (req, res) => {
   try {
     if (db) {
       const snap = await db.collection('starvibe_config').doc('ads').get();
-      if (snap.exists && snap.data()?.monetagUrl) {
-        cachedMonetagUrl = snap.data().monetagUrl;
+      if (snap.exists) {
+        if (snap.data()?.monetagUrl) cachedMonetagUrl = snap.data().monetagUrl;
+        if (snap.data()?.monetagVideoUrl) cachedMonetagVideoUrl = snap.data().monetagVideoUrl;
       }
     }
-    res.json({ ok: true, monetagUrl: cachedMonetagUrl });
+    res.json({ ok: true, monetagUrl: cachedMonetagUrl, monetagVideoUrl: cachedMonetagVideoUrl });
   } catch (e) {
-    res.json({ ok: true, monetagUrl: cachedMonetagUrl });
+    res.json({ ok: true, monetagUrl: cachedMonetagUrl, monetagVideoUrl: cachedMonetagVideoUrl });
   }
 });
 
 app.post('/api/config/monetag', async (req, res) => {
   try {
-    const { monetagUrl, userId } = req.body || {};
+    const { monetagUrl, monetagVideoUrl, userId } = req.body || {};
     if (userId !== OWNER_USER_ID) {
       return res.status(403).json({ ok: false, error: 'Solo el administrador puede cambiar Monetag.' });
     }
@@ -317,13 +319,17 @@ app.post('/api/config/monetag', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'URL inválida' });
     }
     cachedMonetagUrl = String(monetagUrl).trim();
+    if (monetagVideoUrl && /^https:\/\//i.test(String(monetagVideoUrl).trim())) {
+      cachedMonetagVideoUrl = String(monetagVideoUrl).trim();
+    }
     if (db) {
       await db.collection('starvibe_config').doc('ads').set({
         monetagUrl: cachedMonetagUrl,
+        monetagVideoUrl: cachedMonetagVideoUrl,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
-    res.json({ ok: true, monetagUrl: cachedMonetagUrl });
+    res.json({ ok: true, monetagUrl: cachedMonetagUrl, monetagVideoUrl: cachedMonetagVideoUrl });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
