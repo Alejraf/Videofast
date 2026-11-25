@@ -673,7 +673,17 @@
           📐 Horiz / Vert
         </button>
 
-        <iframe id="live-iframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        <video id="live-camera-video" autoplay playsinline muted class="hidden" style="width:100%;height:100%;object-fit:cover;background:#000;"></video>
+        <div id="live-camera-controls" class="hidden" style="position:absolute;bottom:34px;right:8px;z-index:13;display:flex;gap:5px;">
+          <button type="button" onclick="flipActiveLiveCamera()" style="background:rgba(0,0,0,0.8);border:1px solid rgba(250,204,21,0.6);color:#fef08a;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:999px;cursor:pointer;">🔄 Cámara</button>
+          <button type="button" id="live-mic-toggle-btn" onclick="toggleActiveLiveMic()" style="background:rgba(0,0,0,0.8);border:1px solid rgba(16,185,129,0.6);color:#6ee7b7;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:999px;cursor:pointer;">🎙️ Mic ON</button>
+        </div>
+        <div id="live-external-fallback" class="hidden" style="position:absolute;inset:0;background:radial-gradient(circle at center,#1d1709,#050507 78%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;z-index:10;">
+          <div id="live-ext-platform-badge" style="font-size:11px;font-weight:900;color:#facc15;background:rgba(250,204,21,0.14);border:1px solid rgba(250,204,21,0.45);padding:3px 10px;border-radius:999px;margin-bottom:8px;">🔗 TRANSMISIÓN EXTERNA</div>
+          <p id="live-ext-desc" style="font-size:12px;color:#e5e7eb;max-width:290px;line-height:1.4;margin-bottom:10px;">Esta plataforma externa requiere abrir el reproductor oficial manteniendo el chat y regalos activos aquí en StarVibe.</p>
+          <a id="live-ext-open-btn" href="#" target="_blank" rel="noopener" class="follow-btn" style="padding:8px 16px;font-size:12px;text-decoration:none;">▶️ Ver Transmisión Oficial ↗️</a>
+        </div>
+        <iframe id="live-iframe" src="" allow="autoplay; camera; microphone; encrypted-media; fullscreen" allowfullscreen></iframe>
         <div id="creator-vip-alert" class="creator-vip-alert">
           <div style="display:flex;align-items:center;gap:8px;">
             <span id="vip-alert-icon" style="font-size:26px;">👑</span>
@@ -1076,8 +1086,27 @@
         Los regalos enviados en esta sala se acreditan <strong>35% a tu cuenta PIX formalizada</strong> y <strong>65% a StarVibe</strong>.
       </div>
       <form id="live-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px;">
+          <button type="button" id="live-mode-camera-btn" class="pill-btn gold" onclick="setLiveSourceMode('camera')" style="padding:9px 8px;font-size:12px;font-weight:900;text-align:center;">📷 Cámara del Celular</button>
+          <button type="button" id="live-mode-link-btn" class="pill-btn" onclick="setLiveSourceMode('link')" style="padding:9px 8px;font-size:12px;font-weight:800;text-align:center;">🔗 Enlace Externo</button>
+        </div>
         <input id="live-title-input" type="text" maxlength="80" data-i18n-ph="live_title_ph" placeholder="Título de tu transmisión propia..." class="text-input" required />
-        <input id="live-url-input" type="url" placeholder="Enlace de TU propio canal YouTube Live / Twitch (https://...)" class="text-input" required />
+        <div id="live-camera-setup-box" style="background:#121520;border:1px solid rgba(250,204,21,0.38);border-radius:12px;padding:9px;margin-bottom:9px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="font-size:11.5px;font-weight:800;color:#fef08a;">🎥 Transmisión directa con tu cámara</span>
+            <select id="live-camera-facing-select" class="text-input" style="margin-bottom:0;width:auto;padding:4px 8px;font-size:11px;">
+              <option value="user">🤳 Cámara Frontal</option>
+              <option value="environment">📷 Cámara Trasera</option>
+            </select>
+          </div>
+          <p style="font-size:11px;color:#d1d5db;line-height:1.35;">Se encenderá la cámara y el micrófono de tu dispositivo dentro de la sala en vivo de StarVibe.</p>
+        </div>
+        <div id="live-link-setup-box" class="hidden">
+          <input id="live-url-input" type="url" placeholder="Enlace de YouTube Live, TikTok Live, Twitch o Kick (https://...)" class="text-input" />
+          <div style="font-size:10.5px;color:#9ca3af;margin:-4px 0 8px;padding:0 2px;">
+            Compatible con: <strong>YouTube Live</strong>, <strong>TikTok Live</strong>, <strong>Twitch</strong> y <strong>Kick</strong>.
+          </div>
+        </div>
         <input id="live-offer-url-input" type="url" data-i18n-ph="live_offer_ph" placeholder="🛍️ Enlace de venta propio opcional (https://...)" class="text-input" />
         <label class="check-row">
           <input id="live-own-check" type="checkbox" required />
@@ -2271,27 +2300,39 @@
       feedEl.innerHTML = `<div class="empty-state" style="color:#f87171;">⚠️ ${err.message}</div>`;
     });
 
-    function toEmbedStreamUrl(url) {
+    function parseExternalLiveUrl(url) {
       try {
         const u = new URL(url);
-        if (u.hostname.includes('youtube.com')) {
+        const host = u.hostname.toLowerCase();
+        if (host.includes('youtube.com')) {
           if (u.pathname.startsWith('/live/')) {
             const vid = u.pathname.split('/live/')[1].split('/')[0];
-            return 'https://www.youtube.com/embed/' + vid + '?autoplay=1&playsinline=1';
+            return { platform: 'YouTube Live', embedUrl: 'https://www.youtube.com/embed/' + vid + '?autoplay=1&playsinline=1', externalOnly: false };
           }
           const v = u.searchParams.get('v');
-          if (v) return 'https://www.youtube.com/embed/' + v + '?autoplay=1&playsinline=1';
+          if (v) return { platform: 'YouTube Live', embedUrl: 'https://www.youtube.com/embed/' + v + '?autoplay=1&playsinline=1', externalOnly: false };
         }
-        if (u.hostname.includes('youtu.be')) {
+        if (host.includes('youtu.be')) {
           const vid = u.pathname.replace('/', '');
-          if (vid) return 'https://www.youtube.com/embed/' + vid + '?autoplay=1&playsinline=1';
+          if (vid) return { platform: 'YouTube Live', embedUrl: 'https://www.youtube.com/embed/' + vid + '?autoplay=1&playsinline=1', externalOnly: false };
         }
-        if (u.hostname.includes('twitch.tv')) {
-          const ch = u.pathname.replace('/', '');
-          if (ch) return 'https://player.twitch.tv/?channel=' + ch + '&parent=' + location.hostname;
+        if (host.includes('twitch.tv')) {
+          const ch = u.pathname.replace(/^\/+/, '').split('/')[0];
+          if (ch) return { platform: 'Twitch', embedUrl: 'https://player.twitch.tv/?channel=' + ch + '&parent=' + location.hostname, externalOnly: false };
+        }
+        if (host.includes('kick.com')) {
+          const ch = u.pathname.replace(/^\/+/, '').split('/')[0];
+          if (ch) return { platform: 'Kick', embedUrl: 'https://player.kick.com/' + ch, externalOnly: false };
+        }
+        if (host.includes('tiktok.com')) {
+          return { platform: 'TikTok Live', embedUrl: url, externalOnly: true };
         }
       } catch (e) {}
-      return url;
+      return { platform: 'Live Externo', embedUrl: url, externalOnly: false };
+    }
+
+    function toEmbedStreamUrl(url) {
+      return parseExternalLiveUrl(url).embedUrl;
     }
 
     const lq = query(collection(db, 'lives'), orderBy('createdAt', 'desc'));
@@ -2329,7 +2370,184 @@
     let hostLivePaused = false;
     let viewerLivePaused = false;
     let currentLiveEmbedSrc = '';
+    let currentLiveExternalOnly = false;
+    let currentLiveRawUrl = '';
     let unsubLiveDoc = null;
+    let activeLiveMediaStream = null;
+    let activeLiveFacingMode = 'user';
+    let activeLiveMicMuted = false;
+    let selectedLiveSourceMode = 'camera';
+    let livePeerConnections = new Map();
+    let unsubLiveSignals = null;
+
+    window.setLiveSourceMode = (mode) => {
+      selectedLiveSourceMode = mode === 'link' ? 'link' : 'camera';
+      const camBtn = document.getElementById('live-mode-camera-btn');
+      const linkBtn = document.getElementById('live-mode-link-btn');
+      const camBox = document.getElementById('live-camera-setup-box');
+      const linkBox = document.getElementById('live-link-setup-box');
+      const urlInp = document.getElementById('live-url-input');
+      if (camBtn) camBtn.classList.toggle('gold', selectedLiveSourceMode === 'camera');
+      if (linkBtn) linkBtn.classList.toggle('gold', selectedLiveSourceMode === 'link');
+      if (camBox) camBox.classList.toggle('hidden', selectedLiveSourceMode !== 'camera');
+      if (linkBox) linkBox.classList.toggle('hidden', selectedLiveSourceMode !== 'link');
+      if (urlInp) urlInp.required = (selectedLiveSourceMode === 'link');
+    };
+
+    function stopActiveLiveCamera() {
+      if (activeLiveMediaStream) {
+        try {
+          activeLiveMediaStream.getTracks().forEach((tr) => tr.stop());
+        } catch (e) {}
+        activeLiveMediaStream = null;
+      }
+      livePeerConnections.forEach((pc) => { try { pc.close(); } catch (e) {} });
+      livePeerConnections.clear();
+      if (unsubLiveSignals) { try { unsubLiveSignals(); } catch (e) {} unsubLiveSignals = null; }
+      const camVid = document.getElementById('live-camera-video');
+      if (camVid) {
+        try { camVid.pause(); camVid.srcObject = null; } catch (e) {}
+        camVid.classList.add('hidden');
+      }
+      const camCtrls = document.getElementById('live-camera-controls');
+      if (camCtrls) camCtrls.classList.add('hidden');
+    }
+
+    const RTC_CFG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+
+    async function startLiveCameraBroadcast(roomId, isHost, facingMode = 'user') {
+      stopActiveLiveCamera();
+      const camVid = document.getElementById('live-camera-video');
+      const camCtrls = document.getElementById('live-camera-controls');
+      const iframe = document.getElementById('live-iframe');
+      const extFallback = document.getElementById('live-external-fallback');
+      if (iframe) { iframe.src = ''; iframe.classList.add('hidden'); }
+      if (extFallback) extFallback.classList.add('hidden');
+      if (!camVid) return;
+
+      if (isHost) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          toast('⚠️ Tu navegador no permite acceso directo a la cámara');
+          return;
+        }
+        try {
+          activeLiveFacingMode = facingMode;
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: facingMode }, width: { ideal: 720 }, height: { ideal: 1280 } },
+            audio: true
+          });
+          activeLiveMediaStream = stream;
+          camVid.srcObject = stream;
+          camVid.muted = true;
+          camVid.classList.remove('hidden');
+          await camVid.play().catch(() => {});
+          if (camCtrls) camCtrls.classList.remove('hidden');
+          activeLiveMicMuted = false;
+          const micBtn = document.getElementById('live-mic-toggle-btn');
+          if (micBtn) micBtn.textContent = '🎙️ Mic ON';
+
+          // Listen for viewer WebRTC join requests in Firestore signaling subcollection
+          const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
+          unsubLiveSignals = onSnapshot(sigCol, (snap) => {
+            snap.docChanges().forEach(async (chg) => {
+              if (chg.type !== 'added') return;
+              const sig = chg.doc.data() || {};
+              if (sig.type === 'viewer_join' && sig.viewerId && activeLiveMediaStream) {
+                const viewerId = sig.viewerId;
+                try {
+                  if (livePeerConnections.has(viewerId)) {
+                    try { livePeerConnections.get(viewerId).close(); } catch (e) {}
+                  }
+                  const pc = new RTCPeerConnection(RTC_CFG);
+                  livePeerConnections.set(viewerId, pc);
+                  activeLiveMediaStream.getTracks().forEach((track) => pc.addTrack(track, activeLiveMediaStream));
+                  pc.onicecandidate = async (ev) => {
+                    if (ev.candidate) {
+                      try {
+                        await addDoc(sigCol, { type: 'host_ice', viewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
+                      } catch (e) {}
+                    }
+                  };
+                  const offer = await pc.createOffer();
+                  await pc.setLocalDescription(offer);
+                  await addDoc(sigCol, { type: 'host_offer', viewerId, sdp: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
+                } catch (err) {}
+              } else if (sig.type === 'viewer_answer' && sig.viewerId && sig.sdp) {
+                const pc = livePeerConnections.get(sig.viewerId);
+                if (pc && pc.signalingState !== 'stable') {
+                  try { await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp)); } catch (e) {}
+                }
+              } else if (sig.type === 'viewer_ice' && sig.viewerId && sig.candidate) {
+                const pc = livePeerConnections.get(sig.viewerId);
+                if (pc) {
+                  try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
+                }
+              }
+            });
+          });
+        } catch (err) {
+          toast('⚠️ Permite acceso a Cámara y Micrófono para transmitir en vivo');
+        }
+      } else {
+        // Viewer connecting to host's live camera via WebRTC
+        camVid.muted = false;
+        camVid.classList.remove('hidden');
+        if (camCtrls) camCtrls.classList.add('hidden');
+        const myViewerId = getActiveUserId() + '_' + Math.random().toString(36).slice(2, 6);
+        const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
+        const pc = new RTCPeerConnection(RTC_CFG);
+        livePeerConnections.set('host', pc);
+        pc.ontrack = (ev) => {
+          if (ev.streams && ev.streams[0]) {
+            camVid.srcObject = ev.streams[0];
+            camVid.play().catch(() => {});
+          }
+        };
+        pc.onicecandidate = async (ev) => {
+          if (ev.candidate) {
+            try {
+              await addDoc(sigCol, { type: 'viewer_ice', viewerId: myViewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
+            } catch (e) {}
+          }
+        };
+        unsubLiveSignals = onSnapshot(sigCol, (snap) => {
+          snap.docChanges().forEach(async (chg) => {
+            if (chg.type !== 'added') return;
+            const sig = chg.doc.data() || {};
+            if (sig.viewerId !== myViewerId) return;
+            if (sig.type === 'host_offer' && sig.sdp) {
+              try {
+                await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                await addDoc(sigCol, { type: 'viewer_answer', viewerId: myViewerId, sdp: { type: answer.type, sdp: answer.sdp }, createdAt: serverTimestamp() });
+              } catch (e) {}
+            } else if (sig.type === 'host_ice' && sig.candidate) {
+              try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
+            }
+          });
+        });
+        try {
+          await addDoc(sigCol, { type: 'viewer_join', viewerId: myViewerId, createdAt: serverTimestamp() });
+        } catch (e) {}
+      }
+    }
+
+    window.flipActiveLiveCamera = async () => {
+      if (!activeLiveRoom || !isLiveHostOrAdmin(activeLiveRoom)) return;
+      const nextFacing = activeLiveFacingMode === 'user' ? 'environment' : 'user';
+      await startLiveCameraBroadcast(activeLiveRoom.id, true, nextFacing);
+      toast(nextFacing === 'user' ? '🤳 Cámara frontal' : '📷 Cámara trasera');
+    };
+
+    window.toggleActiveLiveMic = () => {
+      if (!activeLiveMediaStream) return;
+      activeLiveMicMuted = !activeLiveMicMuted;
+      activeLiveMediaStream.getAudioTracks().forEach((t) => { t.enabled = !activeLiveMicMuted; });
+      const micBtn = document.getElementById('live-mic-toggle-btn');
+      if (micBtn) micBtn.textContent = activeLiveMicMuted ? '🔇 Mic OFF' : '🎙️ Mic ON';
+      toast(activeLiveMicMuted ? '🔇 Micrófono silenciado' : '🎙️ Micrófono activado');
+    };
 
     function isLiveHostOrAdmin(liveObj) {
       if (!liveObj) return false;
@@ -2347,7 +2565,10 @@
 
     function applyCombinedPauseUI() {
       const effectivePaused = Boolean(hostLivePaused || viewerLivePaused);
+      const isCameraRoom = activeLiveRoom && activeLiveRoom.sourceType === 'camera';
       const iframe = document.getElementById('live-iframe');
+      const camVid = document.getElementById('live-camera-video');
+      const extFallback = document.getElementById('live-external-fallback');
       const banner = document.getElementById('live-paused-banner');
       const titleEl = document.getElementById('live-paused-title');
       const descEl = document.getElementById('live-paused-desc');
@@ -2360,6 +2581,7 @@
 
       if (effectivePaused) {
         if (iframe) iframe.src = '';
+        if (camVid && !camVid.paused) { try { camVid.pause(); } catch (e) {} }
         if (banner) banner.classList.remove('hidden');
         if (hostLivePaused && !viewerLivePaused) {
           if (titleEl) titleEl.textContent = 'Creador en Pausa';
@@ -2372,7 +2594,23 @@
         }
       } else {
         if (banner) banner.classList.add('hidden');
-        if (iframe && currentLiveEmbedSrc) iframe.src = currentLiveEmbedSrc;
+        if (isCameraRoom) {
+          if (iframe) { iframe.src = ''; iframe.classList.add('hidden'); }
+          if (extFallback) extFallback.classList.add('hidden');
+          if (camVid) {
+            camVid.classList.remove('hidden');
+            camVid.play().catch(() => {});
+          }
+        } else if (currentLiveExternalOnly) {
+          if (iframe) { iframe.src = ''; iframe.classList.add('hidden'); }
+          if (extFallback) extFallback.classList.remove('hidden');
+        } else {
+          if (extFallback) extFallback.classList.add('hidden');
+          if (iframe) {
+            iframe.classList.remove('hidden');
+            if (currentLiveEmbedSrc) iframe.src = currentLiveEmbedSrc;
+          }
+        }
       }
     }
 
@@ -2428,12 +2666,28 @@
 
     window.openLiveRoom = (liveObj) => {
       activeLiveRoom = liveObj;
-      currentLiveEmbedSrc = toEmbedStreamUrl(liveObj.streamUrl);
+      const isCam = liveObj.sourceType === 'camera';
+      const parsedExt = isCam ? { platform: 'Cámara StarVibe', embedUrl: '', externalOnly: false } : parseExternalLiveUrl(liveObj.streamUrl || '');
+      currentLiveEmbedSrc = parsedExt.embedUrl;
+      currentLiveExternalOnly = Boolean(parsedExt.externalOnly);
+      currentLiveRawUrl = liveObj.streamUrl || '';
+      const extBtn = document.getElementById('live-ext-open-btn');
+      const extBadge = document.getElementById('live-ext-platform-badge');
+      if (extBtn) extBtn.href = currentLiveRawUrl || '#';
+      if (extBadge) extBadge.textContent = '🔗 ' + (parsedExt.platform || 'LIVE EXTERNO').toUpperCase();
+
       document.getElementById('room-creator').textContent = '@' + (liveObj.user || 'Creador') + ' ✅';
-      document.getElementById('room-title').textContent = (liveObj.title || 'Live') + ' • 35% creador / 65% app';
+      document.getElementById('room-title').textContent = (liveObj.title || 'Live') + ' (' + parsedExt.platform + ') • 35% creador / 65% app';
       hostLivePaused = Boolean(liveObj.paused);
       viewerLivePaused = false;
       syncLiveHostControls(liveObj);
+
+      if (isCam) {
+        const isHost = isLiveHostOrAdmin(liveObj);
+        startLiveCameraBroadcast(liveObj.id, isHost, liveObj.cameraFacing || 'user');
+      } else {
+        stopActiveLiveCamera();
+      }
       applyCombinedPauseUI();
 
       if (unsubLiveDoc) unsubLiveDoc();
@@ -2484,11 +2738,16 @@
     };
 
     window.closeLiveRoom = () => {
+      stopActiveLiveCamera();
       hostLivePaused = false;
       viewerLivePaused = false;
       currentLiveEmbedSrc = '';
+      currentLiveExternalOnly = false;
+      currentLiveRawUrl = '';
       const banner = document.getElementById('live-paused-banner');
       if (banner) banner.classList.add('hidden');
+      const extFallback = document.getElementById('live-external-fallback');
+      if (extFallback) extFallback.classList.add('hidden');
       document.getElementById('live-room-overlay').classList.add('hidden');
       document.getElementById('live-iframe').src = '';
       if (unsubLiveChat) unsubLiveChat();
@@ -3473,12 +3732,15 @@
     document.getElementById('live-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('live-title-input').value.trim();
+      const sourceType = selectedLiveSourceMode === 'link' ? 'link' : 'camera';
+      const cameraFacing = document.getElementById('live-camera-facing-select')?.value || 'user';
       let streamUrl = document.getElementById('live-url-input').value.trim();
       const offerUrl = document.getElementById('live-offer-url-input').value.trim();
-      if (!/^https:\/\//i.test(streamUrl)) return toast('Ingresa una URL válida con https://');
-      const ytMatch = streamUrl.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
-      if (ytMatch && ytMatch[1]) {
-        streamUrl = 'https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1';
+      if (sourceType === 'link') {
+        if (!/^https:\/\//i.test(streamUrl)) return toast('Ingresa una URL válida con https:// (YouTube, TikTok, Twitch o Kick)');
+        streamUrl = toEmbedStreamUrl(streamUrl);
+      } else {
+        streamUrl = 'camera://device';
       }
       const f = getFormalData() || {};
       const stableCreatorId = getActiveUserId();
@@ -3499,6 +3761,8 @@
         refreshLiveGoalAndBattleUI();
         const docRef = await addDoc(collection(db, 'lives'), {
           title,
+          sourceType,
+          cameraFacing,
           streamUrl,
           offerUrl,
           goalTitle,
@@ -3516,11 +3780,14 @@
           createdAt: serverTimestamp()
         });
         document.getElementById('live-form').reset();
+        setLiveSourceMode('camera');
         closeLiveModal();
         toast('📡 ¡Tu sala oficial en vivo está activa!');
         openLiveRoom({
           id: docRef.id,
           title,
+          sourceType,
+          cameraFacing,
           streamUrl,
           offerUrl,
           user: getUserName(),
