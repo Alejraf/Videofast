@@ -1708,11 +1708,10 @@
     const OWNER_EMAIL = '123alejrafnstaller@gmail.com';
     const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
 
-    // Purge any leaked legacy owner profile from older versions if the user didn't explicitly authenticate it
     (function purgeLeakedOwnerCache() {
       try {
         const ver = localStorage.getItem('sv_session_schema');
-        if (ver !== 'v12_2') {
+        if (ver !== 'v12_3') {
           const rawFormal = localStorage.getItem('sv_formal_profile');
           if (rawFormal && rawFormal.includes('123alejrafnstaller@gmail.com')) {
             localStorage.removeItem('sv_formal_profile');
@@ -1720,7 +1719,7 @@
           if (localStorage.getItem('sv_username') === 'Creador_1Osz') {
             localStorage.removeItem('sv_username');
           }
-          localStorage.setItem('sv_session_schema', 'v12_2');
+          localStorage.setItem('sv_session_schema', 'v12_3');
         }
       } catch (e) {}
     })();
@@ -2400,6 +2399,28 @@
             window._gTimer = setTimeout(() => burst.classList.remove('show'), 2400);
           }
         });
+        // Real-time video frame relay from Socket.IO server (works across all mobile networks without STUN/TURN blocks)
+        svSocket.on('live_video_frame', ({ liveId, frame }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !frame) return;
+          if (viewerLivePaused || hostLivePaused) return;
+          const imgEl = document.getElementById('sv-viewer-live-img');
+          const waitEl = document.getElementById('sv-viewer-live-wait');
+          if (imgEl) {
+            imgEl.src = frame;
+            imgEl.classList.remove('hidden');
+          }
+          if (waitEl) waitEl.style.display = 'none';
+        });
+        // Real-time audio chunk playback for viewers
+        svSocket.on('live_audio_chunk', async ({ liveId, audioData }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !audioData) return;
+          if (viewerLivePaused || hostLivePaused || window._svViewerAudioMuted) return;
+          try {
+            const aud = new Audio(audioData);
+            aud.volume = 1.0;
+            aud.play().catch(() => {});
+          } catch (e) {}
+        });
         svSocket.on('sala_finalizada', ({ liveId }) => {
           if (activeLiveRoom && activeLiveRoom.id === liveId) {
             closeLiveRoom();
@@ -2703,6 +2724,18 @@
     };
 
     function stopActiveLiveCamera() {
+      if (typeof window._svStopSocketRelay === 'function') {
+        try { window._svStopSocketRelay(); } catch (e) {}
+        window._svStopSocketRelay = null;
+      }
+      const viewerImg = document.getElementById('sv-viewer-live-img');
+      if (viewerImg) {
+        try { viewerImg.remove(); } catch (e) {}
+      }
+      const viewerWait = document.getElementById('sv-viewer-live-wait');
+      if (viewerWait) {
+        try { viewerWait.remove(); } catch (e) {}
+      }
       if (activeLiveMediaStream) {
         try {
           activeLiveMediaStream.getTracks().forEach((tr) => tr.stop());
@@ -2757,90 +2790,115 @@
           const micBtn = document.getElementById('live-mic-toggle-btn');
           if (micBtn) micBtn.textContent = '🎙️ Mic ON';
 
-          // Listen for viewer WebRTC join requests in Firestore signaling subcollection
-          const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
-          unsubLiveSignals = onSnapshot(sigCol, (snap) => {
-            snap.docChanges().forEach(async (chg) => {
-              if (chg.type !== 'added') return;
-              const sig = chg.doc.data() || {};
-              if (sig.type === 'viewer_join' && sig.viewerId && activeLiveMediaStream) {
-                const viewerId = sig.viewerId;
-                try {
-                  if (livePeerConnections.has(viewerId)) {
-                    try { livePeerConnections.get(viewerId).close(); } catch (e) {}
+          // Stream real-time video frames + audio chunks through Socket.IO server (works across all mobile networks)
+          const sock = ensureSocket();
+          const relayCanvas = document.createElement('canvas');
+          relayCanvas.width = 360;
+          relayCanvas.height = 640;
+          const relayCtx = relayCanvas.getContext('2d');
+
+          const emitFrame = () => {
+            if (!activeLiveRoom || activeLiveRoom.id !== roomId || !activeLiveMediaStream || hostLivePaused) return;
+            if (camVid.readyState >= 2 && camVid.videoWidth > 0 && camVid.videoHeight > 0) {
+              try {
+                relayCtx.drawImage(camVid, 0, 0, relayCanvas.width, relayCanvas.height);
+                const frame = relayCanvas.toDataURL('image/jpeg', 0.52);
+                if (sock && frame) {
+                  sock.emit('live_video_frame', { liveId: roomId, frame });
+                }
+              } catch (e) {}
+            }
+          };
+
+          const frameInterval = setInterval(emitFrame, 140); // ~7 fps smooth low-latency relay
+
+          // Capture short audio segments if MediaRecorder is supported
+          let audioLoopActive = true;
+          const startAudioPulse = () => {
+            if (!audioLoopActive || !activeLiveMediaStream) return;
+            try {
+              const audioTracks = activeLiveMediaStream.getAudioTracks();
+              if (audioTracks.length > 0 && !activeLiveMicMuted && typeof MediaRecorder !== 'undefined') {
+                const aStream = new MediaStream(audioTracks);
+                const rec = new MediaRecorder(aStream);
+                const chunks = [];
+                rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+                rec.onstop = () => {
+                  if (!audioLoopActive) return;
+                  if (chunks.length > 0 && sock && !hostLivePaused && !activeLiveMicMuted) {
+                    const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      if (reader.result && sock) {
+                        sock.emit('live_audio_chunk', { liveId: roomId, audioData: reader.result });
+                      }
+                    };
+                    reader.readAsDataURL(blob);
                   }
-                  const pc = new RTCPeerConnection(RTC_CFG);
-                  livePeerConnections.set(viewerId, pc);
-                  activeLiveMediaStream.getTracks().forEach((track) => pc.addTrack(track, activeLiveMediaStream));
-                  pc.onicecandidate = async (ev) => {
-                    if (ev.candidate) {
-                      try {
-                        await addDoc(sigCol, { type: 'host_ice', viewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
-                      } catch (e) {}
-                    }
-                  };
-                  const offer = await pc.createOffer();
-                  await pc.setLocalDescription(offer);
-                  await addDoc(sigCol, { type: 'host_offer', viewerId, sdp: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
-                } catch (err) {}
-              } else if (sig.type === 'viewer_answer' && sig.viewerId && sig.sdp) {
-                const pc = livePeerConnections.get(sig.viewerId);
-                if (pc && pc.signalingState !== 'stable') {
-                  try { await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp)); } catch (e) {}
-                }
-              } else if (sig.type === 'viewer_ice' && sig.viewerId && sig.candidate) {
-                const pc = livePeerConnections.get(sig.viewerId);
-                if (pc) {
-                  try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
-                }
+                  if (audioLoopActive) startAudioPulse();
+                };
+                rec.start();
+                setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 950);
+              } else {
+                setTimeout(startAudioPulse, 800);
               }
-            });
-          });
+            } catch (e) {}
+          };
+          startAudioPulse();
+
+          window._svStopSocketRelay = () => {
+            audioLoopActive = false;
+            clearInterval(frameInterval);
+          };
         } catch (err) {
           toast('⚠️ Permite acceso a Cámara y Micrófono para transmitir en vivo');
         }
       } else {
-        // Viewer connecting to host's live camera via WebRTC
-        camVid.muted = false;
-        camVid.classList.remove('hidden');
+        // Viewer receives live video frames + audio directly from Socket.IO relay
+        camVid.classList.add('hidden');
         if (camCtrls) camCtrls.classList.add('hidden');
-        const myViewerId = getActiveUserId() + '_' + Math.random().toString(36).slice(2, 6);
-        const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
-        const pc = new RTCPeerConnection(RTC_CFG);
-        livePeerConnections.set('host', pc);
-        pc.ontrack = (ev) => {
-          if (ev.streams && ev.streams[0]) {
-            camVid.srcObject = ev.streams[0];
-            camVid.play().catch(() => {});
+        window._svViewerAudioMuted = false;
+
+        const stage = document.getElementById('sv-live-player-box');
+        if (stage) {
+          stage.style.flex = '1';
+          stage.style.minHeight = '260px';
+          stage.style.width = '100%';
+        }
+        let viewerImg = document.getElementById('sv-viewer-live-img');
+        let viewerWait = document.getElementById('sv-viewer-live-wait');
+        if (stage) {
+          if (!viewerImg) {
+            viewerImg = document.createElement('img');
+            viewerImg.id = 'sv-viewer-live-img';
+            viewerImg.alt = 'Transmisión en vivo';
+            viewerImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#050507;z-index:2;';
+            stage.insertBefore(viewerImg, document.getElementById('live-iframe'));
           }
-        };
-        pc.onicecandidate = async (ev) => {
-          if (ev.candidate) {
-            try {
-              await addDoc(sigCol, { type: 'viewer_ice', viewerId: myViewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
-            } catch (e) {}
-          }
-        };
-        unsubLiveSignals = onSnapshot(sigCol, (snap) => {
-          snap.docChanges().forEach(async (chg) => {
-            if (chg.type !== 'added') return;
-            const sig = chg.doc.data() || {};
-            if (sig.viewerId !== myViewerId) return;
-            if (sig.type === 'host_offer' && sig.sdp) {
-              try {
-                await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                await addDoc(sigCol, { type: 'viewer_answer', viewerId: myViewerId, sdp: { type: answer.type, sdp: answer.sdp }, createdAt: serverTimestamp() });
-              } catch (e) {}
-            } else if (sig.type === 'host_ice' && sig.candidate) {
-              try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
+          if (!viewerWait) {
+            viewerWait = document.createElement('div');
+            viewerWait.id = 'sv-viewer-live-wait';
+            viewerWait.style.cssText = 'position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#090b12;color:#fef08a;font-size:12.5px;font-weight:800;gap:8px;padding:14px;text-align:center;';
+            viewerWait.innerHTML = '<span>📡 Conectando señal en vivo...</span><span style="font-size:11px;color:#9ca3af;font-weight:600;">Si la pantalla sigue en espera, toca el botón para activar audio y video.</span><button type="button" id="sv-activate-stream-btn" class="pill-btn gold" style="padding:7px 14px;font-size:11.5px;">🔊 Activar Video y Audio</button>';
+            stage.insertBefore(viewerWait, document.getElementById('live-iframe'));
+            const actBtn = viewerWait.querySelector('#sv-activate-stream-btn');
+            if (actBtn) {
+              actBtn.addEventListener('click', () => {
+                window._svViewerAudioMuted = false;
+                viewerWait.style.display = 'none';
+                const s = ensureSocket();
+                if (s && activeLiveRoom) {
+                  s.emit('unirse_al_live', { liveId: activeLiveRoom.id, userId: getActiveUserId(), isHost: false });
+                }
+                toast('🔊 Señal en vivo activada');
+              });
             }
-          });
-        });
-        try {
-          await addDoc(sigCol, { type: 'viewer_join', viewerId: myViewerId, createdAt: serverTimestamp() });
-        } catch (e) {}
+          }
+        }
+        const sock = ensureSocket();
+        if (sock) {
+          sock.emit('unirse_al_live', { liveId: roomId, userId: getActiveUserId(), isHost: false });
+        }
       }
     }
 

@@ -6,7 +6,8 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: { origin: '*' },
+  maxHttpBufferSize: 5e6
 });
 
 app.use(express.json({ limit: '2mb' }));
@@ -21,6 +22,7 @@ app.use((req, res, next) => {
 app.use(express.static(__dirname));
 
 const activeSocketLives = new Map();
+const latestFrameByRoom = new Map();
 
 io.on('connection', (socket) => {
   socket.on('unirse_al_live', ({ liveId, userId, isHost } = {}) => {
@@ -35,10 +37,23 @@ io.on('connection', (socket) => {
         hostSocketId: socket.id,
         startedAt: Date.now()
       });
+    } else if (latestFrameByRoom.has(liveId)) {
+      socket.emit('live_video_frame', { liveId, frame: latestFrameByRoom.get(liveId) });
     }
 
     const espectadores = io.sockets.adapter.rooms.get(liveId)?.size || 1;
     io.to(liveId).emit('actualizar_espectadores', espectadores);
+  });
+
+  socket.on('live_video_frame', ({ liveId, frame } = {}) => {
+    if (!liveId || !frame) return;
+    latestFrameByRoom.set(liveId, frame);
+    socket.to(liveId).emit('live_video_frame', { liveId, frame });
+  });
+
+  socket.on('live_audio_chunk', ({ liveId, audioData } = {}) => {
+    if (!liveId || !audioData) return;
+    socket.to(liveId).emit('live_audio_chunk', { liveId, audioData });
   });
 
   socket.on('salir_del_live', ({ liveId } = {}) => {
@@ -51,6 +66,7 @@ io.on('connection', (socket) => {
   socket.on('finalizar_live', ({ liveId } = {}) => {
     if (!liveId) return;
     activeSocketLives.delete(liveId);
+    latestFrameByRoom.delete(liveId);
     io.to(liveId).emit('sala_finalizada', { liveId });
   });
 
@@ -74,6 +90,7 @@ io.on('connection', (socket) => {
     const roomMeta = activeSocketLives.get(liveId);
     if (roomMeta && roomMeta.hostSocketId === socket.id) {
       activeSocketLives.delete(liveId);
+      latestFrameByRoom.delete(liveId);
       io.to(liveId).emit('sala_finalizada', { liveId });
     } else {
       const espectadores = io.sockets.adapter.rooms.get(liveId)?.size || 0;
@@ -92,5 +109,5 @@ app.get('*', (_req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log('StarVibe server + Socket.IO running on port', PORT);
+  console.log('StarVibe server + Socket.IO Live Relay running on port', PORT);
 });
