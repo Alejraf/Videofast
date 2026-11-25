@@ -10,10 +10,17 @@ const io = new Server(server, {
 });
 
 app.use(express.json({ limit: '2mb' }));
+app.use((req, res, next) => {
+  if (req.path === '/' || req.path === '/index.html' || req.path === '/sw.js') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
 app.use(express.static(__dirname));
 
-// Track active live rooms & host sockets so stale rooms close instantly on disconnect
-const activeSocketLives = new Map(); // liveId -> { hostSocketId, startedAt }
+const activeSocketLives = new Map();
 
 io.on('connection', (socket) => {
   socket.on('unirse_al_live', ({ liveId, userId, isHost } = {}) => {

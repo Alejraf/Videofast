@@ -1708,6 +1708,23 @@
     const OWNER_EMAIL = '123alejrafnstaller@gmail.com';
     const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
 
+    // Purge any leaked legacy owner profile from older versions if the user didn't explicitly authenticate it
+    (function purgeLeakedOwnerCache() {
+      try {
+        const ver = localStorage.getItem('sv_session_schema');
+        if (ver !== 'v12_2') {
+          const rawFormal = localStorage.getItem('sv_formal_profile');
+          if (rawFormal && rawFormal.includes('123alejrafnstaller@gmail.com')) {
+            localStorage.removeItem('sv_formal_profile');
+          }
+          if (localStorage.getItem('sv_username') === 'Creador_1Osz') {
+            localStorage.removeItem('sv_username');
+          }
+          localStorage.setItem('sv_session_schema', 'v12_2');
+        }
+      } catch (e) {}
+    })();
+
     function getOrCreateDeviceUserId() {
       let did = localStorage.getItem('sv_device_uid_v2');
       if (!did) {
