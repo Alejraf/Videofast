@@ -1,4 +1,4 @@
-const CACHE_NAME = 'starvibe-v12-4-perf';
+const CACHE_NAME = 'starvibe-v12-6-16ms-pcm';
 
 self.addEventListener('install', () => self.skipWaiting());
 

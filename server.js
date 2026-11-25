@@ -48,12 +48,17 @@ io.on('connection', (socket) => {
   socket.on('live_video_frame', ({ liveId, frame } = {}) => {
     if (!liveId || !frame) return;
     latestFrameByRoom.set(liveId, frame);
-    socket.to(liveId).emit('live_video_frame', { liveId, frame });
+    socket.volatile.to(liveId).emit('live_video_frame', { liveId, frame });
+  });
+
+  socket.on('live_audio_pcm', ({ liveId, pcm, sr } = {}) => {
+    if (!liveId || !pcm) return;
+    socket.volatile.to(liveId).emit('live_audio_pcm', { liveId, pcm, sr });
   });
 
   socket.on('live_audio_chunk', ({ liveId, audioData } = {}) => {
     if (!liveId || !audioData) return;
-    socket.to(liveId).emit('live_audio_chunk', { liveId, audioData });
+    socket.volatile.to(liveId).emit('live_audio_chunk', { liveId, audioData });
   });
 
   socket.on('salir_del_live', ({ liveId } = {}) => {

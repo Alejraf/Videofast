@@ -757,7 +757,7 @@
       <div class="sv-live-side-panel" style="display:flex;flex-direction:column;flex:0 0 auto;max-height:46dvh;">
       <div id="live-chat-messages" class="live-chat-area" style="flex:1;min-height:64px;max-height:130px;overflow-y:auto;"></div>
 
-      <div class="live-gift-bar">
+      <div id="sv-live-gift-bar" class="live-gift-bar">
         <button class="gift-chip" onclick="sendVirtualGift('✨ Chispa', 10, 1.00, 'basic', 'REGALO BÁSICO')">
           <div class="g-icon">✨</div><div class="g-name">Chispa</div><strong>10 🪙</strong><span>R$ 1,00</span>
         </button>
@@ -792,6 +792,9 @@
 
       <form id="live-chat-form" class="live-chat-form" style="display:flex;gap:6px;align-items:center;padding:6px 10px calc(8px + env(safe-area-inset-bottom));">
         <input id="live-chat-input" type="text" maxlength="120" data-i18n-ph="live_chat_ph" placeholder="Escribe en el chat en vivo..." required style="flex:1;" />
+        <span id="sv-host-hearts-badge" class="hidden" style="background:rgba(244,63,94,0.18);border:1px solid rgba(244,63,94,0.5);color:#fda4af;border-radius:999px;padding:7px 11px;font-weight:900;font-size:12.5px;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
+          ❤️ <span id="sv-host-likes-count">0</span>
+        </span>
         <button type="button" id="sv-live-heart-btn" onclick="sendLiveHeartTap()" aria-label="Dar Me Gusta" style="background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;border:none;border-radius:999px;padding:8px 12px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;box-shadow:0 2px 10px rgba(244,63,94,0.45);flex-shrink:0;">
           ❤️ <span id="sv-live-likes-count">0</span>
         </button>
@@ -1200,7 +1203,7 @@
         <div class="modal-title" data-i18n="recharge_title">🪙 Recargar Monedas StarVibe</div>
         <button onclick="closeRechargeModal()" class="close-btn">✕</button>
       </div>
-      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:8px;" data-i18n="recharge_desc">Usa tus monedas para enviar regalos animados en vivo (35% creador / 65% StarVibe).</p>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:8px;" data-i18n="recharge_desc">Usa tus monedas para enviar regalos animados en vivo .</p>
       <div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.3);border-radius:10px;padding:8px 10px;font-size:11px;color:#fef08a;margin-bottom:10px;line-height:1.4;">
         🛡️ <strong>Transparencia StarVibe:</strong> Las monedas son bienes digitales para regalos en vivo (no apuestas ni juegos de azar). Revisa nuestros <a href="/terms" target="_blank" style="color:#93c5fd;">Términos</a> y <a href="/privacy" target="_blank" style="color:#93c5fd;">Privacidad</a>.
       </div>
@@ -1464,13 +1467,13 @@
         rights_chk: "Confirmo que soy autor o tengo licencia de este video y cumple las normas legales.",
         publish_btn: "Publicar en StarVibe",
         live_modal_title: "📡 Publicar Sala En Vivo",
-        live_modal_desc: "Tu transmisión se reproducirá integrada dentro de StarVibe con chat en vivo y regalos (35% creador / 60% StarVibe).",
+        live_modal_desc: "Tu transmisión se reproducirá integrada dentro de StarVibe con chat en vivo y regalos .",
         live_title_ph: "Título de tu directo...",
         live_offer_ph: "🛍️ Enlace de venta en vivo opcional (https://...)",
         live_terms_chk: "Soy mayor de 18 años y acepto las normas de transmisión y reparto (65% StarVibe / 35% Creador).",
         activate_live_btn: "Activar Sala En Vivo",
         recharge_title: "🪙 Recargar Monedas StarVibe",
-        recharge_desc: "Usa tus monedas para enviar regalos animados en vivo (35% creador / 60% StarVibe).",
+        recharge_desc: "Usa tus monedas para enviar regalos animados en vivo .",
         split_title: "⚙️ Ajustes de Reparto de Ganancias",
         split_app_lbl: "🏢 Plataforma StarVibe:",
         split_creator_lbl: "🎙️ Creador que transmite:",
@@ -2405,10 +2408,48 @@
       } catch (e) {}
     }
 
+    let svPlaybackAudioCtx = null;
+    let svNextAudioTime = 0;
+
+    function playIncomingPcmChunk(pcmBuffer, sampleRate) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const sr = sampleRate || 16000;
+        if (!svPlaybackAudioCtx) {
+          svPlaybackAudioCtx = new AudioCtx({ sampleRate: sr, latencyHint: 'interactive' });
+        }
+        if (svPlaybackAudioCtx.state === 'suspended') {
+          svPlaybackAudioCtx.resume().catch(() => {});
+        }
+        const int16 = new Int16Array(pcmBuffer);
+        if (!int16.length) return;
+        const audioBuf = svPlaybackAudioCtx.createBuffer(1, int16.length, sr);
+        const chan = audioBuf.getChannelData(0);
+        for (let i = 0; i < int16.length; i++) {
+          chan[i] = int16[i] / 32768;
+        }
+        const srcNode = svPlaybackAudioCtx.createBufferSource();
+        srcNode.buffer = audioBuf;
+        srcNode.connect(svPlaybackAudioCtx.destination);
+        const now = svPlaybackAudioCtx.currentTime;
+        if (svNextAudioTime < now || svNextAudioTime > now + 0.064) {
+          svNextAudioTime = now + 0.008;
+        }
+        srcNode.start(svNextAudioTime);
+        svNextAudioTime += audioBuf.duration;
+      } catch (e) {}
+    }
+
     function ensureSocket() {
       if (svSocket) return svSocket;
       if (typeof window.io === 'function') {
-        svSocket = window.io({ transports: ['websocket', 'polling'] });
+        svSocket = window.io({ transports: ['websocket'], upgrade: false });
+        svSocket.on('connect_error', () => {
+          if (svSocket && svSocket.io && svSocket.io.opts) {
+            svSocket.io.opts.transports = ['websocket', 'polling'];
+          }
+        });
         svSocket.on('actualizar_espectadores', (count) => {
           const el = document.getElementById('room-viewers-count');
           if (el) el.textContent = String(Math.max(1, Number(count || 1)));
@@ -2416,7 +2457,9 @@
         svSocket.on('mostrar_comentario', ({ usuario, texto }) => {
           liveRoomLikesCount = Number(liveObj.likesCount || 0);
       const likesLbl = document.getElementById('sv-live-likes-count');
+      const hostLikesLbl = document.getElementById('sv-host-likes-count');
       if (likesLbl) likesLbl.textContent = String(liveRoomLikesCount);
+      if (hostLikesLbl) hostLikesLbl.textContent = String(liveRoomLikesCount);
       const chatList = document.getElementById('live-chat-messages');
           if (!chatList) return;
           const div = document.createElement('div');
@@ -2451,15 +2494,11 @@
           }
           if (waitEl) waitEl.style.display = 'none';
         });
-        // Real-time audio chunk playback for viewers
-        svSocket.on('live_audio_chunk', async ({ liveId, audioData }) => {
-          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !audioData) return;
+        // Ultra-low latency 16ms PCM audio playback for viewers
+        svSocket.on('live_audio_pcm', ({ liveId, pcm, sr }) => {
+          if (!activeLiveRoom || activeLiveRoom.id !== liveId || !pcm) return;
           if (viewerLivePaused || hostLivePaused || window._svViewerAudioMuted) return;
-          try {
-            const aud = new Audio(audioData);
-            aud.volume = 1.0;
-            aud.play().catch(() => {});
-          } catch (e) {}
+          playIncomingPcmChunk(pcm, sr || 16000);
         });
         svSocket.on('mostrar_like_live', ({ liveId, totalLikes }) => {
           if (!activeLiveRoom || activeLiveRoom.id !== liveId) return;
@@ -2469,7 +2508,9 @@
             liveRoomLikesCount += 1;
           }
           const lbl = document.getElementById('sv-live-likes-count');
+          const hLbl = document.getElementById('sv-host-likes-count');
           if (lbl) lbl.textContent = String(liveRoomLikesCount);
+          if (hLbl) hLbl.textContent = String(liveRoomLikesCount);
           renderFloatingLiveHeart();
         });
         svSocket.on('sala_finalizada', ({ liveId }) => {
@@ -2844,19 +2885,18 @@
           // Stream real-time video frames + audio chunks through Socket.IO server (works across all mobile networks)
           const sock = ensureSocket();
           const relayCanvas = document.createElement('canvas');
-          relayCanvas.width = 240;
-          relayCanvas.height = 426;
-          const relayCtx = relayCanvas.getContext('2d');
+          relayCanvas.width = 192;
+          relayCanvas.height = 340;
+          const relayCtx = relayCanvas.getContext('2d', { alpha: false });
 
           const emitFrame = () => {
             if (!activeLiveRoom || activeLiveRoom.id !== roomId || !activeLiveMediaStream || hostLivePaused) return;
-            // Backpressure guard: prevent TCP/WebSocket buffer buildup that causes 2s delay
             const buffered = sock?.io?.engine?.transport?.ws?.bufferedAmount || 0;
-            if (buffered > 48000) return;
+            if (buffered > 12000) return;
             if (camVid.readyState >= 2 && camVid.videoWidth > 0 && camVid.videoHeight > 0) {
               try {
                 relayCtx.drawImage(camVid, 0, 0, relayCanvas.width, relayCanvas.height);
-                const frame = relayCanvas.toDataURL('image/jpeg', 0.42);
+                const frame = relayCanvas.toDataURL('image/jpeg', 0.36);
                 if (sock && frame) {
                   sock.volatile.emit('live_video_frame', { liveId: roomId, frame });
                 }
@@ -2864,45 +2904,52 @@
             }
           };
 
-          const frameInterval = setInterval(emitFrame, 65); // ~15 fps ultra-low latency without queue buildup
+          const frameInterval = setInterval(emitFrame, 40); // ~25 fps instant sync with 12KB backpressure cap
 
-          // Capture ultra-short 320ms audio segments for near real-time voice
-          let audioLoopActive = true;
-          const startAudioPulse = () => {
-            if (!audioLoopActive || !activeLiveMediaStream) return;
-            try {
-              const audioTracks = activeLiveMediaStream.getAudioTracks();
-              if (audioTracks.length > 0 && !activeLiveMicMuted && typeof MediaRecorder !== 'undefined') {
-                const aStream = new MediaStream(audioTracks);
-                const rec = new MediaRecorder(aStream);
-                const chunks = [];
-                rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
-                rec.onstop = () => {
-                  if (!audioLoopActive) return;
-                  if (chunks.length > 0 && sock && !hostLivePaused && !activeLiveMicMuted) {
-                    const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      if (reader.result && sock) {
-                        sock.volatile.emit('live_audio_chunk', { liveId: roomId, audioData: reader.result });
-                      }
-                    };
-                    reader.readAsDataURL(blob);
-                  }
-                  if (audioLoopActive) startAudioPulse();
-                };
-                rec.start();
-                setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 320);
-              } else {
-                setTimeout(startAudioPulse, 400);
-              }
-            } catch (e) {}
-          };
-          startAudioPulse();
+          // Minimum WebAudio hardware buffer size: 256 samples @ 16kHz = 16ms packets!
+          let captureAudioCtx = null;
+          let captureProcessor = null;
+          let captureSource = null;
+          let silentGain = null;
+          try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            const audioTracks = activeLiveMediaStream.getAudioTracks();
+            if (AudioCtx && audioTracks.length > 0) {
+              captureAudioCtx = new AudioCtx({ sampleRate: 16000, latencyHint: 'interactive' });
+              captureSource = captureAudioCtx.createMediaStreamSource(new MediaStream(audioTracks));
+              captureProcessor = captureAudioCtx.createScriptProcessor(256, 1, 1);
+              silentGain = captureAudioCtx.createGain();
+              silentGain.gain.value = 0;
+              captureProcessor.onaudioprocess = (ev) => {
+                if (!activeLiveRoom || activeLiveRoom.id !== roomId || hostLivePaused || activeLiveMicMuted) return;
+                const buffered = sock?.io?.engine?.transport?.ws?.bufferedAmount || 0;
+                if (buffered > 12000) return;
+                const input = ev.inputBuffer.getChannelData(0);
+                const pcm16 = new Int16Array(input.length);
+                for (let i = 0; i < input.length; i++) {
+                  const s = Math.max(-1, Math.min(1, input[i]));
+                  pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                if (sock) {
+                  sock.volatile.emit('live_audio_pcm', {
+                    liveId: roomId,
+                    pcm: pcm16.buffer,
+                    sr: captureAudioCtx.sampleRate || 16000
+                  });
+                }
+              };
+              captureSource.connect(captureProcessor);
+              captureProcessor.connect(silentGain);
+              silentGain.connect(captureAudioCtx.destination);
+            }
+          } catch (e) {}
 
           window._svStopSocketRelay = () => {
-            audioLoopActive = false;
             clearInterval(frameInterval);
+            try { if (captureProcessor) captureProcessor.disconnect(); } catch (e) {}
+            try { if (captureSource) captureSource.disconnect(); } catch (e) {}
+            try { if (silentGain) silentGain.disconnect(); } catch (e) {}
+            try { if (captureAudioCtx) captureAudioCtx.close(); } catch (e) {}
           };
         } catch (err) {
           toast('⚠️ Permite acceso a Cámara y Micrófono para transmitir en vivo');
@@ -2912,6 +2959,7 @@
         camVid.classList.add('hidden');
         if (camCtrls) camCtrls.classList.add('hidden');
         window._svViewerAudioMuted = false;
+                try { const AudioCtx = window.AudioContext || window.webkitAudioContext; if (AudioCtx && !svPlaybackAudioCtx) svPlaybackAudioCtx = new AudioCtx({ sampleRate: 16000, latencyHint: 'interactive' }); if (svPlaybackAudioCtx && svPlaybackAudioCtx.state === 'suspended') svPlaybackAudioCtx.resume(); } catch (e) {}
 
         const stage = document.getElementById('sv-live-player-box');
         if (stage) {
@@ -2939,6 +2987,7 @@
             if (actBtn) {
               actBtn.addEventListener('click', () => {
                 window._svViewerAudioMuted = false;
+                try { const AudioCtx = window.AudioContext || window.webkitAudioContext; if (AudioCtx && !svPlaybackAudioCtx) svPlaybackAudioCtx = new AudioCtx({ sampleRate: 16000, latencyHint: 'interactive' }); if (svPlaybackAudioCtx && svPlaybackAudioCtx.state === 'suspended') svPlaybackAudioCtx.resume(); } catch (e) {}
                 viewerWait.style.display = 'none';
                 const s = ensureSocket();
                 if (s && activeLiveRoom) {
@@ -2988,9 +3037,21 @@
       const endBtn = document.getElementById('live-end-btn');
       const rewindBtn = document.getElementById('viewer-rewind-live-btn');
       const pauseBtn = document.getElementById('live-pause-btn');
+      const giftBar = document.getElementById('sv-live-gift-bar');
+      const heartBtn = document.getElementById('sv-live-heart-btn');
+      const hostHeartsBadge = document.getElementById('sv-host-hearts-badge');
       if (endBtn) endBtn.classList.toggle('hidden', !isBroadcaster);
       if (rewindBtn) rewindBtn.classList.toggle('hidden', isBroadcaster);
       if (pauseBtn) pauseBtn.classList.remove('hidden');
+      if (giftBar) giftBar.classList.toggle('hidden', isBroadcaster);
+      if (heartBtn) {
+        heartBtn.classList.toggle('hidden', isBroadcaster);
+        heartBtn.style.display = isBroadcaster ? 'none' : 'inline-flex';
+      }
+      if (hostHeartsBadge) {
+        hostHeartsBadge.classList.toggle('hidden', !isBroadcaster);
+        hostHeartsBadge.style.display = isBroadcaster ? 'inline-flex' : 'none';
+      }
       const roomElapsed = document.getElementById('room-elapsed-badge');
       if (roomElapsed) roomElapsed.innerHTML = `🔴 @${liveObj.user || 'Creador'} ${formatLiveElapsed(getLiveStartMs(liveObj))} • 👁️ <span id="room-viewers-count">1</span>`;
     }
@@ -3012,7 +3073,9 @@
       if (!activeLiveRoom) return;
       liveRoomLikesCount += 1;
       const lbl = document.getElementById('sv-live-likes-count');
+      const hLbl = document.getElementById('sv-host-likes-count');
       if (lbl) lbl.textContent = String(liveRoomLikesCount);
+      if (hLbl) hLbl.textContent = String(liveRoomLikesCount);
       renderFloatingLiveHeart();
       const s = ensureSocket();
       if (s) {
@@ -3148,7 +3211,7 @@
       if (extBadge) extBadge.textContent = '🔗 ' + (parsedExt.platform || 'LIVE EXTERNO').toUpperCase();
 
       document.getElementById('room-creator').textContent = '@' + (liveObj.user || 'Creador') + ' ✅';
-      document.getElementById('room-title').textContent = (liveObj.title || 'Live') + ' (' + parsedExt.platform + ') • 35% creador / 65% app';
+      document.getElementById('room-title').textContent = (liveObj.title || 'Live') + ' (' + parsedExt.platform + ')';
       hostLivePaused = Boolean(liveObj.paused);
       viewerLivePaused = false;
       syncLiveHostControls(liveObj);
@@ -3211,9 +3274,37 @@
       chatList.innerHTML = '<div class="live-msg">Bienvenido al chat en vivo de StarVibe ✨</div>';
 
       if (unsubLiveChat) unsubLiveChat();
+      const seenGiftMsgIds = new Set();
+      let initialChatLoaded = false;
       const cq = query(collection(db, 'lives', liveObj.id, 'messages'), orderBy('createdAt', 'asc'));
       unsubLiveChat = onSnapshot(cq, (snap) => {
-        if (snap.empty) return;
+        if (snap.empty) {
+          initialChatLoaded = true;
+          return;
+        }
+        snap.docChanges().forEach((chg) => {
+          if (chg.type === 'added') {
+            const m = chg.doc.data();
+            if (!initialChatLoaded) {
+              seenGiftMsgIds.add(chg.doc.id);
+            } else if (m.isGift && !seenGiftMsgIds.has(chg.doc.id) && m.senderUid !== getActiveUserId()) {
+              seenGiftMsgIds.add(chg.doc.id);
+              const gEmoji = (m.giftName || '🎁').split(' ')[0];
+              const burst = document.getElementById('live-gift-burst');
+              if (burst) {
+                burst.className = 'live-gift-burst tier-' + (m.tier || 'basic') + ' show';
+                document.getElementById('burst-tier-pill').textContent = '★ ' + (m.tierLabel || 'REGALO') + ' • ' + (m.coinCost || 10) + ' 🪙';
+                document.getElementById('burst-gift-emoji').textContent = gEmoji;
+                document.getElementById('burst-gift-text').textContent = '@' + (m.user || 'User') + ' envió ' + (m.giftName || 'Regalo');
+                document.getElementById('burst-gift-sub').textContent = 'Valor: R$ ' + Number(m.brlValue || 1).toFixed(2).replace('.', ',');
+                spawnGiftParticles(gEmoji, m.tier === 'mythic' ? 18 : m.tier === 'legendary' ? 12 : m.tier === 'epic' ? 8 : 5);
+                clearTimeout(window._gTimer);
+                window._gTimer = setTimeout(() => burst.classList.remove('show'), 2600);
+              }
+            }
+          }
+        });
+        initialChatLoaded = true;
         chatList.innerHTML = '';
         snap.forEach((mDoc) => {
           const m = mDoc.data();
@@ -3536,11 +3627,26 @@
         window._vipTimer = setTimeout(() => vipAlert.classList.remove('show'), durationMs + 1200);
       }
 
+      const sGift = ensureSocket();
+      if (sGift) {
+        sGift.emit('enviar_regalo', {
+          liveId: activeLiveRoom.id,
+          usuario: getUserName(),
+          regaloNombre: giftName,
+          emoji,
+          tier,
+          tierLabel,
+          coinCost,
+          brlValue
+        });
+      }
+
       try {
         await addDoc(collection(db, 'lives', activeLiveRoom.id, 'messages'), {
           user: getUserName(),
           text: giftName + ' (' + coinCost + ' 🪙 • R$ ' + brlValue.toFixed(2) + ')',
           isGift: true,
+          senderUid: getActiveUserId(),
           tier,
           tierLabel,
           giftName,
@@ -5267,6 +5373,13 @@
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
+      let swRefreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!swRefreshing) {
+          swRefreshing = true;
+          window.location.reload();
+        }
+      });
     }
   </script>
 </body>
