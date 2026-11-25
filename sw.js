@@ -1,4 +1,4 @@
-const CACHE_NAME = 'starvibe-v13-0-webrtc-pro';
+const CACHE_NAME = 'starvibe-v13-1-syntaxfix';
 
 self.addEventListener('install', () => self.skipWaiting());
 
