@@ -1,20 +1,29 @@
 {
-  "name": "StarVibe",
+  "id": "https://starvibe.cashplayapp.sbs/",
+  "name": "StarVibe — Videos, Gaming & En Vivo",
   "short_name": "StarVibe",
-  "description": "Plataforma de videos cortos, salas En Vivo y creación con StarVibe Studio Pro.",
+  "description": "Plataforma emergente de videos cortos, clips gaming, salas En Vivo y edición con StarVibe Studio Pro.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#050507",
   "theme_color": "#050507",
-  "categories": ["entertainment", "video", "social"],
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["entertainment", "video", "social", "games"],
   "icons": [
     {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

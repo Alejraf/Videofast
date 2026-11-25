@@ -11,12 +11,12 @@
   <meta name="description" content="Mira videos cortos, series originales y transmisiones en vivo en StarVibe. Gana recompensas por videos (+45s), regalos en vivo y referidos con retiro por PIX." />
   <meta name="keywords" content="StarVibe, videos cortos, series, transmisiones en vivo, live streaming, creadores, recompensas, PIX, monetizacion" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
-  <link rel="canonical" href="https://videofast-light.onrender.com/" />
+  <link rel="canonical" href="https://starvibe.cashplayapp.sbs/" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://videofast-light.onrender.com/" />
+  <meta property="og:url" content="https://starvibe.cashplayapp.sbs/" />
   <meta property="og:title" content="StarVibe — Videos Cortos, Series y En Vivo" />
   <meta property="og:description" content="Descubre videos, series y transmisiones en vivo en StarVibe con sistema de creadores, referidos y retiros por PIX." />
-  <meta property="og:image" content="https://videofast-light.onrender.com/icon.svg" />
+  <meta property="og:image" content="https://starvibe.cashplayapp.sbs/icon.svg" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="StarVibe — Videos Cortos, Series y En Vivo" />
   <meta name="twitter:description" content="Videos cortos, series y En Vivo en StarVibe." />
@@ -513,20 +513,31 @@
   </style>
 </head>
 <body>
-  <!-- ANUNCIO DE ENTRADA PANTALLA COMPLETA (ESTILO TIKTOK CON SALTAR Y CIERRE AUTOMÁTICO) -->
+  <!-- SPLASH DE MARCA NATIVO STARVIBE -->
+  <div id="sv-brand-splash" style="position:fixed;inset:0;z-index:9998;background:radial-gradient(circle at top,#181408 0%,#050507 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity 0.35s ease;pointer-events:none;">
+    <img src="/icon.svg" alt="StarVibe" style="width:74px;height:74px;border-radius:20px;box-shadow:0 0 32px rgba(250,204,21,0.35);" />
+    <div style="font-size:24px;font-weight:900;letter-spacing:2px;color:#fef08a;">STARVIBE</div>
+    <div style="font-size:11.5px;color:#9ca3af;letter-spacing:0.6px;">Videos • Series • En Vivo</div>
+  </div>
+  <!-- ANUNCIO DE ENTRADA PANTALLA COMPLETA (CONTADOR + SALTAR INMEDIATO SIN CAPTCHA) -->
   <div id="entry-promo-overlay" class="hidden">
     <div class="promo-top-bar">
-      <span class="promo-badge">📢 ANUNCIO • <span id="promo-sec-lbl">6s</span></span>
-      <button id="entry-promo-skip" class="promo-skip-btn ready" onclick="dismissEntryPromo()">Saltar anuncio ✕</button>
+      <span class="promo-badge">📢 PATROCINADO • <span id="promo-sec-lbl">5s</span></span>
+      <button id="entry-promo-skip" class="promo-skip-btn ready" onclick="dismissEntryPromo()">Saltar ✕</button>
     </div>
-    <div class="promo-ad-stage">
-      <iframe id="entry-promo-frame" src="about:blank" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <div class="promo-ad-stage" style="background:radial-gradient(circle at 50% 35%,#261d08 0%,#050507 75%);padding:28px;text-align:center;flex-direction:column;">
+      <div style="width:82px;height:82px;border-radius:24px;background:rgba(250,204,21,0.14);border:1.5px solid rgba(250,204,21,0.55);display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:16px;box-shadow:0 0 32px rgba(250,204,21,0.22);">🎬</div>
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:#facc15;text-transform:uppercase;margin-bottom:6px;">StarVibe Destacado</div>
+      <h3 style="font-size:21px;font-weight:900;color:#fff;margin-bottom:8px;max-width:320px;">Crea, Transmite y Gana con tu Comunidad</h3>
+      <p style="font-size:13px;color:#d1d5db;max-width:310px;line-height:1.5;margin-bottom:20px;">
+        Videos de +45s a R$ 0,50 / 1.000 vistas, regalos en vivo y edición en StarVibe Studio Pro.
+      </p>
+      <a id="entry-promo-cta" href="https://uplcm.com/4/12342382" target="_blank" rel="noopener sponsored" onclick="dismissEntryPromo()" class="promo-cta-btn" style="max-width:290px;">
+        ↗️ Ver Oferta Patrocinada
+      </a>
     </div>
     <div class="promo-bottom-bar">
       <div class="promo-progress-track"><div id="promo-progress-fill"></div></div>
-      <a id="entry-promo-cta" href="https://uplcm.com/4/12342382" target="_blank" rel="noopener sponsored" onclick="dismissEntryPromo()" class="promo-cta-btn">
-        ↗️ Abrir Anuncio en Pantalla Completa
-      </a>
     </div>
   </div>
 
@@ -554,6 +565,13 @@
         <button class="feed-tab" data-mode="following" onclick="setFeedMode('following', this)" data-i18n="tab_following">Siguiendo</button>
         <button class="feed-tab active" data-mode="foryou" onclick="setFeedMode('foryou', this)" data-i18n="tab_foryou">Para ti</button>
         <button class="feed-tab" data-mode="trending" onclick="setFeedMode('trending', this)" data-i18n="tab_trending">Tendencias</button>
+      </div>
+      <div id="topic-chips-bar" style="display:flex;gap:6px;overflow-x:auto;padding:7px 2px 2px;scrollbar-width:none;pointer-events:auto;">
+        <button type="button" class="pill-btn gold" data-topic="all" onclick="setTopicFilter('all', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">✨ Todo</button>
+        <button type="button" class="pill-btn" data-topic="gaming" onclick="setTopicFilter('gaming', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎮 Gaming</button>
+        <button type="button" class="pill-btn" data-topic="monetizable" onclick="setTopicFilter('monetizable', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">💰 +45s Pagos</button>
+        <button type="button" class="pill-btn" data-topic="series" onclick="setTopicFilter('series', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎬 Series</button>
+        <button type="button" class="pill-btn" data-topic="musica" onclick="setTopicFilter('musica', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎵 Música</button>
       </div>
       <div id="search-bar" class="search-bar hidden">
         <input id="search-input" type="text" data-i18n-ph="search_ph" placeholder="Buscar #hashtag, @creador o serie..." oninput="applySearchFilter()" />
@@ -686,7 +704,10 @@
       <div class="profile-wrap">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <button type="button" class="pill-btn" style="padding:7px 12px;font-size:12px;" onclick="switchTab('feed')">← Volver al Inicio</button>
-          <span style="font-size:11px;color:#9ca3af;">Mi Perfil</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:#9ca3af;">Mi Perfil</span>
+            <button type="button" id="sv-admin-lock-btn" class="pill-btn hidden" onclick="toggleAdminToolsVisibility()" style="padding:4px 8px;font-size:11px;" title="Gestión interna">⚙️</button>
+          </div>
         </div>
         <div class="prof-card">
           <div class="avatar" id="prof-avatar">S</div>
@@ -1021,7 +1042,10 @@
         <div class="modal-title" data-i18n="recharge_title">🪙 Recargar Monedas StarVibe</div>
         <button onclick="closeRechargeModal()" class="close-btn">✕</button>
       </div>
-      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:12px;" data-i18n="recharge_desc">Usa tus monedas para enviar regalos animados en vivo (35% creador / 60% StarVibe).</p>
+      <p style="font-size:12.5px;color:#9ca3af;margin-bottom:8px;" data-i18n="recharge_desc">Usa tus monedas para enviar regalos animados en vivo (35% creador / 65% StarVibe).</p>
+      <div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.3);border-radius:10px;padding:8px 10px;font-size:11px;color:#fef08a;margin-bottom:10px;line-height:1.4;">
+        🛡️ <strong>Transparencia StarVibe:</strong> Las monedas son bienes digitales para regalos en vivo (no apuestas ni juegos de azar). Revisa nuestros <a href="/terms" target="_blank" style="color:#93c5fd;">Términos</a> y <a href="/privacy" target="_blank" style="color:#93c5fd;">Privacidad</a>.
+      </div>
       <div class="pack-item"><div><strong>50 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Chispas, Rosas & Fuego</div></div><button onclick="buyCoinPack(50, 'R$ 5,00')">R$ 5,00</button></div>
       <div class="pack-item"><div><strong>250 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Rayos & Corona Imperial</div></div><button onclick="buyCoinPack(250, 'R$ 25,00')">R$ 25,00</button></div>
       <div class="pack-item"><div><strong>1.000 🪙</strong><div style="font-size:11.5px;color:#9ca3af;">Superdeportivo & Nave VIP</div></div><button onclick="buyCoinPack(1000, 'R$ 100,00')">R$ 100,00</button></div>
@@ -1575,12 +1599,24 @@
       return fp;
     }
 
+    let adminToolsUnlocked = false;
+    window.toggleAdminToolsVisibility = () => {
+      const isAdmin = getActiveUserId() === OWNER_USER_ID;
+      if (!isAdmin) return;
+      adminToolsUnlocked = !adminToolsUnlocked;
+      refreshAdminAndReferralUI();
+      toast(adminToolsUnlocked ? '🛡️ Herramientas de administración visibles' : '🔒 Herramientas de administración ocultas');
+    };
+
     function refreshAdminAndReferralUI() {
       const isAdmin = getActiveUserId() === OWNER_USER_ID;
+      const showAdmin = isAdmin && adminToolsUnlocked;
       const adminBtn = document.getElementById('admin-split-btn');
       const adminMonetagBox = document.getElementById('admin-monetag-box');
-      if (adminBtn) adminBtn.classList.toggle('hidden', !isAdmin);
-      if (adminMonetagBox) adminMonetagBox.classList.toggle('hidden', !isAdmin);
+      const adminPinToggle = document.getElementById('sv-admin-lock-btn');
+      if (adminPinToggle) adminPinToggle.classList.toggle('hidden', !isAdmin);
+      if (adminBtn) adminBtn.classList.toggle('hidden', !showAdmin);
+      if (adminMonetagBox) adminMonetagBox.classList.toggle('hidden', !showAdmin);
 
       const codeEl = document.getElementById('my-ref-code');
       if (codeEl) codeEl.textContent = getMyReferralCode();
@@ -2414,18 +2450,21 @@
     window.sendVirtualGift = async (giftName, coinCost, brlValue, tier = 'basic', tierLabel = 'REGALO EN VIVO') => {
       if (!activeLiveRoom) return;
       const currentCoins = getCoinsBalance();
+      const paidCoins = Number(localStorage.getItem('sv_paid_coins') || '0');
       if (currentCoins < coinCost) {
         toast('🪙 Necesitas ' + coinCost + ' monedas para enviar ' + giftName);
         return openRechargeModal();
       }
+      const isPromoCoins = paidCoins < coinCost;
+      if (!isPromoCoins) {
+        localStorage.setItem('sv_paid_coins', String(Math.max(0, paidCoins - coinCost)));
+      }
       setCoinsBalance(currentCoins - coinCost);
 
       const creatorPct = getCreatorSplitPct();
-      const appPct = 100 - creatorPct;
-      const creatorShare = +(brlValue * (creatorPct / 100)).toFixed(2);
-      const appShare = +(brlValue * (appPct / 100)).toFixed(2);
+      const creatorShare = isPromoCoins ? 0 : +(brlValue * (creatorPct / 100)).toFixed(2);
 
-      if (activeLiveRoom.uid === getActiveUserId() || (currentUser && activeLiveRoom.uid === currentUser.uid)) {
+      if (!isPromoCoins && (activeLiveRoom.uid === getActiveUserId() || (currentUser && activeLiveRoom.uid === currentUser.uid))) {
         addCreatorEarnings(creatorShare);
       }
 
@@ -2436,7 +2475,8 @@
           senderUserId: getActiveUserId(),
           creatorUserId: activeLiveRoom.uid || 'guest',
           coinCost,
-          creatorShare
+          creatorShare,
+          isPromoCoins
         })
       }).catch(() => {});
 
@@ -2528,6 +2568,14 @@
       renderFeed();
     };
 
+    let activeTopicFilter = 'all';
+    window.setTopicFilter = (topic, btnEl) => {
+      activeTopicFilter = topic || 'all';
+      document.querySelectorAll('#topic-chips-bar .pill-btn').forEach((b) => b.classList.remove('gold'));
+      if (btnEl) btnEl.classList.add('gold');
+      renderFeed();
+    };
+
     function getFilteredVideos() {
       const blocked = getBlockedSet();
       let list = allVideosCache.filter((v) => !blocked.has(v.uid || '') && !blocked.has(v.user || ''));
@@ -2537,6 +2585,16 @@
         list = list.filter((v) => following.has(v.uid || v.user));
       } else if (feedMode === 'trending') {
         list.sort((a, b) => ((b.likes || 0) * 2 + (b.commentsCount || 0) * 3) - ((a.likes || 0) * 2 + (a.commentsCount || 0) * 3));
+      }
+
+      if (activeTopicFilter === 'gaming') {
+        list = list.filter((v) => /gam(e|ing)|gameplay|arena|free\s?fire|cod|valorant|stream|jugador/i.test(`${v.category || ''} ${v.caption || ''}`));
+      } else if (activeTopicFilter === 'monetizable') {
+        list = list.filter((v) => Number(v.durationSec || 0) >= 45);
+      } else if (activeTopicFilter === 'series') {
+        list = list.filter((v) => /serie|episodio|cap[ií]tulo|historia/i.test(`${v.category || ''} ${v.caption || ''}`));
+      } else if (activeTopicFilter === 'musica') {
+        list = list.filter((v) => /m[uú]sica|rap|beat|canci[oó]n|freestyle/i.test(`${v.category || ''} ${v.caption || ''}`));
       }
 
       if (searchQuery) {
@@ -2761,14 +2819,45 @@
           const adSlide = document.createElement('div');
           adSlide.className = 'slide ad-slide';
           const currentAdUrl = activeMonetagUrl || MONETAG_DIRECT_LINK;
+          const adSpotId = 'adspot-' + idx + '-' + Math.random().toString(36).slice(2, 6);
           adSlide.innerHTML = `
-            <div style="position:relative;width:100%;height:100%;background:#000;display:flex;flex-direction:column;">
-              <div style="position:absolute;top:58px;left:14px;z-index:5;background:rgba(0,0,0,0.75);border:1px solid #facc15;color:#fef08a;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;">📢 PATROCINADO • DESLIZA PARA CONTINUAR</div>
-              <iframe src="${currentAdUrl}" style="width:100%;height:100%;border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-              <a href="${currentAdUrl}" target="_blank" rel="noopener sponsored" class="ad-cta" style="position:absolute;bottom:78px;left:16px;right:16px;text-align:center;z-index:5;">↗️ Ver Anuncio Completo</a>
+            <div style="position:relative;width:100%;height:100%;background:radial-gradient(circle at 50% 32%,#231b08 0%,#06070b 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+              <div style="position:absolute;top:62px;left:14px;right:14px;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span style="background:rgba(0,0,0,0.78);border:1px solid rgba(250,204,21,0.6);color:#fef08a;font-size:10.5px;font-weight:800;padding:5px 10px;border-radius:999px;">
+                  📢 ANUNCIO • <span id="cd-${adSpotId}">5s</span>
+                </span>
+                <button type="button" onclick="skipFeedAdSlide(this)" style="background:linear-gradient(135deg,#facc15,#d97706);color:#000;border:none;border-radius:999px;padding:6px 13px;font-size:11.5px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.6);">
+                  Saltar ✕
+                </button>
+              </div>
+              <div style="width:80px;height:80px;border-radius:24px;background:rgba(250,204,21,0.14);border:1.5px solid rgba(250,204,21,0.5);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:14px;box-shadow:0 0 30px rgba(250,204,21,0.22);animation:pulse 1.8s infinite;">🚀</div>
+              <h3 style="font-size:20px;font-weight:900;color:#fef08a;margin-bottom:8px;">Impulsa tu Canal y Gana en StarVibe</h3>
+              <p style="font-size:13px;color:#d1d5db;max-width:305px;line-height:1.5;margin-bottom:16px;">
+                Anuncio activo con contador automático y salto inmediato. Explora la oferta destacada o desliza hacia arriba.
+              </p>
+              <div style="width:220px;height:5px;background:rgba(255,255,255,0.14);border-radius:999px;overflow:hidden;margin-bottom:16px;">
+                <div id="bar-${adSpotId}" style="width:100%;height:100%;background:linear-gradient(90deg,#facc15,#f59e0b);transition:width 1s linear;"></div>
+              </div>
+              <a href="${currentAdUrl}" target="_blank" rel="noopener sponsored" class="ad-cta" style="max-width:260px;padding:12px 18px;border-radius:999px;font-weight:900;text-decoration:none;">
+                ↗️ Ver Anuncio / Oferta
+              </a>
             </div>
           `;
           feedEl.appendChild(adSlide);
+          (function startAdSpotCountdown(spotKey, slideEl) {
+            let rem = 5;
+            const iv = setInterval(() => {
+              rem -= 1;
+              const cdEl = document.getElementById('cd-' + spotKey);
+              const barEl = document.getElementById('bar-' + spotKey);
+              if (cdEl) cdEl.textContent = Math.max(0, rem) + 's';
+              if (barEl) barEl.style.width = Math.max(0, (rem / 5) * 100) + '%';
+              if (rem <= 0) {
+                clearInterval(iv);
+                if (cdEl && cdEl.parentElement) cdEl.parentElement.innerHTML = '✅ Listo • Desliza ⬆️';
+              }
+            }, 1000);
+          })(adSpotId, adSlide);
         }
       });
 
@@ -2854,6 +2943,16 @@
       updateProfileHeader();
       renderProfileGrid();
       toast('LGPD OK');
+    };
+
+    window.skipFeedAdSlide = (btnEl) => {
+      const sl = btnEl ? btnEl.closest('.slide') : null;
+      const nextSl = sl && sl.nextElementSibling;
+      if (nextSl) {
+        nextSl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (feedEl) {
+        feedEl.scrollBy({ top: feedEl.clientHeight || 600, behavior: 'smooth' });
+      }
     };
 
     function setupAutoPlay() {
@@ -3180,9 +3279,13 @@
     document.getElementById('live-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('live-title-input').value.trim();
-      const streamUrl = document.getElementById('live-url-input').value.trim();
+      let streamUrl = document.getElementById('live-url-input').value.trim();
       const offerUrl = document.getElementById('live-offer-url-input').value.trim();
       if (!/^https:\/\//i.test(streamUrl)) return toast('Ingresa una URL válida con https://');
+      const ytMatch = streamUrl.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+      if (ytMatch && ytMatch[1]) {
+        streamUrl = 'https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1';
+      }
       const f = getFormalData() || {};
       const stableCreatorId = getActiveUserId();
       try {
@@ -3737,17 +3840,35 @@
 
         const canvasStream = canvas.captureStream(30);
         let combinedStream = canvasStream;
+        let audioCtx = null;
         try {
           vid.muted = false;
           const vStream = vid.captureStream ? vid.captureStream() : (vid.mozCaptureStream ? vid.mozCaptureStream() : null);
           if (vStream && vStream.getAudioTracks().length > 0) {
             combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...vStream.getAudioTracks()]);
+          } else {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+              audioCtx = new AudioContextClass();
+              const srcNode = audioCtx.createMediaElementSource(vid);
+              const destNode = audioCtx.createMediaStreamDestination();
+              srcNode.connect(destNode);
+              srcNode.connect(audioCtx.destination);
+              if (destNode.stream.getAudioTracks().length > 0) {
+                combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...destNode.stream.getAudioTracks()]);
+              }
+            }
           }
         } catch (e) {}
 
-        const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
-          ? 'video/webm;codecs=vp8,opus'
-          : (MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '');
+        const mimeCandidates = [
+          'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+          'video/mp4',
+          'video/webm;codecs=vp9,opus',
+          'video/webm;codecs=vp8,opus',
+          'video/webm'
+        ];
+        const mime = mimeCandidates.find((m) => MediaRecorder.isTypeSupported(m)) || '';
         const recorder = mime
           ? new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 1500000 })
           : new MediaRecorder(combinedStream);
@@ -3797,6 +3918,7 @@
       } finally {
         editorRendering = false;
         vid.muted = true;
+        try { if (audioCtx && audioCtx.state !== 'closed') audioCtx.close(); } catch (e) {}
         if (btn) btn.disabled = false;
         if (pWrap) pWrap.classList.add('hidden');
       }
@@ -3966,7 +4088,14 @@
 
     window.openEntryPromoNow = () => {
       localStorage.removeItem('sv_last_entry_promo');
-      initEntryPromo();
+      // Arranque limpio directo al feed de StarVibe (sin iframe invasivo ni pantallas técnicas al abrir)
+    setTimeout(() => {
+      const sp = document.getElementById('sv-brand-splash');
+      if (sp) {
+        sp.style.opacity = '0';
+        setTimeout(() => sp.remove(), 350);
+      }
+    }, 850);
     };
 
     function initEntryPromo() {
@@ -4043,6 +4172,10 @@
         history.pushState({ svView: 'home' }, '', '');
       }
     } catch (e) {}
+
+    fetch('/health', { cache: 'no-store' }).catch(() => {});
+    window.addEventListener('online', () => toast('✅ Conexión restablecida en StarVibe'));
+    window.addEventListener('offline', () => toast('⚠️ Sin conexión a internet: revisando caché local'));
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});

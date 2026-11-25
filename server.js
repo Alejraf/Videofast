@@ -9,8 +9,15 @@ const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.disable('x-powered-by');
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '256kb' }));
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 // Servir archivos estáticos desde /public o desde la raíz
 const publicDir = path.join(__dirname, 'public');
@@ -155,13 +162,16 @@ async function creditCoinsOnce({ paymentId, userId, coins, amountBRL }) {
   return { credited: true, newBalance: current.coins };
 }
 
-// 3. Diagnóstico
+// 3. Diagnóstico y Keep-Alive para Render
+app.get('/health', (req, res) => {
+  res.status(200).json({ ok: true, service: 'StarVibe', status: 'awake' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
-    mpConfigured: Boolean(mpClient),
-    firebaseConfigured: Boolean(db),
-    publicAppUrl: publicAppUrl || null
+    service: 'StarVibe',
+    status: 'online'
   });
 });
 
@@ -175,30 +185,30 @@ app.get('/api/wallet/:userId', async (req, res) => {
   }
 });
 
-// 4b. Regalos virtuales
+// 4b. Regalos virtuales (solo monedas compradas/reales generan saldo retirable al creador)
 app.post('/api/wallet/gift', async (req, res) => {
   try {
-    const { senderUserId = 'guest', creatorUserId = 'guest', coinCost = 0, creatorShare = 0 } = req.body || {};
+    const { senderUserId = 'guest', creatorUserId = 'guest', coinCost = 0, creatorShare = 0, isPromoCoins = false } = req.body || {};
     const cost = Number(coinCost || 0);
-    const share = Number(creatorShare || 0);
-    if (!db || cost <= 0) return res.json({ ok: true });
+    const effectiveCreatorShare = isPromoCoins ? 0 : Math.max(0, +(Number(creatorShare || 0)).toFixed(2));
+    if (!db || cost <= 0) return res.json({ ok: true, effectiveCreatorShare });
 
     const senderRef = db.collection('starvibe_users').doc(String(senderUserId));
     const creatorRef = db.collection('starvibe_users').doc(String(creatorUserId));
 
     await db.runTransaction(async (tx) => {
       const sDoc = await tx.get(senderRef);
-      const cur = sDoc.exists ? Number(sDoc.data()?.coins ?? 100) : 100;
+      const cur = sDoc.exists ? Number(sDoc.data()?.coins ?? 0) : 0;
       tx.set(senderRef, { coins: Math.max(0, cur - cost), updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
 
-      if (share > 0) {
+      if (effectiveCreatorShare > 0) {
         const cDoc = await tx.get(creatorRef);
         const curEarn = cDoc.exists ? Number(cDoc.data()?.creatorEarnings ?? 0) : 0;
-        tx.set(creatorRef, { creatorEarnings: +(curEarn + share).toFixed(2), updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        tx.set(creatorRef, { creatorEarnings: +(curEarn + effectiveCreatorShare).toFixed(2), updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
       }
     });
 
-    res.json({ ok: true });
+    res.json({ ok: true, effectiveCreatorShare });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
@@ -739,10 +749,28 @@ app.get('/account-deletion', (req, res) => {
   res.type('text/html').send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Eliminación de Cuenta - StarVibe</title><style>body{font-family:system-ui,sans-serif;background:#090b10;color:#e5e7eb;max-width:760px;margin:0 auto;padding:24px;line-height:1.6}h1{color:#facc15}a{color:#60a5fa}</style></head><body><h1>Solicitud de Eliminación de Cuenta y Datos — StarVibe</h1><p>Para eliminar permanentemente tu perfil, videos y datos asociados en StarVibe:</p><ol><li>Abre la app StarVibe y entra en <strong>Perfil</strong>.</li><li>Baja hasta el pie de página y pulsa <strong>Eliminar mi cuenta y mis datos (LGPD)</strong>.</li><li>También puedes solicitar la baja escribiendo desde tu correo registrado a <strong>suporte@starvibeapp.sbs</strong>.</li></ol><p><a href="/">← Volver a StarVibe</a></p></body></html>`);
 });
 
+// Verificación Digital Asset Links para Android TWA / Google Play (elimina barra superior del navegador)
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  const pkg = process.env.ANDROID_PACKAGE_NAME || 'sbs.cashplayapp.starvibe';
+  const sha = process.env.ANDROID_SHA256_FINGERPRINT || '';
+  const list = sha
+    ? [{
+        relation: ['delegate_permission/common.handle_all_urls'],
+        target: {
+          namespace: 'android_app',
+          package_name: pkg,
+          sha256_cert_fingerprints: sha.split(',').map((s) => s.trim()).filter(Boolean)
+        }
+      }]
+    : [];
+  res.setHeader('Content-Type', 'application/json');
+  res.status(200).send(JSON.stringify(list, null, 2));
+});
+
 // Rutas SEO para indexación en Google Search
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
-    'User-agent: *\nAllow: /\nSitemap: https://videofast-light.onrender.com/sitemap.xml\n'
+    'User-agent: *\nAllow: /\nSitemap: https://starvibe.cashplayapp.sbs/sitemap.xml\n'
   );
 });
 
@@ -750,7 +778,7 @@ app.get('/sitemap.xml', (req, res) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://videofast-light.onrender.com/</loc>
+    <loc>https://starvibe.cashplayapp.sbs/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -769,4 +797,12 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor StarVibe activo en puerto ${PORT}`);
+  const keepUrl = process.env.PUBLIC_APP_URL
+    ? `${process.env.PUBLIC_APP_URL.replace(/\/$/, '')}/health`
+    : (process.env.RENDER_EXTERNAL_URL ? `${process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '')}/health` : '');
+  if (keepUrl && /^https:\/\//i.test(keepUrl)) {
+    setInterval(() => {
+      fetch(keepUrl).catch(() => {});
+    }, 11 * 60 * 1000);
+  }
 });
