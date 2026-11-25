@@ -1,4 +1,4 @@
-const CACHE_NAME = 'starvibe-v13-1-syntaxfix';
+const CACHE_NAME = 'starvibe-v14-0-tiktok-white';
 
 self.addEventListener('install', () => self.skipWaiting());
 

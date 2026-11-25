@@ -624,6 +624,241 @@
       max-height: 34dvh !important;
     }
 
+  
+    /* === STARVIBE v14.0: CLEAN WHITE MANAGEMENT THEME + TIKTOK LIVE UI === */
+    .app.sv-light-mode {
+      background: #ffffff !important;
+      color: #111827 !important;
+    }
+    .app.sv-light-mode .header {
+      display: none !important;
+    }
+    .navbar.sv-navbar-light {
+      background: #ffffff !important;
+      border-top: 1px solid #e5e7eb !important;
+    }
+    .navbar.sv-navbar-light .nav-btn {
+      color: #6b7280 !important;
+    }
+    .navbar.sv-navbar-light .nav-btn.active {
+      color: #111827 !important;
+      font-weight: 800 !important;
+    }
+    .navbar.sv-navbar-light .add-btn {
+      background: #111827 !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18) !important;
+    }
+
+    /* Pure White Views (Profile, Inbox, Live List) */
+    #view-profile, #view-inbox, #view-live {
+      background: #ffffff !important;
+      color: #111827 !important;
+    }
+    #view-profile .profile-wrap,
+    #view-inbox .inbox-wrap,
+    #view-live .live-wrap {
+      padding-top: calc(12px + env(safe-area-inset-top)) !important;
+      padding-bottom: 86px !important;
+      background: #ffffff !important;
+      color: #111827 !important;
+    }
+
+    /* TikTok Clean White Profile */
+    .tk-prof-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 4px 12px; border-bottom: 1px solid #f3f4f6; margin-bottom: 14px;
+    }
+    .tk-prof-topbar-title {
+      font-size: 16px; font-weight: 800; color: #111827; display: flex; align-items: center; gap: 4px;
+    }
+    .tk-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e5e7eb;
+      background: #f9fafb; color: #111827; font-size: 16px; display: inline-flex;
+      align-items: center; justify-content: center; cursor: pointer; position: relative;
+    }
+    #view-profile .prof-card {
+      background: #ffffff !important; border: none !important; box-shadow: none !important;
+      padding: 4px 0 12px !important; text-align: center;
+    }
+    #view-profile .avatar {
+      width: 88px !important; height: 88px !important; font-size: 32px !important;
+      background: linear-gradient(135deg, #111827, #374151) !important;
+      color: #ffffff !important; border: 3px solid #f3f4f6 !important;
+      margin: 0 auto 8px !important; position: relative; overflow: visible !important;
+    }
+    .tk-avatar-plus {
+      position: absolute; bottom: -2px; right: -2px; width: 24px; height: 24px;
+      border-radius: 50%; background: #25f4ee; color: #111827; font-weight: 900;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      border: 2px solid #ffffff; cursor: pointer;
+    }
+    #view-profile #prof-title {
+      color: #111827 !important; font-size: 17px !important; font-weight: 800 !important;
+    }
+    #view-profile .stats-row {
+      display: flex !important; justify-content: center !important; gap: 24px !important;
+      margin: 12px 0 !important;
+    }
+    #view-profile .stat-box {
+      background: transparent !important; border: none !important; padding: 0 !important;
+    }
+    #view-profile .stat-box strong {
+      color: #111827 !important; font-size: 17px !important; font-weight: 800 !important; display: block;
+    }
+    #view-profile .stat-box span {
+      color: #6b7280 !important; font-size: 12px !important;
+    }
+    .tk-prof-actions {
+      display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 10px 0 8px;
+    }
+    .tk-btn-gray {
+      background: #f3f4f6; color: #111827; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 9px 15px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .tk-btn-primary {
+      background: #fe2c55; color: #ffffff; border: none;
+      border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    #view-profile .wallet-card,
+    #view-profile .lang-card,
+    #view-profile .brand-studio {
+      background: #f9fafb !important; border: 1px solid #e5e7eb !important;
+      color: #111827 !important; box-shadow: none !important;
+    }
+    #view-profile .wallet-card p,
+    #view-profile .brand-studio p,
+    #view-profile .legal-box {
+      color: #4b5563 !important;
+    }
+    #view-profile .wallet-card strong,
+    #view-profile .lang-card span,
+    #view-profile .brand-studio h4 {
+      color: #111827 !important;
+    }
+    #view-profile .wallet-box {
+      background: #ffffff !important; border: 1px solid #e5e7eb !important;
+    }
+    #view-profile .wallet-box strong {
+      color: #111827 !important;
+    }
+    #view-profile .wallet-box span {
+      color: #6b7280 !important;
+    }
+    #view-profile .split-pill {
+      background: #fee2e2 !important; color: #be123c !important; border: none !important;
+    }
+    #view-profile .pill-btn {
+      background: #ffffff !important; color: #111827 !important; border: 1px solid #d1d5db !important;
+    }
+    #view-profile .pill-btn.gold {
+      background: #111827 !important; color: #ffffff !important; border-color: #111827 !important;
+    }
+    #view-profile .prof-subtabs {
+      border-bottom: 1px solid #e5e7eb !important; background: #ffffff !important;
+    }
+    #view-profile .prof-subtab {
+      color: #6b7280 !important; background: transparent !important;
+    }
+    #view-profile .prof-subtab.active {
+      color: #111827 !important; border-bottom: 2px solid #111827 !important;
+    }
+    #view-profile .grid-item {
+      background: #f3f4f6 !important; border: 1px solid #e5e7eb !important; position: relative;
+    }
+    .tk-grid-badge {
+      position: absolute; top: 5px; left: 5px; background: #fe2c55; color: #fff;
+      font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 2;
+    }
+    .tk-grid-views {
+      position: absolute; bottom: 5px; left: 6px; color: #fff; font-size: 11px;
+      font-weight: 800; text-shadow: 0 1px 4px rgba(0,0,0,0.85); z-index: 2;
+    }
+
+    /* Clean White Inbox / Messages View */
+    .tk-inbox-stories {
+      display: flex; gap: 12px; overflow-x: auto; padding: 10px 2px 14px;
+      border-bottom: 1px solid #f3f4f6; scrollbar-width: none;
+    }
+    .tk-story-item {
+      flex: 0 0 auto; text-align: center; width: 64px; cursor: pointer;
+    }
+    .tk-story-ring {
+      width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 4px;
+      padding: 2px; background: linear-gradient(135deg, #fe2c55, #25f4ee);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tk-story-inner {
+      width: 100%; height: 100%; border-radius: 50%; background: #111827; color: #fff;
+      font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center;
+      border: 2px solid #ffffff;
+    }
+    .tk-inbox-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 12px 4px; border-bottom: 1px solid #f3f4f6;
+    }
+    .tk-inbox-icon {
+      width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+
+    /* Clean White Live Rooms List View */
+    #view-live .live-banner {
+      background: #f9fafb !important; border: 1px solid #e5e7eb !important; color: #111827 !important;
+    }
+    #view-live .live-banner h3 { color: #111827 !important; }
+    #view-live .live-banner p { color: #4b5563 !important; }
+    #view-live .live-card {
+      background: #ffffff !important; border: 1px solid #e5e7eb !important; color: #111827 !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    }
+    #view-live .live-card h4 { color: #111827 !important; }
+
+    /* Clean White Modals (Edit Profile, Activity Center, Settings Drawer) */
+    .modal.sv-white-modal {
+      background: #ffffff !important;
+      color: #111827 !important;
+    }
+    .modal.sv-white-modal .modal-header {
+      border-bottom: 1px solid #e5e7eb !important;
+    }
+    .modal.sv-white-modal .modal-title {
+      color: #111827 !important;
+    }
+    .modal.sv-white-modal .close-btn {
+      background: #f3f4f6 !important; color: #111827 !important;
+    }
+    .modal.sv-white-modal .text-input {
+      background: #f9fafb !important; color: #111827 !important; border: 1px solid #d1d5db !important;
+    }
+
+    /* TikTok Live Slide-up Gift Drawer & Clean Bottom Bar */
+    .sv-gift-drawer {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+      background: rgba(17, 20, 28, 0.97); backdrop-filter: blur(12px);
+      border-top-left-radius: 18px; border-top-right-radius: 18px;
+      border-top: 1px solid rgba(255,255,255,0.14);
+      padding: 12px 12px calc(14px + env(safe-area-inset-bottom));
+      transform: translateY(105%); transition: transform 0.25s ease;
+    }
+    .sv-gift-drawer.open {
+      transform: translateY(0);
+    }
+    .sv-gift-grid-modal {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 220px; overflow-y: auto;
+    }
+    .sv-live-bottom-controls {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(5, 5, 7, 0.88);
+    }
+    .sv-live-circle-btn {
+      width: 38px; height: 38px; border-radius: 50%; border: none;
+      background: rgba(255, 255, 255, 0.14); color: #ffffff;
+      font-size: 17px; display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+
   </style>
 </head>
 <body>
@@ -839,99 +1074,188 @@
       <div class="sv-live-side-panel" style="display:flex;flex-direction:column;flex:0 0 auto;max-height:46dvh;">
       <div id="live-chat-messages" class="live-chat-area" style="flex:1;min-height:64px;max-height:130px;overflow-y:auto;"></div>
 
-      <div id="sv-live-gift-bar" class="live-gift-bar">
-        <button class="gift-chip" onclick="sendVirtualGift('✨ Chispa', 10, 1.00, 'basic', 'REGALO BÁSICO')">
-          <div class="g-icon">✨</div><div class="g-name">Chispa</div><strong>10 🪙</strong><span>R$ 1,00</span>
-        </button>
-        <button class="gift-chip" onclick="sendVirtualGift('🌹 Rosa', 25, 2.50, 'basic', 'DETALLE ESPECIAL')">
-          <div class="g-icon">🌹</div><div class="g-name">Rosa</div><strong>25 🪙</strong><span>R$ 2,50</span>
-        </button>
-        <button class="gift-chip chip-rare" onclick="sendVirtualGift('🔥 Fuego', 50, 5.00, 'rare', 'REGALO RARO')">
-          <div class="g-icon">🔥</div><div class="g-name">Fuego</div><strong>50 🪙</strong><span>R$ 5,00</span>
-        </button>
-        <button class="gift-chip chip-rare" onclick="sendVirtualGift('⚡ Rayo Dorado', 100, 10.00, 'rare', 'IMPULSO RARO')">
-          <div class="g-icon">⚡</div><div class="g-name">Rayo</div><strong>100 🪙</strong><span>R$ 10,00</span>
-        </button>
-        <button class="gift-chip chip-epic" onclick="sendVirtualGift('👑 Corona Imperial', 250, 25.00, 'epic', 'REGALO ÉPICO')">
-          <div class="g-icon">👑</div><div class="g-name">Corona</div><strong>250 🪙</strong><span>R$ 25,00</span>
-        </button>
-        <button class="gift-chip chip-epic" onclick="sendVirtualGift('🏎️ Superdeportivo', 500, 50.00, 'epic', 'ENTRADA ÉPICA')">
-          <div class="g-icon">🏎️</div><div class="g-name">Deportivo</div><strong>500 🪙</strong><span>R$ 50,00</span>
-        </button>
-        <button class="gift-chip chip-legendary" onclick="sendVirtualGift('🚀 Nave Estelar', 1000, 100.00, 'legendary', 'LEGENDARIO VIP')">
-          <div class="g-icon">🚀</div><div class="g-name">Nave VIP</div><strong>1.000 🪙</strong><span>R$ 100</span>
-        </button>
-        <button class="gift-chip chip-legendary" onclick="sendVirtualGift('💎 Diamante Real', 2500, 250.00, 'legendary', 'JOYA LEGENDARIA')">
-          <div class="g-icon">💎</div><div class="g-name">Diamante</div><strong>2.500 🪙</strong><span>R$ 250</span>
-        </button>
-        <button class="gift-chip chip-mythic" onclick="sendVirtualGift('🦁 León de Oro', 5000, 500.00, 'mythic', 'MÍTICO SUPREMO')">
-          <div class="g-icon">🦁</div><div class="g-name">León Oro</div><strong>5.000 🪙</strong><span>R$ 500</span>
-        </button>
-        <button class="gift-chip chip-mythic" onclick="sendVirtualGift('🏰 Castillo StarVibe', 10000, 1000.00, 'mythic', 'MÁXIMO PRESTIGIO')">
-          <div class="g-icon">🏰</div><div class="g-name">Castillo</div><strong>10.000 🪙</strong><span>R$ 1.000</span>
-        </button>
-      </div>
+            <div class="sv-live-bottom-controls">
+        <form id="live-chat-form" class="live-chat-form" style="flex:1;display:flex;align-items:center;gap:6px;padding:0;background:transparent;border:none;">
+          <input id="live-chat-input" type="text" maxlength="120" data-i18n-ph="live_chat_ph" placeholder="Añadir comentario..." required style="flex:1;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.18);border-radius:999px;padding:8px 14px;color:#fff;font-size:12.5px;" />
+          <button type="submit" style="background:#fe2c55;color:#fff;border:none;border-radius:999px;padding:8px 13px;font-weight:800;font-size:12px;cursor:pointer;" data-i18n="send_btn">Enviar</button>
+        </form>
 
-      <form id="live-chat-form" class="live-chat-form" style="display:flex;gap:6px;align-items:center;padding:6px 10px calc(8px + env(safe-area-inset-bottom));">
-        <input id="live-chat-input" type="text" maxlength="120" data-i18n-ph="live_chat_ph" placeholder="Escribe en el chat en vivo..." required style="flex:1;" />
-        <span id="sv-host-hearts-badge" class="hidden" style="background:rgba(244,63,94,0.18);border:1px solid rgba(244,63,94,0.5);color:#fda4af;border-radius:999px;padding:7px 11px;font-weight:900;font-size:12.5px;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
+        <!-- Spectator Gift Trigger Button (Hidden for Broadcaster) -->
+        <button type="button" id="sv-open-gift-drawer-btn" class="sv-live-circle-btn" onclick="toggleLiveGiftDrawer(true)" title="Enviar Regalo" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+          🎁
+        </button>
+
+        <!-- Share Live Button -->
+        <button type="button" class="sv-live-circle-btn" onclick="shareActiveLiveRoom()" title="Compartir LIVE">
+          ↗️
+        </button>
+
+        <!-- Broadcaster Read-Only Hearts Counter -->
+        <span id="sv-host-hearts-badge" class="hidden" style="background:rgba(254,44,85,0.2);border:1px solid rgba(254,44,85,0.55);color:#fda4af;border-radius:999px;padding:7px 11px;font-weight:900;font-size:12px;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
           ❤️ <span id="sv-host-likes-count">0</span>
         </span>
-        <button type="button" id="sv-live-heart-btn" onclick="sendLiveHeartTap()" aria-label="Dar Me Gusta" style="background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;border:none;border-radius:999px;padding:8px 12px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;box-shadow:0 2px 10px rgba(244,63,94,0.45);flex-shrink:0;">
+
+        <!-- Spectator Tap-to-Like Heart Button -->
+        <button type="button" id="sv-live-heart-btn" onclick="sendLiveHeartTap()" aria-label="Dar Me Gusta" style="background:#fe2c55;color:#fff;border:none;border-radius:999px;padding:8px 12px;font-weight:900;font-size:12.5px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;box-shadow:0 2px 10px rgba(254,44,85,0.45);flex-shrink:0;">
           ❤️ <span id="sv-live-likes-count">0</span>
         </button>
-        <button type="submit" data-i18n="send_btn">Enviar</button>
-      </form>
+      </div>
+      </div>
+
+      <!-- Slide-up Gift Drawer (Spectators only) -->
+      <div id="sv-gift-drawer" class="sv-gift-drawer">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <strong style="font-size:13.5px;color:#fff;">🎁 Enviar Regalo en Vivo</strong>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" class="pill-btn gold" style="padding:4px 10px;font-size:11px;" onclick="toggleLiveGiftDrawer(false); openRechargeModal();">🪙 Recargar</button>
+            <button type="button" class="close-btn" style="width:26px;height:26px;font-size:13px;" onclick="toggleLiveGiftDrawer(false)">✕</button>
+          </div>
+        </div>
+        <div id="sv-live-gift-bar" class="sv-gift-grid-modal">
+          <button class="gift-chip" onclick="sendVirtualGift('✨ Chispa', 10, 1.00, 'basic', 'REGALO BÁSICO'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">✨</div><div class="g-name">Chispa</div><strong>10 🪙</strong>
+          </button>
+          <button class="gift-chip" onclick="sendVirtualGift('🌹 Rosa', 25, 2.50, 'basic', 'DETALLE ESPECIAL'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">🌹</div><div class="g-name">Rosa</div><strong>25 🪙</strong>
+          </button>
+          <button class="gift-chip chip-rare" onclick="sendVirtualGift('🔥 Fuego', 50, 5.00, 'rare', 'REGALO RARO'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">🔥</div><div class="g-name">Fuego</div><strong>50 🪙</strong>
+          </button>
+          <button class="gift-chip chip-rare" onclick="sendVirtualGift('⚡ Rayo', 100, 10.00, 'rare', 'IMPULSO RARO'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">⚡</div><div class="g-name">Rayo</div><strong>100 🪙</strong>
+          </button>
+          <button class="gift-chip chip-epic" onclick="sendVirtualGift('👑 Corona', 250, 25.00, 'epic', 'REGALO ÉPICO'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">👑</div><div class="g-name">Corona</div><strong>250 🪙</strong>
+          </button>
+          <button class="gift-chip chip-epic" onclick="sendVirtualGift('🏎️ Deportivo', 500, 50.00, 'epic', 'ENTRADA ÉPICA'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">🏎️</div><div class="g-name">Deportivo</div><strong>500 🪙</strong>
+          </button>
+          <button class="gift-chip chip-legendary" onclick="sendVirtualGift('🚀 Nave VIP', 1000, 100.00, 'legendary', 'LEGENDARIO VIP'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">🚀</div><div class="g-name">Nave VIP</div><strong>1.000 🪙</strong>
+          </button>
+          <button class="gift-chip chip-legendary" onclick="sendVirtualGift('💎 Diamante', 2500, 250.00, 'legendary', 'JOYA LEGENDARIA'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">💎</div><div class="g-name">Diamante</div><strong>2.500 🪙</strong>
+          </button>
+          <button class="gift-chip chip-mythic" onclick="sendVirtualGift('🦁 León Oro', 5000, 500.00, 'mythic', 'MÍTICO SUPREMO'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">🦁</div><div class="g-name">León Oro</div><strong>5.000 🪙</strong>
+          </button>
+          <button class="gift-chip chip-mythic" onclick="sendVirtualGift('🏰 Castillo', 10000, 1000.00, 'mythic', 'MÁXIMO PRESTIGIO'); toggleLiveGiftDrawer(false);">
+            <div class="g-icon">🏰</div><div class="g-name">Castillo</div><strong>10.000 🪙</strong>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- VISTA 3: PERFIL, IDIOMAS, WALLET Y STUDIO -->
+    <!-- VISTA 3: MENSAJES / BANDEJA DE ENTRADA (FONDO BLANCO LIMPIO) -->
+    <div id="view-inbox" class="view">
+      <div class="inbox-wrap" style="padding:14px 14px 86px;max-width:520px;margin:0 auto;">
+        <div class="tk-prof-topbar">
+          <button type="button" class="tk-icon-btn" onclick="switchTab('feed')" title="Inicio">←</button>
+          <div class="tk-prof-topbar-title">Mensajes y Actividad</div>
+          <button type="button" class="tk-icon-btn" onclick="openNotificationsDrawer()" title="Alertas">🔔</button>
+        </div>
+
+        <!-- Creadores en vivo ahora (Burbuja estilo Historias / LIVE) -->
+        <div style="font-size:12px;font-weight:800;color:#6b7280;margin-bottom:4px;">EN VIVO AHORA</div>
+        <div id="tk-inbox-live-stories" class="tk-inbox-stories">
+          <div class="tk-story-item" onclick="switchToLiveTab()">
+            <div class="tk-story-ring"><div class="tk-story-inner">📡</div></div>
+            <div style="font-size:11px;font-weight:700;color:#111827;">Ver Lives</div>
+          </div>
+        </div>
+
+        <!-- Categorías de Actividad estilo TikTok -->
+        <div class="tk-inbox-row" onclick="openActivityCenterModal('followers')" style="cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="tk-inbox-icon" style="background:#e0f2fe;color:#0284c7;">👥</div>
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#111827;">Nuevos seguidores</div>
+              <div id="inbox-followers-sub" style="font-size:12px;color:#6b7280;">Personas que siguen tu perfil</div>
+            </div>
+          </div>
+          <span style="color:#9ca3af;font-weight:800;">›</span>
+        </div>
+
+        <div class="tk-inbox-row" onclick="openActivityCenterModal('likes')" style="cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="tk-inbox-icon" style="background:#ffe4e6;color:#e11d48;">❤️</div>
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#111827;">Actividad</div>
+              <div id="inbox-likes-sub" style="font-size:12px;color:#6b7280;">Me gusta, comentarios y menciones</div>
+            </div>
+          </div>
+          <span style="color:#9ca3af;font-weight:800;">›</span>
+        </div>
+
+        <div class="tk-inbox-row" onclick="openNotificationsDrawer()" style="cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="tk-inbox-icon" style="background:#fef3c7;color:#d97706;">🔔</div>
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#111827;">Notificaciones del sistema</div>
+              <div id="inbox-system-sub" style="font-size:12px;color:#6b7280;">Avisos de LIVE de creadores que sigues</div>
+            </div>
+          </div>
+          <span style="color:#9ca3af;font-weight:800;">›</span>
+        </div>
+
+        <div style="margin-top:16px;font-size:12px;font-weight:800;color:#6b7280;margin-bottom:6px;">ACTIVIDAD RECIENTE</div>
+        <div id="tk-inbox-feed-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- VISTA 4: PERFIL BLANCO LIMPIO ESTILO TIKTOK -->
     <div id="view-profile" class="view">
       <div class="profile-wrap">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <button type="button" class="pill-btn" style="padding:7px 12px;font-size:12px;" onclick="switchTab('feed')">← Volver al Inicio</button>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:11px;color:#9ca3af;">Mi Perfil</span>
-            <button type="button" id="sv-admin-lock-btn" class="pill-btn hidden" onclick="toggleAdminToolsVisibility()" style="padding:4px 8px;font-size:11px;" title="Gestión interna">⚙️</button>
+        <div class="tk-prof-topbar">
+          <button type="button" class="tk-icon-btn" onclick="switchTab('feed')" title="Volver al Inicio">←</button>
+          <div class="tk-prof-topbar-title">
+            <span id="tk-top-display-name">Perfil StarVibe</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" id="sv-admin-lock-btn" class="tk-icon-btn hidden" onclick="toggleAdminToolsVisibility()" title="Gestión interna">🛡️</button>
+            <button type="button" class="tk-icon-btn" onclick="shareMyProfileLink()" title="Compartir perfil">↗️</button>
+            <button type="button" class="tk-icon-btn" onclick="openSettingsDrawer()" title="Ajustes y privacidad">☰</button>
           </div>
         </div>
+
         <div class="prof-card">
-          <div class="avatar" id="prof-avatar">S</div>
+          <div class="avatar" id="prof-avatar" onclick="triggerAvatarUpload()" style="cursor:pointer;">
+            <span id="prof-avatar-letter">S</span>
+            <img id="prof-avatar-img" src="" alt="Avatar" class="hidden" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+            <span class="tk-avatar-plus">+</span>
+          </div>
+          <input id="avatar-file-input" type="file" accept="image/*" class="hidden" onchange="handleAvatarSelected(event)" />
+
           <h3 id="prof-title">@Creador</h3>
-          <p style="font-size:12px;color:#9ca3af;margin-top:4px;" data-i18n="prof_subtitle">Creador en StarVibe</p>
+          <p id="prof-bio-display" style="font-size:12.5px;color:#4b5563;margin-top:4px;max-width:300px;margin-left:auto;margin-right:auto;" data-i18n="prof_subtitle">Creador en StarVibe</p>
+
           <div class="stats-row">
+            <div class="stat-box"><strong id="stat-following">0</strong><span data-i18n="stat_following">Siguiendo</span></div>
             <div class="stat-box"><strong id="stat-videos">0</strong><span data-i18n="stat_videos">Videos</span></div>
             <div class="stat-box"><strong id="stat-likes">0</strong><span data-i18n="stat_likes">Me gusta</span></div>
-            <div class="stat-box"><strong id="stat-following">0</strong><span data-i18n="stat_following">Siguiendo</span></div>
           </div>
-          <div class="name-row">
-            <input id="username-input" type="text" maxlength="20" data-i18n-ph="username_ph" placeholder="Tu nombre de usuario..." />
-            <button onclick="saveUsername()" data-i18n="save_btn">Guardar</button>
+
+          <div class="tk-prof-actions">
+            <button type="button" class="tk-btn-gray" onclick="openEditProfileModal()">Editar perfil</button>
+            <button type="button" class="tk-btn-gray" onclick="shareMyProfileLink()">Compartir perfil</button>
+            <button type="button" id="formalize-btn" class="tk-btn-primary" onclick="openFormalizeModal()">🪪 Formalizar (+18 / PIX)</button>
           </div>
-          <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-            <button id="formalize-btn" class="pill-btn gold" onclick="openFormalizeModal()">🪪 Formalizar Cuenta</button>
-            <button class="pill-btn" onclick="openCreatorRulesModal()">📜 Reglas de Creador</button>
+
+          <div class="name-row" style="max-width:340px;margin:8px auto 0;">
+            <input id="username-input" type="text" maxlength="20" data-i18n-ph="username_ph" placeholder="Tu nombre de usuario..." style="background:#f9fafb;color:#111827;border:1px solid #d1d5db;" />
+            <button onclick="saveUsername()" style="background:#111827;color:#fff;" data-i18n="save_btn">Guardar</button>
           </div>
-          <div id="formal-status-badge" style="margin-top:8px;font-size:11px;color:#9ca3af;">Estado: Cuenta básica (pendiente de formalización)</div>
+
+          <div id="formal-status-badge" style="margin-top:8px;font-size:11.5px;color:#6b7280;">Estado: Cuenta básica (pendiente de formalización)</div>
         </div>
 
-        <!-- Selector de Idioma Rápido -->
-        <div class="lang-card">
-          <span style="font-size:13px;font-weight:800;color:#fff;" data-i18n="lang_title">🌐 Idioma de la App</span>
-          <div class="lang-btns">
-            <button id="lchip-pt" class="lang-chip" onclick="setLanguage('pt')">🇧🇷 Português</button>
-            <button id="lchip-es" class="lang-chip" onclick="setLanguage('es')">🇪🇸 Español</button>
-            <button id="lchip-en" class="lang-chip" onclick="setLanguage('en')">🇺🇸 English</button>
-          </div>
-        </div>
-
-        <!-- Billetera & Reparto 60% / 40% -->
+        <!-- Wallet limpia estilo TikTok -->
         <div class="wallet-card">
           <div class="wallet-header">
-            <strong style="font-size:14px;color:#6ee7b7;" data-i18n="wallet_title">💰 Billetera & Reparto de Ganancias</strong>
+            <strong style="font-size:14px;" data-i18n="wallet_title">💰 Wallet & Recompensas</strong>
             <span class="split-pill">65% App • 35% Creador</span>
           </div>
-          <p style="font-size:11.5px;color:#d1d5db;line-height:1.4;" data-i18n="wallet_desc">
+          <p style="font-size:11.5px;line-height:1.45;" data-i18n="wallet_desc">
             Gana <strong>35%</strong> en regalos En Vivo y <strong>R$ 0,50 por cada 1.000 vistas</strong> en videos de +45s. Retiro mínimo por PIX: <strong>R$ 50,00</strong>.
           </p>
           <div class="wallet-grid">
@@ -941,47 +1265,57 @@
             </div>
             <div class="wallet-box">
               <strong id="wallet-creator-earnings">R$ 0,00</strong>
-              <span data-i18n="wallet_earn_lbl">Ganancia Creador (35%)</span>
+              <span data-i18n="wallet_earn_lbl">Saldo Estimado (BRL)</span>
             </div>
           </div>
           <div class="studio-btns">
-            <button class="pill-btn gold" onclick="openRechargeModal()" data-i18n="recharge_btn">➕ Recargar Monedas (PIX)</button>
-            <button class="pill-btn gold" onclick="openWithdrawModal()">💸 Retirar Ganancias</button>
+            <button class="pill-btn gold" onclick="openRechargeModal()" data-i18n="recharge_btn">➕ Obtener Monedas (PIX)</button>
+            <button class="pill-btn" onclick="openWithdrawModal()">💸 Retirar por PIX</button>
             <button id="admin-split-btn" class="pill-btn gold hidden" onclick="openSplitSettingsModal()">🛡️ Panel Admin (Denuncias, PIX y Monetag)</button>
           </div>
         </div>
 
-        <!-- Programa de Referidos con Metas (Estilo TikTok Bonus) -->
-        <div class="wallet-card" style="border-color:rgba(250,204,21,0.45);">
+        <!-- Programa de Referidos -->
+        <div class="wallet-card">
           <div class="wallet-header">
-            <strong style="font-size:14px;color:#fef08a;">🎁 Invita y Gana (Metas de Referidos)</strong>
+            <strong style="font-size:14px;">🎁 Invita y Gana (Metas de Referidos)</strong>
             <span class="split-pill" id="ref-count-pill">0 / 5 Referidos</span>
           </div>
-          <p style="font-size:11.5px;color:#d1d5db;line-height:1.45;margin-bottom:10px;">
-            Gana <strong>R$ 0,25 por cada amigo validado</strong> (que vea al menos 2 minutos de video) + <strong>Bonos extra</strong> al cumplir metas. Se suma directo a tu saldo retirable por PIX (mín. R$ 50,00).
+          <p style="font-size:11.5px;line-height:1.45;margin-bottom:10px;">
+            Gana <strong>R$ 0,25 por cada amigo validado</strong> (que vea al menos 2 minutos de video) + <strong>Bonos extra</strong> al cumplir metas.
           </p>
-          <div style="background:#0f1117;border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:10px;margin-bottom:10px;">
+          <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:10px;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
               <div>
-                <div style="font-size:10.5px;color:#9ca3af;">Tu código de invitación:</div>
-                <strong id="my-ref-code" style="font-size:16px;color:#facc15;letter-spacing:1px;">SV-CARGANDO</strong>
+                <div style="font-size:10.5px;color:#6b7280;">Tu código de invitación:</div>
+                <strong id="my-ref-code" style="font-size:16px;color:#fe2c55;letter-spacing:1px;">SV-CARGANDO</strong>
               </div>
               <div style="display:flex;gap:6px;">
-                <button type="button" class="pill-btn" onclick="copyReferralLink()">📋 Copiar Link</button>
+                <button type="button" class="pill-btn" onclick="copyReferralLink()">📋 Copiar</button>
                 <button type="button" class="pill-btn gold" onclick="shareReferralLink()">📲 Invitar</button>
               </div>
             </div>
-            <div style="margin-top:8px;font-size:11px;color:#6ee7b7;" id="ref-milestone-status">
-              🎯 Meta 1 (5 amigos): +R$ 1,50 bono • Meta 2 (15 amigos): +R$ 5,00 bono • Meta 3 (50 amigos): +R$ 20,00 bono
+            <div style="margin-top:8px;font-size:11px;color:#059669;font-weight:700;" id="ref-milestone-status">
+              🎯 Meta 1 (5 amigos): +R$ 1,50 • Meta 2 (15 amigos): +R$ 5,00 • Meta 3 (50 amigos): +R$ 20,00
             </div>
           </div>
 
           <div id="redeem-ref-box" style="display:flex;gap:6px;align-items:center;">
-            <input id="redeem-ref-input" type="text" maxlength="20" placeholder="¿Te invitaron? Pega el código aquí..." class="text-input" style="margin-bottom:0;flex:1;padding:9px 11px;font-size:12px;" />
+            <input id="redeem-ref-input" type="text" maxlength="20" placeholder="¿Te invitaron? Pega el código aquí..." class="text-input" style="margin-bottom:0;flex:1;padding:9px 11px;font-size:12px;background:#ffffff;color:#111827;border:1px solid #d1d5db;" />
             <button type="button" class="pill-btn gold" style="padding:9px 12px;white-space:nowrap;" onclick="submitReferralCode()">Canjear</button>
           </div>
-          <div id="redeem-ref-done" class="hidden" style="font-size:11.5px;color:#6ee7b7;margin-top:4px;">
+          <div id="redeem-ref-done" class="hidden" style="font-size:11.5px;color:#059669;margin-top:4px;font-weight:700;">
             ✅ Código de invitación vinculado correctamente.
+          </div>
+        </div>
+
+        <!-- Selector de Idioma Rápido -->
+        <div class="lang-card">
+          <span style="font-size:13px;font-weight:800;" data-i18n="lang_title">🌐 Idioma de la App</span>
+          <div class="lang-btns">
+            <button id="lchip-pt" class="lang-chip" onclick="setLanguage('pt')">🇧🇷 Português</button>
+            <button id="lchip-es" class="lang-chip" onclick="setLanguage('es')">🇪🇸 Español</button>
+            <button id="lchip-en" class="lang-chip" onclick="setLanguage('en')">🇺🇸 English</button>
           </div>
         </div>
 
@@ -990,13 +1324,14 @@
           <p data-i18n="studio_desc">Monetiza tus videos añadiendo enlaces directos de producto/afiliado (estilo Shop) o conecta tu marca con nuestra audiencia.</p>
           <div class="studio-btns">
             <button class="pill-btn gold" onclick="openBrandModal()" data-i18n="brand_btn">💼 Anunciar mi Marca</button>
-            <button class="pill-btn gold" onclick="triggerInstallApp()" data-i18n="fullscreen_btn">📲 Abrir sin barra del navegador</button>
+            <button class="pill-btn" onclick="openCreatorRulesModal()">📜 Reglas de Creador</button>
           </div>
         </div>
 
         <div class="prof-subtabs">
-          <button id="subtab-mine" class="prof-subtab active" onclick="switchProfileGrid('mine', this)" data-i18n="my_videos_tab">🎬 Mis Videos</button>
+          <button id="subtab-mine" class="prof-subtab active" onclick="switchProfileGrid('mine', this)" data-i18n="my_videos_tab">🎬 Videos</button>
           <button id="subtab-saved" class="prof-subtab" onclick="switchProfileGrid('saved', this)" data-i18n="saved_tab">🔖 Guardados</button>
+          <button id="subtab-liked" class="prof-subtab" onclick="switchProfileGrid('liked', this)">❤️ Me gusta</button>
         </div>
         <div id="my-videos-grid" class="my-grid"></div>
 
@@ -1014,10 +1349,80 @@
       </div>
     </div>
 
-    <!-- NAVBAR INFERIOR -->
-    <div class="navbar">
+    <!-- MODAL EDITAR PERFIL (BLANCO LIMPIO ESTILO TIKTOK) -->
+    <div id="edit-profile-modal" class="modal sv-white-modal hidden">
+      <div class="modal-header">
+        <button type="button" onclick="closeEditProfileModal()" class="pill-btn" style="padding:6px 12px;font-size:12px;background:#f3f4f6;color:#111827;border:1px solid #d1d5db;">Cancelar</button>
+        <div class="modal-title" style="font-size:16px;">Editar perfil</div>
+        <button type="button" onclick="saveEditProfileForm()" class="tk-btn-primary" style="padding:6px 14px;font-size:12px;">Guardar</button>
+      </div>
+      <div style="text-align:center;margin:14px 0;">
+        <div onclick="triggerAvatarUpload()" style="width:84px;height:84px;border-radius:50%;background:#111827;color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;cursor:pointer;overflow:hidden;">
+          <span id="edit-avatar-preview-letter">S</span>
+          <img id="edit-avatar-preview-img" src="" class="hidden" style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+        <span onclick="triggerAvatarUpload()" style="font-size:12.5px;color:#fe2c55;font-weight:700;cursor:pointer;">Cambiar foto</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#4b5563;display:block;margin-bottom:4px;">Nombre visible</label>
+          <input id="edit-display-name" type="text" maxlength="30" class="text-input" placeholder="Tu nombre..." />
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#4b5563;display:block;margin-bottom:4px;">Nombre de usuario (@)</label>
+          <input id="edit-handle-input" type="text" maxlength="20" class="text-input" placeholder="usuario_starvibe" />
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#4b5563;display:block;margin-bottom:4px;">Descripción / Bio</label>
+          <textarea id="edit-bio-input" rows="3" maxlength="100" class="text-input" placeholder="Añade una descripción a tu perfil..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CENTRO DE ACTIVIDADES & AJUSTES (BLANCO LIMPIO) -->
+    <div id="settings-drawer-modal" class="modal sv-white-modal hidden">
+      <div class="modal-header">
+        <div class="modal-title" style="font-size:16px;">Ajustes y Centro de Actividad</div>
+        <button type="button" onclick="closeSettingsDrawer()" class="close-btn">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+        <div class="tk-inbox-row" onclick="closeSettingsDrawer(); openRechargeModal();" style="cursor:pointer;">
+          <div><strong>💰 Wallet y Monedas</strong><div style="font-size:12px;color:#6b7280;">Recarga monedas y consulta tus recompensas</div></div>
+          <span>›</span>
+        </div>
+        <div class="tk-inbox-row" onclick="closeSettingsDrawer(); openActivityCenterModal('history');" style="cursor:pointer;">
+          <div><strong>🕒 Centro de actividades</strong><div style="font-size:12px;color:#6b7280;">Historial de videos vistos, likes y comentarios</div></div>
+          <span>›</span>
+        </div>
+        <div class="tk-inbox-row" onclick="closeSettingsDrawer(); shareReferralLink();" style="cursor:pointer;">
+          <div><strong>🎁 Invita y Gana (Código QR / Link)</strong><div style="font-size:12px;color:#6b7280;">Comparte tu enlace de invitación y suma saldo</div></div>
+          <span>›</span>
+        </div>
+        <div class="tk-inbox-row" onclick="closeSettingsDrawer(); openFormalizeModal();" style="cursor:pointer;">
+          <div><strong>🪪 Verificación +18 y Cuenta PIX</strong><div style="font-size:12px;color:#6b7280;">Activa retiros y transmisiones en vivo</div></div>
+          <span>›</span>
+        </div>
+        <div class="tk-inbox-row" onclick="closeSettingsDrawer(); openCreatorRulesModal();" style="cursor:pointer;">
+          <div><strong>📜 Normas y Privacidad</strong><div style="font-size:12px;color:#6b7280;">Reglas de comunidad y protección de datos</div></div>
+          <span>›</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CENTRO DE ACTIVIDADES DETALLE -->
+    <div id="activity-center-modal" class="modal sv-white-modal hidden">
+      <div class="modal-header">
+        <div class="modal-title" id="activity-modal-title" style="font-size:16px;">Centro de actividades</div>
+        <button type="button" onclick="closeActivityCenterModal()" class="close-btn">✕</button>
+      </div>
+      <div id="activity-center-list" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"></div>
+    </div>
+
+    <!-- NAVBAR INFERIOR ESTILO TIKTOK (4 SECCIONES: INICIO, CREAR +, MENSAJES, PERFIL) -->
+    <div id="sv-bottom-navbar" class="navbar">
       <button id="nav-feed" onclick="switchTab('feed')" class="nav-btn active"><span>🏠</span><span data-i18n="nav_home">Inicio</span></button>
       <button onclick="openModal()" class="add-btn">+</button>
+      <button id="nav-inbox" onclick="switchTab('inbox')" class="nav-btn" style="position:relative;"><span>💬</span><span>Mensajes</span><span id="inbox-nav-dot" class="hidden" style="position:absolute;top:4px;right:24%;width:7px;height:7px;border-radius:50%;background:#fe2c55;"></span></button>
       <button id="nav-profile" onclick="switchTab('profile')" class="nav-btn"><span>👤</span><span data-i18n="nav_profile">Perfil</span></button>
     </div>
 
@@ -2396,10 +2801,28 @@
 
     function updateProfileHeader() {
       const name = getUserName();
+      const disp = localStorage.getItem('sv_display_name') || name;
+      const bio = localStorage.getItem('sv_user_bio') || t('prof_subtitle');
+      const avData = localStorage.getItem('sv_avatar_data') || '';
+      const topDisp = document.getElementById('tk-top-display-name');
+      if (topDisp) topDisp.textContent = disp;
       document.getElementById('prof-title').textContent = '@' + name;
-      document.getElementById('prof-avatar').textContent = name.charAt(0).toUpperCase();
+      const bioEl = document.getElementById('prof-bio-display');
+      if (bioEl) bioEl.textContent = bio;
+      const avLetter = document.getElementById('prof-avatar-letter');
+      const avImg = document.getElementById('prof-avatar-img');
+      if (avData && avImg && avLetter) {
+        avImg.src = avData;
+        avImg.classList.remove('hidden');
+        avLetter.classList.add('hidden');
+      } else if (avLetter && avImg) {
+        avLetter.textContent = name.charAt(0).toUpperCase();
+        avLetter.classList.remove('hidden');
+        avImg.classList.add('hidden');
+      }
       document.getElementById('username-input').value = localStorage.getItem('sv_username') || localStorage.getItem('gs_username') || '';
-      const mine = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
+      const myUid = getActiveUserId();
+      const mine = allVideosCache.filter((v) => (currentUser && v.uid === currentUser.uid) || v.uid === myUid);
       const totalLikes = mine.reduce((acc, v) => acc + Number(v.likes || 0), 0);
       document.getElementById('stat-videos').textContent = mine.length;
       document.getElementById('stat-likes').textContent = totalLikes;
@@ -2431,7 +2854,7 @@
       document.querySelectorAll('.feed-tab').forEach((b) => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
       document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
-      document.getElementById('view-live').classList.add('active');
+      document.getElementById('view-live').classList.add('active'); applyThemeForTab('live'); pauseAllFeedVideos();
       document.querySelectorAll('#video-feed video').forEach((v) => v.pause());
     };
 
@@ -3177,7 +3600,16 @@
       const rewindBtn = document.getElementById('viewer-rewind-live-btn');
       const pauseBtn = document.getElementById('live-pause-btn');
       const giftBar = document.getElementById('sv-live-gift-bar');
+      const openGiftDrawerBtn = document.getElementById('sv-open-gift-drawer-btn');
       const heartBtn = document.getElementById('sv-live-heart-btn');
+      if (openGiftDrawerBtn) {
+        openGiftDrawerBtn.classList.toggle('hidden', isBroadcaster);
+        if (isBroadcaster) {
+          openGiftDrawerBtn.style.setProperty('display', 'none', 'important');
+        } else {
+          openGiftDrawerBtn.style.setProperty('display', 'inline-flex', 'important');
+        }
+      }
       const hostHeartsBadge = document.getElementById('sv-host-hearts-badge');
       if (endBtn) endBtn.classList.toggle('hidden', !isBroadcaster);
       if (rewindBtn) rewindBtn.classList.toggle('hidden', isBroadcaster);
@@ -3477,6 +3909,7 @@
     };
 
     window.closeLiveRoom = () => {
+      toggleLiveGiftDrawer(false);
       releaseLiveWakeLock();
       liveRoomHorizontal = false;
       applyLandscapeLayoutClasses();
@@ -3953,6 +4386,31 @@
       const followingSet = getFollowingSet();
       feedEl.innerHTML = '';
 
+      // Inject TikTok-style interactive LIVE preview slide at the top of "Para ti" when creators are LIVE
+      if (feedMode === 'foryou' && !searchQuery && liveRoomsCache.length > 0) {
+        const featuredLive = liveRoomsCache[0];
+        const liveSlide = document.createElement('div');
+        liveSlide.className = 'slide';
+        liveSlide.style.cssText = 'background:radial-gradient(circle at center,#1e1b2e 0%,#050507 85%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;cursor:pointer;';
+        liveSlide.innerHTML = `
+          <div style="position:absolute;top:106px;left:14px;display:flex;align-items:center;gap:6px;background:rgba(254,44,85,0.92);color:#fff;font-size:11px;font-weight:900;padding:4px 10px;border-radius:999px;">
+            <span class="live-dot" style="background:#fff;"></span> LIVE ahora • ${formatLiveElapsed(getLiveStartMs(featuredLive))}
+          </div>
+          <div style="width:92px;height:92px;border-radius:50%;padding:3px;background:linear-gradient(135deg,#fe2c55,#25f4ee);margin-bottom:12px;">
+            <div style="width:100%;height:100%;border-radius:50%;background:#111827;color:#fff;font-size:34px;font-weight:900;display:flex;align-items:center;justify-content:center;">
+              ${(featuredLive.user || 'L').charAt(0).toUpperCase()}
+            </div>
+          </div>
+          <strong style="font-size:18px;color:#fff;">@${featuredLive.user || 'Creador'}</strong>
+          <p style="font-size:13.5px;color:#d1d5db;margin-top:4px;max-width:280px;">${featuredLive.title || 'Transmisión en vivo ahora'}</p>
+          <div style="margin-top:16px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);color:#fff;padding:10px 22px;border-radius:999px;font-size:13.5px;font-weight:800;backdrop-filter:blur(6px);">
+            📡 Pulsa para ver el LIVE
+          </div>
+        `;
+        liveSlide.addEventListener('click', () => openLiveRoom(featuredLive));
+        feedEl.appendChild(liveSlide);
+      }
+
       videosToRender.forEach((v, idx) => {
         const isLiked = likedSet.has(v.id);
         const isSaved = savedSet.has(v.id);
@@ -4185,21 +4643,27 @@
     function renderProfileGrid() {
       const grid = document.getElementById('my-videos-grid');
       if (!grid) return;
+      const myUid = getActiveUserId();
       let list = [];
       if (profileGridMode === 'mine') {
-        list = currentUser ? allVideosCache.filter((v) => v.uid === currentUser.uid) : [];
+        list = allVideosCache.filter((v) => (currentUser && v.uid === currentUser.uid) || v.uid === myUid);
+      } else if (profileGridMode === 'liked') {
+        const liked = getLikedSet();
+        list = allVideosCache.filter((v) => liked.has(v.id));
       } else {
         const saved = getSavedSet();
         list = allVideosCache.filter((v) => saved.has(v.id));
       }
 
       if (list.length === 0) {
-        grid.innerHTML = '<p style="grid-column:1/-1;font-size:12px;color:#9ca3af;margin-top:6px;">0</p>';
+        grid.innerHTML = '<p style="grid-column:1/-1;font-size:12.5px;color:#6b7280;text-align:center;padding:18px 0;">Aún no hay videos en esta sección.</p>';
         return;
       }
-      grid.innerHTML = list.map((v) => `
+      grid.innerHTML = list.map((v, i) => `
         <div class="grid-item">
           <video src="${v.videoUrl}" muted preload="metadata"></video>
+          ${profileGridMode === 'mine' && i === 0 ? '<span class="tk-grid-badge">Anclado</span>' : ''}
+          <span class="tk-grid-views">▶ ${Number(v.views || v.likes || 0)}</span>
           ${profileGridMode === 'mine' ? `<button class="del-vid" onclick="deleteMyVideo('${v.id}')">🗑️</button>` : ''}
         </div>
       `).join('');
@@ -4307,6 +4771,174 @@
       document.querySelectorAll('video').forEach((v) => { v.muted = isMuted; });
     };
 
+
+    // === STARVIBE v14.0 HELPERS: WHITE THEME, INBOX, EDIT PROFILE, LIVE DRAWER & FEED LIVE CARDS ===
+    window.toggleLiveGiftDrawer = (open) => {
+      const drawer = document.getElementById('sv-gift-drawer');
+      if (!drawer) return;
+      if (open) drawer.classList.add('open');
+      else drawer.classList.remove('open');
+    };
+
+    window.shareActiveLiveRoom = async () => {
+      if (!activeLiveRoom) return;
+      const shareUrl = window.location.origin + '/?ref=' + getMyReferralCode();
+      const text = '🔴 ¡Mira el LIVE de @' + (activeLiveRoom.user || 'Creador') + ' en StarVibe! ' + shareUrl;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'StarVibe LIVE', text, url: shareUrl }); return; } catch (e) {}
+      }
+      try { await navigator.clipboard.writeText(shareUrl); toast('🔗 Enlace del LIVE copiado'); } catch (e) {}
+    };
+
+    window.shareMyProfileLink = async () => {
+      const shareUrl = window.location.origin + '/?ref=' + getMyReferralCode();
+      const text = '🎬 Sigue mi perfil @' + getUserName() + ' en StarVibe: ' + shareUrl;
+      if (navigator.share) {
+        try { await navigator.share({ title: '@' + getUserName() + ' • StarVibe', text, url: shareUrl }); return; } catch (e) {}
+      }
+      try { await navigator.clipboard.writeText(shareUrl); toast('🔗 Enlace de perfil copiado'); } catch (e) {}
+    };
+
+    window.triggerAvatarUpload = () => {
+      const inp = document.getElementById('avatar-file-input');
+      if (inp) inp.click();
+    };
+
+    window.handleAvatarSelected = (ev) => {
+      const file = ev.target && ev.target.files && ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = 180; c.height = 180;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, 180, 180);
+          const dataUrl = c.toDataURL('image/jpeg', 0.8);
+          localStorage.setItem('sv_avatar_data', dataUrl);
+          updateProfileHeader();
+          toast('✅ Foto de perfil actualizada');
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.openEditProfileModal = () => {
+      const name = getUserName();
+      const disp = localStorage.getItem('sv_display_name') || name;
+      const bio = localStorage.getItem('sv_user_bio') || '';
+      const av = localStorage.getItem('sv_avatar_data') || '';
+      document.getElementById('edit-display-name').value = disp;
+      document.getElementById('edit-handle-input').value = name;
+      document.getElementById('edit-bio-input').value = bio;
+      const prevLetter = document.getElementById('edit-avatar-preview-letter');
+      const prevImg = document.getElementById('edit-avatar-preview-img');
+      if (av) {
+        prevImg.src = av; prevImg.classList.remove('hidden'); prevLetter.classList.add('hidden');
+      } else {
+        prevLetter.textContent = name.charAt(0).toUpperCase();
+        prevLetter.classList.remove('hidden'); prevImg.classList.add('hidden');
+      }
+      document.getElementById('edit-profile-modal').classList.remove('hidden');
+    };
+    window.closeEditProfileModal = () => document.getElementById('edit-profile-modal').classList.add('hidden');
+    window.saveEditProfileForm = () => {
+      const disp = document.getElementById('edit-display-name').value.trim();
+      const handle = document.getElementById('edit-handle-input').value.trim().replace(/[^a-zA-Z0-9_áéíóúÁÉÍÓÚñÑ]/g, '');
+      const bio = document.getElementById('edit-bio-input').value.trim();
+      if (disp) localStorage.setItem('sv_display_name', disp);
+      if (handle) localStorage.setItem('sv_username', handle);
+      localStorage.setItem('sv_user_bio', bio);
+      updateProfileHeader();
+      closeEditProfileModal();
+      toast('✅ Perfil guardado');
+    };
+
+    window.openSettingsDrawer = () => document.getElementById('settings-drawer-modal').classList.remove('hidden');
+    window.closeSettingsDrawer = () => document.getElementById('settings-drawer-modal').classList.add('hidden');
+
+    window.openActivityCenterModal = (mode = 'history') => {
+      const titleEl = document.getElementById('activity-modal-title');
+      const listEl = document.getElementById('activity-center-list');
+      if (!listEl) return;
+      if (mode === 'followers') {
+        titleEl.textContent = '👥 Siguiendo y Seguidores';
+        const fol = [...getFollowingSet()];
+        listEl.innerHTML = fol.length
+          ? fol.map(u => `<div class="tk-inbox-row"><strong>@${u}</strong><span style="font-size:11.5px;color:#059669;font-weight:700;">Siguiendo</span></div>`).join('')
+          : '<p style="font-size:13px;color:#6b7280;text-align:center;padding:20px;">Aún no sigues a ningún creador.</p>';
+      } else if (mode === 'likes') {
+        titleEl.textContent = '❤️ Videos que te gustaron';
+        const likedIds = getLikedSet();
+        const likedVids = allVideosCache.filter(v => likedIds.has(v.id));
+        listEl.innerHTML = likedVids.length
+          ? likedVids.map(v => `<div class="tk-inbox-row"><div><strong>@${v.user || 'Creador'}</strong><div style="font-size:12px;color:#6b7280;">${v.caption || 'Video en StarVibe'}</div></div><span style="color:#fe2c55;">❤️</span></div>`).join('')
+          : '<p style="font-size:13px;color:#6b7280;text-align:center;padding:20px;">Aún no has dado Me gusta a ningún video.</p>';
+      } else {
+        titleEl.textContent = '🕒 Historial de actividad';
+        const notifs = getNotificationsStore();
+        listEl.innerHTML = notifs.length
+          ? notifs.map(n => `<div class="tk-inbox-row"><div><strong>${n.title}</strong><div style="font-size:12px;color:#6b7280;">${n.body}</div></div></div>`).join('')
+          : '<p style="font-size:13px;color:#6b7280;text-align:center;padding:20px;">Tu historial de actividad está al día.</p>';
+      }
+      document.getElementById('activity-center-modal').classList.remove('hidden');
+    };
+    window.closeActivityCenterModal = () => document.getElementById('activity-center-modal').classList.add('hidden');
+
+    function renderInboxView() {
+      const storiesEl = document.getElementById('tk-inbox-live-stories');
+      const feedListEl = document.getElementById('tk-inbox-feed-list');
+      if (storiesEl) {
+        const liveBubbles = liveRoomsCache.map((l) => `
+          <div class="tk-story-item" onclick="joinLiveById('${l.id}')">
+            <div class="tk-story-ring"><div class="tk-story-inner">${(l.user || 'L').charAt(0).toUpperCase()}</div></div>
+            <div style="font-size:11px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@${l.user || 'Live'}</div>
+          </div>
+        `).join('');
+        storiesEl.innerHTML = `
+          <div class="tk-story-item" onclick="switchToLiveTab()">
+            <div class="tk-story-ring"><div class="tk-story-inner">📡</div></div>
+            <div style="font-size:11px;font-weight:700;color:#111827;">Ver Lives</div>
+          </div>
+        ` + liveBubbles;
+      }
+      const folSub = document.getElementById('inbox-followers-sub');
+      const likesSub = document.getElementById('inbox-likes-sub');
+      const sysSub = document.getElementById('inbox-system-sub');
+      if (folSub) folSub.textContent = 'Sigues a ' + getFollowingSet().size + ' creador(es)';
+      if (likesSub) likesSub.textContent = getLikedSet().size + ' video(s) marcados con Me gusta';
+      if (sysSub) sysSub.textContent = liveRoomsCache.length > 0 ? (liveRoomsCache.length + ' transmisión(es) LIVE activa(s) ahora') : 'Sin transmisiones activas en este momento';
+
+      if (feedListEl) {
+        const notifs = getNotificationsStore();
+        if (notifs.length === 0 && liveRoomsCache.length === 0) {
+          feedListEl.innerHTML = '<div style="text-align:center;padding:24px;color:#6b7280;font-size:13px;">Aquí verás avisos cuando tus creadores favoritos inicien un LIVE o publiquen nuevos videos.</div>';
+        } else {
+          const liveCards = liveRoomsCache.map(l => `
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div>
+                <div style="font-size:12.5px;font-weight:800;color:#fe2c55;">🔴 @${l.user || 'Creador'} está EN VIVO</div>
+                <div style="font-size:12px;color:#4b5563;">${l.title || 'Transmisión en directo'}</div>
+              </div>
+              <button type="button" class="tk-btn-primary" style="padding:7px 12px;font-size:12px;" onclick="joinLiveById('${l.id}')">Entrar</button>
+            </div>
+          `).join('');
+          const notifCards = notifs.slice(0, 15).map(n => `
+            <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div>
+                <div style="font-size:12.5px;font-weight:800;color:#111827;">${n.title}</div>
+                <div style="font-size:11.5px;color:#6b7280;">${n.body}</div>
+              </div>
+              ${n.liveId ? `<button type="button" class="tk-btn-primary" style="padding:6px 11px;font-size:11.5px;" onclick="joinLiveById('${n.liveId}')">Ver</button>` : ''}
+            </div>
+          `).join('');
+          feedListEl.innerHTML = liveCards + notifCards;
+        }
+      }
+    }
+
     function isFeedCurrentlyVisible() {
       const feedView = document.getElementById('view-feed');
       const liveOverlay = document.getElementById('live-room-overlay');
@@ -4328,13 +4960,24 @@
       });
     }
 
+    function applyThemeForTab(tab) {
+      const appEl = document.querySelector('.app');
+      const navEl = document.getElementById('sv-bottom-navbar');
+      const isLight = (tab !== 'feed');
+      if (appEl) appEl.classList.toggle('sv-light-mode', isLight);
+      if (navEl) navEl.classList.toggle('sv-navbar-light', isLight);
+    }
+
     window.switchTab = (tab, skipHistory = false) => {
       if (tab !== 'feed' && !skipHistory) pushNavState('tab-' + tab);
       document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach((el) => el.classList.remove('active'));
-      document.getElementById('view-' + tab).classList.add('active');
-      document.getElementById('nav-' + tab).classList.add('active');
+      const viewEl = document.getElementById('view-' + tab);
+      const navBtn = document.getElementById('nav-' + tab);
+      if (viewEl) viewEl.classList.add('active');
+      if (navBtn) navBtn.classList.add('active');
       document.getElementById('feed-tabs').style.display = tab === 'feed' ? 'flex' : 'none';
+      applyThemeForTab(tab);
       if (tab !== 'feed') {
         pauseAllFeedVideos();
       }
@@ -4342,6 +4985,10 @@
         updateProfileHeader();
         renderProfileGrid();
         if (typeof refreshAdminAndReferralUI === 'function') refreshAdminAndReferralUI();
+      } else if (tab === 'inbox') {
+        const dot = document.getElementById('inbox-nav-dot');
+        if (dot) dot.classList.add('hidden');
+        renderInboxView();
       } else if (tab === 'feed') {
         setupAutoPlay();
       }
