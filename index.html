@@ -908,12 +908,15 @@
 
         <!-- EDITOR INTEGRADO MODERNIZADO STARVIBE STUDIO v2 (Android 15/16 Ready) -->
         <div id="sv-video-editor-box" class="hidden" style="background:linear-gradient(180deg,#11141d,#090b10);border:1px solid rgba(250,204,21,0.5);border-radius:16px;padding:12px;margin-bottom:12px;box-shadow:0 12px 30px rgba(0,0,0,0.65);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:15px;">🎬</span>
               <strong style="font-size:13px;color:#fef08a;">StarVibe Studio Pro</strong>
+              <span id="sv-edit-status-pill" style="font-size:10.5px;color:#6ee7b7;background:rgba(16,185,129,0.16);border:1px solid rgba(16,185,129,0.35);padding:2px 8px;border-radius:999px;font-weight:700;">Original</span>
             </div>
-            <span id="sv-edit-status-pill" style="font-size:10.5px;color:#6ee7b7;background:rgba(16,185,129,0.16);border:1px solid rgba(16,185,129,0.35);padding:2px 9px;border-radius:999px;font-weight:700;">Original</span>
+            <button type="button" onclick="discardSelectedVideo()" style="background:rgba(239,68,68,0.16);border:1px solid rgba(239,68,68,0.55);color:#fca5a5;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;cursor:pointer;">
+              🗑️ Descartar video
+            </button>
           </div>
 
           <!-- Monitor de Vista Previa -->
@@ -4049,6 +4052,40 @@
       if (btn) btn.disabled = false;
       if (pWrap) pWrap.classList.add('hidden');
     };
+
+    window.discardSelectedVideo = (silent = false) => {
+      cancelEditorRender();
+      selectedVideoDurationSec = 0;
+      editedVideoBlob = null;
+      editedVideoFilename = '';
+      editorAutoCaptions = [];
+      editorRawDuration = 0;
+      if (editorObjectUrl) {
+        try { URL.revokeObjectURL(editorObjectUrl); } catch (e) {}
+        editorObjectUrl = '';
+      }
+      const edVid = document.getElementById('sv-editor-src-vid');
+      if (edVid) {
+        try { edVid.pause(); edVid.removeAttribute('src'); edVid.load(); } catch (e) {}
+      }
+      if (videoInput) {
+        try { videoInput.value = ''; } catch (e) {}
+      }
+      const badge = document.getElementById('video-meta-badge');
+      if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
+      const editorBox = document.getElementById('sv-video-editor-box');
+      if (editorBox) editorBox.classList.add('hidden');
+      const pill = document.getElementById('sv-edit-status-pill');
+      if (pill) { pill.textContent = 'Original'; pill.style.color = '#6ee7b7'; }
+      if (fileLabel) fileLabel.textContent = t('pick_video_lbl');
+      if (!silent) toast('🗑️ Video descartado. Selecciona otro video.');
+    };
+
+    window.addEventListener('pagehide', () => {
+      if (editedVideoBlob || editorObjectUrl) {
+        window.discardSelectedVideo(true);
+      }
+    });
 
     window.resetEditedVideoBlob = () => {
       cancelEditorRender();
