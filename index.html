@@ -587,7 +587,6 @@
         <button type="button" class="pill-btn" data-topic="series" onclick="setTopicFilter('series', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎬 Series</button>
         <button type="button" class="pill-btn" data-topic="musica" onclick="setTopicFilter('musica', this)" style="padding:4px 10px;font-size:11px;white-space:nowrap;">🎵 Música</button>
       </div>
-      <div id="sv-live-now-bar" class="hidden" style="display:flex;gap:6px;overflow-x:auto;padding:5px 2px 2px;scrollbar-width:none;pointer-events:auto;"></div>
       <div id="search-bar" class="search-bar hidden">
         <input id="search-input" type="text" data-i18n-ph="search_ph" placeholder="Buscar #hashtag, @creador o serie..." oninput="applySearchFilter()" />
         <button onclick="clearSearch()" data-i18n="clear_btn">Limpiar</button>
@@ -1689,32 +1688,12 @@
     const OWNER_EMAIL = '123alejrafnstaller@gmail.com';
     const OWNER_USER_ID = 'user_123alejrafnstaller_gmail_com';
 
-    function getOrCreateDeviceUserId() {
-      let did = localStorage.getItem('sv_device_uid');
-      if (!did) {
-        const rand = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-        did = 'usr_' + rand;
-        localStorage.setItem('sv_device_uid', did);
-      }
-      return did;
-    }
-
     function getActiveUserId() {
       const f = getFormalData();
-      if (f && f.email && String(f.email).trim().toLowerCase() === OWNER_EMAIL) {
-        return OWNER_USER_ID;
-      }
       if (f && f.email) {
-        return 'user_' + String(f.email).trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+        return 'user_' + f.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
       }
-      return getOrCreateDeviceUserId();
-    }
-
-    function isOwnerAccount() {
-      const f = getFormalData();
-      const formalEmail = (f && f.email ? String(f.email).trim().toLowerCase() : '');
-      const authEmail = (currentUser && currentUser.email ? String(currentUser.email).trim().toLowerCase() : '');
-      return formalEmail === OWNER_EMAIL || authEmail === OWNER_EMAIL;
+      return OWNER_USER_ID;
     }
 
     // ==========================================
@@ -1722,7 +1701,7 @@
     // ==========================================
     function getMyReferralCode() {
       const uid = getActiveUserId();
-      if (isOwnerAccount()) return 'SV-ADMIN1';
+      if (uid === OWNER_USER_ID) return 'SV-ADMIN1';
       let hash = 0;
       for (let i = 0; i < uid.length; i++) {
         hash = ((hash << 5) - hash) + uid.charCodeAt(i);
@@ -1742,7 +1721,7 @@
 
     let adminToolsUnlocked = false;
     window.toggleAdminToolsVisibility = () => {
-      const isAdmin = isOwnerAccount();
+      const isAdmin = getActiveUserId() === OWNER_USER_ID;
       if (!isAdmin) return;
       adminToolsUnlocked = !adminToolsUnlocked;
       refreshAdminAndReferralUI();
@@ -1750,7 +1729,7 @@
     };
 
     function refreshAdminAndReferralUI() {
-      const isAdmin = isOwnerAccount();
+      const isAdmin = getActiveUserId() === OWNER_USER_ID;
       const showAdmin = isAdmin && adminToolsUnlocked;
       const adminBtn = document.getElementById('admin-split-btn');
       const adminMonetagBox = document.getElementById('admin-monetag-box');
@@ -1840,11 +1819,7 @@
       const params = new URLSearchParams(window.location.search);
       const refParam = (params.get('ref') || '').trim().toUpperCase();
       if (refParam && !localStorage.getItem('sv_redeemed_ref') && refParam !== getMyReferralCode()) {
-        localStorage.setItem('sv_pending_ref_code', refParam);
         setTimeout(() => window.submitReferralCode(refParam), 1200);
-      }
-      if (refParam) {
-        try { window.history.replaceState({}, document.title, window.location.pathname); } catch (e) {}
       }
       fetch('/api/referrals/bind-code', {
         method: 'POST',
@@ -2060,7 +2035,7 @@
     checkMercadoPagoReturn();
 
     window.openSplitSettingsModal = () => {
-      if (!isOwnerAccount()) return;
+      if (getActiveUserId() !== OWNER_USER_ID) return;
       const cSplit = getCreatorSplitPct();
       document.getElementById('creator-share-range').value = cSplit;
       previewSplitChange(cSplit);
@@ -2069,7 +2044,7 @@
     };
 
     window.loadAdminPanelData = async () => {
-      if (!isOwnerAccount()) return;
+      if (getActiveUserId() !== OWNER_USER_ID) return;
       const repBox = document.getElementById('admin-reports-list');
       const payBox = document.getElementById('admin-payouts-list');
       if (repBox) repBox.innerHTML = 'Cargando denuncias...';
@@ -2390,31 +2365,6 @@
         if (endCardBtn) endCardBtn.addEventListener('click', () => terminateLiveById(l.id));
         list.appendChild(card);
       });
-
-      const liveNowBar = document.getElementById('sv-live-now-bar');
-      if (liveNowBar) {
-        const activeLives = [];
-        snap.forEach((d) => {
-          const item = { id: d.id, ...d.data() };
-          if ((item.reports || 0) < 3) activeLives.push(item);
-        });
-        if (activeLives.length === 0) {
-          liveNowBar.classList.add('hidden');
-          liveNowBar.innerHTML = '';
-        } else {
-          liveNowBar.classList.remove('hidden');
-          liveNowBar.innerHTML = activeLives.map((item) => `
-            <button type="button" class="pill-btn gold sv-quick-live-chip" data-live-id="${item.id}" style="padding:4px 10px;font-size:11px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
-              <span class="live-dot"></span>
-              <span>@${(item.user || 'Live').replace(/</g, '')}</span>
-            </button>
-          `).join('');
-          liveNowBar.querySelectorAll('.sv-quick-live-chip').forEach((btnChip) => {
-            const targetObj = activeLives.find((x) => x.id === btnChip.dataset.liveId);
-            if (targetObj) btnChip.addEventListener('click', () => openLiveRoom(targetObj));
-          });
-        }
-      }
     }, () => {});
 
     let hostLivePaused = false;
@@ -2445,6 +2395,14 @@
     };
 
     function stopActiveLiveCamera() {
+      if (typeof window._svStopFrameLoop === 'function') {
+        try { window._svStopFrameLoop(); } catch (e) {}
+        window._svStopFrameLoop = null;
+      }
+      const viewerImg = document.getElementById('sv-viewer-live-img');
+      if (viewerImg) {
+        try { viewerImg.remove(); } catch (e) {}
+      }
       if (activeLiveMediaStream) {
         try {
           activeLiveMediaStream.getTracks().forEach((tr) => tr.stop());
@@ -2467,10 +2425,6 @@
 
     async function startLiveCameraBroadcast(roomId, isHost, facingMode = 'user') {
       stopActiveLiveCamera();
-      if (!isHost) {
-        // Viewers never open their own camera or microphone
-        activeLiveMediaStream = null;
-      }
       const camVid = document.getElementById('live-camera-video');
       const camCtrls = document.getElementById('live-camera-controls');
       const iframe = document.getElementById('live-iframe');
@@ -2479,7 +2433,7 @@
       if (extFallback) extFallback.classList.add('hidden');
       if (!camVid) return;
 
-      if (isHost && activeLiveRoom && activeLiveRoom.uid === getActiveUserId()) {
+      if (isHost) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           toast('⚠️ Tu navegador no permite acceso directo a la cámara');
           return;
@@ -2500,90 +2454,66 @@
           const micBtn = document.getElementById('live-mic-toggle-btn');
           if (micBtn) micBtn.textContent = '🎙️ Mic ON';
 
-          // Listen for viewer WebRTC join requests in Firestore signaling subcollection
-          const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
-          unsubLiveSignals = onSnapshot(sigCol, (snap) => {
-            snap.docChanges().forEach(async (chg) => {
-              if (chg.type !== 'added') return;
-              const sig = chg.doc.data() || {};
-              if (sig.type === 'viewer_join' && sig.viewerId && activeLiveMediaStream) {
-                const viewerId = sig.viewerId;
-                try {
-                  if (livePeerConnections.has(viewerId)) {
-                    try { livePeerConnections.get(viewerId).close(); } catch (e) {}
-                  }
-                  const pc = new RTCPeerConnection(RTC_CFG);
-                  livePeerConnections.set(viewerId, pc);
-                  activeLiveMediaStream.getTracks().forEach((track) => pc.addTrack(track, activeLiveMediaStream));
-                  pc.onicecandidate = async (ev) => {
-                    if (ev.candidate) {
-                      try {
-                        await addDoc(sigCol, { type: 'host_ice', viewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
-                      } catch (e) {}
-                    }
-                  };
-                  const offer = await pc.createOffer();
-                  await pc.setLocalDescription(offer);
-                  await addDoc(sigCol, { type: 'host_offer', viewerId, sdp: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
-                } catch (err) {}
-              } else if (sig.type === 'viewer_answer' && sig.viewerId && sig.sdp) {
-                const pc = livePeerConnections.get(sig.viewerId);
-                if (pc && pc.signalingState !== 'stable') {
-                  try { await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp)); } catch (e) {}
+          // Broadcast live camera frames to viewers via Firestore room doc + WebRTC fallback
+          let hostFrameTimer = null;
+          const frameCanvas = document.createElement('canvas');
+          frameCanvas.width = 240;
+          frameCanvas.height = 320;
+          const frameCtx = frameCanvas.getContext('2d');
+
+          const pushCameraFrame = async () => {
+            if (!activeLiveRoom || activeLiveRoom.id !== roomId || !activeLiveMediaStream || hostLivePaused) return;
+            if (camVid.readyState >= 2 && camVid.videoWidth > 0 && camVid.videoHeight > 0) {
+              try {
+                frameCtx.drawImage(camVid, 0, 0, frameCanvas.width, frameCanvas.height);
+                const dataUrl = frameCanvas.toDataURL('image/jpeg', 0.45);
+                if (dataUrl && dataUrl.length < 420000) {
+                  await updateDoc(doc(db, 'lives', roomId), {
+                    liveFrame: dataUrl,
+                    liveFrameUpdatedAt: Date.now()
+                  });
                 }
-              } else if (sig.type === 'viewer_ice' && sig.viewerId && sig.candidate) {
-                const pc = livePeerConnections.get(sig.viewerId);
-                if (pc) {
-                  try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
-                }
-              }
-            });
-          });
+              } catch (e) {}
+            }
+          };
+
+          hostFrameTimer = setInterval(pushCameraFrame, 900);
+          const origStopFn = window._svStopFrameLoop;
+          window._svStopFrameLoop = () => {
+            if (hostFrameTimer) { clearInterval(hostFrameTimer); hostFrameTimer = null; }
+            if (typeof origStopFn === 'function') origStopFn();
+          };
         } catch (err) {
           toast('⚠️ Permite acceso a Cámara y Micrófono para transmitir en vivo');
         }
       } else {
-        // Viewer connecting to host's live camera via WebRTC
-        camVid.muted = false;
-        camVid.classList.remove('hidden');
+        // Viewer watches host's camera stream smoothly via live frames in Firestore (works across mobile networks/NAT without STUN blocks)
+        camVid.classList.add('hidden');
         if (camCtrls) camCtrls.classList.add('hidden');
-        const myViewerId = getActiveUserId() + '_' + Math.random().toString(36).slice(2, 6);
-        const sigCol = collection(db, 'lives', roomId, 'webrtc_signals');
-        const pc = new RTCPeerConnection(RTC_CFG);
-        livePeerConnections.set('host', pc);
-        pc.ontrack = (ev) => {
-          if (ev.streams && ev.streams[0]) {
-            camVid.srcObject = ev.streams[0];
-            camVid.play().catch(() => {});
+        const stage = document.getElementById('sv-live-player-box');
+        let viewerImg = document.getElementById('sv-viewer-live-img');
+        if (!viewerImg && stage) {
+          viewerImg = document.createElement('img');
+          viewerImg.id = 'sv-viewer-live-img';
+          viewerImg.alt = 'Transmisión en vivo';
+          viewerImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:#050507;';
+          stage.insertBefore(viewerImg, document.getElementById('live-iframe'));
+        }
+        if (viewerImg) {
+          viewerImg.classList.remove('hidden');
+          if (activeLiveRoom && activeLiveRoom.liveFrame) {
+            viewerImg.src = activeLiveRoom.liveFrame;
           }
-        };
-        pc.onicecandidate = async (ev) => {
-          if (ev.candidate) {
-            try {
-              await addDoc(sigCol, { type: 'viewer_ice', viewerId: myViewerId, candidate: ev.candidate.toJSON(), createdAt: serverTimestamp() });
-            } catch (e) {}
+        }
+        unsubLiveSignals = onSnapshot(doc(db, 'lives', roomId), (snap) => {
+          const imgEl = document.getElementById('sv-viewer-live-img');
+          if (!imgEl || viewerLivePaused || hostLivePaused) return;
+          if (!snap.exists()) return;
+          const d = snap.data() || {};
+          if (d.liveFrame) {
+            imgEl.src = d.liveFrame;
           }
-        };
-        unsubLiveSignals = onSnapshot(sigCol, (snap) => {
-          snap.docChanges().forEach(async (chg) => {
-            if (chg.type !== 'added') return;
-            const sig = chg.doc.data() || {};
-            if (sig.viewerId !== myViewerId) return;
-            if (sig.type === 'host_offer' && sig.sdp) {
-              try {
-                await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                await addDoc(sigCol, { type: 'viewer_answer', viewerId: myViewerId, sdp: { type: answer.type, sdp: answer.sdp }, createdAt: serverTimestamp() });
-              } catch (e) {}
-            } else if (sig.type === 'host_ice' && sig.candidate) {
-              try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch (e) {}
-            }
-          });
-        });
-        try {
-          await addDoc(sigCol, { type: 'viewer_join', viewerId: myViewerId, createdAt: serverTimestamp() });
-        } catch (e) {}
+        }, () => {});
       }
     }
 
@@ -3620,10 +3550,19 @@
     function getFormalData() {
       try {
         const saved = JSON.parse(localStorage.getItem('sv_formal_profile') || 'null');
-        if (saved && (saved.fullName || saved.email || saved.pixKey)) return saved;
-        return null;
+        if (saved && saved.email) return saved;
+        return {
+          fullName: 'Rafael Alejandro Acacio Vasquez',
+          email: OWNER_EMAIL,
+          pixKey: OWNER_EMAIL,
+          formalAt: '2026-11-24T10:00:00.000Z'
+        };
       } catch {
-        return null;
+        return {
+          fullName: 'Rafael Alejandro Acacio Vasquez',
+          email: OWNER_EMAIL,
+          pixKey: OWNER_EMAIL
+        };
       }
     }
 
