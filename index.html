@@ -1539,6 +1539,34 @@
                 <option value="1.5">1.5x Rápido</option>
               </select>
             </div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #222838;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <strong style="font-size:11px;color:#fef08a;">💡 Luces y Color</strong>
+                <select id="sv-studio-light" onchange="renderEditorPreviewFrame()" style="background:#0c0e14;color:#fff;border:1px solid #2b3140;border-radius:7px;padding:4px 7px;font-size:10.5px;">
+                  <option value="off">Luz: Apagada</option>
+                  <option value="soft-warm">Luz Cálida Suave</option>
+                  <option value="cool-rim">Luz Fría Estudio</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;color:#d1d5db;">
+                <label style="display:flex;flex-direction:column;gap:2px;">
+                  <span>Brillo</span>
+                  <input id="sv-light-bright" type="range" min="0.65" max="1.45" step="0.05" value="1" oninput="renderEditorPreviewFrame()" style="accent-color:#facc15;" />
+                </label>
+                <label style="display:flex;flex-direction:column;gap:2px;">
+                  <span>Contraste</span>
+                  <input id="sv-light-contrast" type="range" min="0.7" max="1.45" step="0.05" value="1" oninput="renderEditorPreviewFrame()" style="accent-color:#facc15;" />
+                </label>
+                <label style="display:flex;flex-direction:column;gap:2px;">
+                  <span>Saturación</span>
+                  <input id="sv-light-sat" type="range" min="0.5" max="1.55" step="0.05" value="1" oninput="renderEditorPreviewFrame()" style="accent-color:#facc15;" />
+                </label>
+              </div>
+            </div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #222838;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#d1d5db;">
+              <span>🎵 Audio libre de derechos (base local)</span>
+              <button type="button" id="sv-royalty-audio-btn" class="pill-btn" onclick="toggleRoyaltyFreeBeat()" style="padding:4px 10px;font-size:10.5px;">▶️ Activar Base</button>
+            </div>
           </div>
 
           <!-- PANEL 4: TEXTO Y LEYENDAS AUTOMÁTICAS -->
@@ -5495,6 +5523,75 @@
       ctx.restore();
     }
 
+    const SV_FREE_AUDIO = { ctx: null, timer: null, enabled: false, gain: 0.16 };
+
+    function getSvCombinedVisualFilter() {
+      const filterPreset = document.getElementById('sv-filter-preset')?.value || 'none';
+      const bright = Number(document.getElementById('sv-light-bright')?.value || 1);
+      const contrast = Number(document.getElementById('sv-light-contrast')?.value || 1);
+      const sat = Number(document.getElementById('sv-light-sat')?.value || 1);
+      const parts = [];
+      if (filterPreset && filterPreset !== 'none') parts.push(filterPreset);
+      parts.push(`brightness(${bright}) contrast(${contrast}) saturate(${sat})`);
+      return parts.join(' ');
+    }
+
+    function drawSvStudioLight(ctx, cw, ch) {
+      const mode = document.getElementById('sv-studio-light')?.value || 'off';
+      if (mode === 'off') return;
+      ctx.save();
+      const grad = ctx.createRadialGradient(cw * 0.5, ch * 0.35, cw * 0.12, cw * 0.5, ch * 0.5, cw * 0.85);
+      if (mode === 'soft-warm') {
+        grad.addColorStop(0, 'rgba(255, 224, 178, 0.16)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+      } else if (mode === 'cool-rim') {
+        grad.addColorStop(0, 'rgba(186, 230, 253, 0.14)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.restore();
+    }
+
+    window.toggleRoyaltyFreeBeat = () => {
+      const btn = document.getElementById('sv-royalty-audio-btn');
+      SV_FREE_AUDIO.enabled = !SV_FREE_AUDIO.enabled;
+      if (SV_FREE_AUDIO.timer) {
+        clearInterval(SV_FREE_AUDIO.timer);
+        SV_FREE_AUDIO.timer = null;
+      }
+      if (!SV_FREE_AUDIO.enabled) {
+        if (btn) btn.textContent = '▶️ Activar Base';
+        toast('Base libre de derechos pausada');
+        return;
+      }
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        if (!SV_FREE_AUDIO.ctx) SV_FREE_AUDIO.ctx = new AudioCtx();
+        if (SV_FREE_AUDIO.ctx.state === 'suspended') SV_FREE_AUDIO.ctx.resume().catch(() => {});
+        let step = 0;
+        const notes = [110, 146.83, 164.81, 196.0];
+        SV_FREE_AUDIO.timer = setInterval(() => {
+          if (!SV_FREE_AUDIO.enabled || !SV_FREE_AUDIO.ctx) return;
+          const now = SV_FREE_AUDIO.ctx.currentTime;
+          const osc = SV_FREE_AUDIO.ctx.createOscillator();
+          const g = SV_FREE_AUDIO.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(notes[step % notes.length], now);
+          g.gain.setValueAtTime(0.001, now);
+          g.gain.exponentialRampToValueAtTime(SV_FREE_AUDIO.gain, now + 0.03);
+          g.gain.exponentialRampToValueAtTime(0.0008, now + 0.36);
+          osc.connect(g);
+          g.connect(SV_FREE_AUDIO.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.38);
+          step += 1;
+        }, 450);
+      }
+      if (btn) btn.textContent = '⏹️ Detener Base';
+      toast('🎵 Base de audio libre de derechos activa');
+    };
+
     function drawEditorFrameToCanvas(vid, canvas, currentSec) {
       if (!vid || !canvas || !vid.videoWidth || !vid.videoHeight) return;
       const ctx = canvas.getContext('2d');
@@ -5504,7 +5601,7 @@
       ctx.fillRect(0, 0, cw, ch);
 
       const fitMode = document.getElementById('sv-fit-mode')?.value || 'cover';
-      const filterPreset = document.getElementById('sv-filter-preset')?.value || 'none';
+      const combinedFilter = getSvCombinedVisualFilter();
       const vw = vid.videoWidth;
       const vh = vid.videoHeight;
 
@@ -5518,7 +5615,7 @@
         ctx.restore();
 
         ctx.save();
-        if (filterPreset !== 'none') ctx.filter = filterPreset;
+        ctx.filter = combinedFilter;
         const fgScale = Math.min(cw / vw, ch / vh);
         const fw = vw * fgScale;
         const fh = vh * fgScale;
@@ -5526,13 +5623,14 @@
         ctx.restore();
       } else {
         ctx.save();
-        if (filterPreset !== 'none') ctx.filter = filterPreset;
+        ctx.filter = combinedFilter;
         const scale = Math.max(cw / vw, ch / vh);
         const dw = vw * scale;
         const dh = vh * scale;
         ctx.drawImage(vid, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
         ctx.restore();
       }
+      drawSvStudioLight(ctx, cw, ch);
 
       const hud = document.getElementById('sv-editor-time-hud');
       if (hud) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'starvibe-v14-1-playstore-clean';
+const CACHE_NAME = 'starvibe-v14-2-editor-lights-audio';
 
 self.addEventListener('install', () => self.skipWaiting());
 
