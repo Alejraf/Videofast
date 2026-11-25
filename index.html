@@ -459,7 +459,7 @@
       display: flex; flex-direction: column;
       color: #fff;
     }
-    #entry-promo-overlay.hidden { display: none !important; }
+    #entry-promo-overlay.hidden { display: none !important; pointer-events: none !important; }
     .promo-top-bar {
       position: absolute; top: 14px; left: 14px; right: 14px; z-index: 10002;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -517,6 +517,20 @@
   <div id="sv-brand-splash" style="position:fixed;inset:0;z-index:9998;background:radial-gradient(circle at top,#181408 0%,#050507 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity 0.35s ease;pointer-events:none;">
     <img src="/icon.svg" alt="StarVibe" style="width:74px;height:74px;border-radius:20px;box-shadow:0 0 32px rgba(250,204,21,0.35);" />
     <div style="font-size:24px;font-weight:900;letter-spacing:2px;color:#fef08a;">STARVIBE</div>
+  <script>
+(function(){
+  function hideSplashNow(){
+    var s = document.getElementById('sv-brand-splash');
+    if (!s) return;
+    s.style.opacity = '0';
+    s.style.pointerEvents = 'none';
+    setTimeout(function(){ try { s.remove(); } catch(e){} }, 220);
+  }
+  setTimeout(hideSplashNow, 950);
+  setTimeout(hideSplashNow, 2200);
+  window.addEventListener('load', function(){ setTimeout(hideSplashNow, 300); });
+})();
+</script>
     <div style="font-size:11.5px;color:#9ca3af;letter-spacing:0.6px;">Videos • Series • En Vivo</div>
   </div>
   <!-- ANUNCIO DE ENTRADA PANTALLA COMPLETA (CONTADOR + SALTAR INMEDIATO SIN CAPTCHA) -->
@@ -624,7 +638,41 @@
         </div>
       </div>
 
-      <div class="live-player-box">
+      <div class="live-player-box" id="sv-live-player-box">
+        <div style="position:absolute;bottom:8px;left:8px;z-index:11;background:rgba(0,0,0,0.72);color:#d1d5db;font-size:9.5px;padding:3px 8px;border-radius:999px;pointer-events:none;">
+          ⚖️ Responsabilidad exclusiva del creador • <a href="/terms" target="_blank" style="color:#93c5fd;pointer-events:auto;">Reglas</a>
+        </div>
+        <!-- Barra de Meta de Regalos Activada por el Creador -->
+        <div id="sv-live-goal-bar" style="position:absolute;top:8px;left:8px;right:8px;z-index:12;background:rgba(9,11,18,0.86);border:1px solid rgba(250,204,21,0.48);border-radius:11px;padding:6px 10px;backdrop-filter:blur(6px);">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:800;color:#fef08a;margin-bottom:4px;gap:6px;">
+            <span id="sv-goal-title-lbl">🎯 Meta del Creador: Reto en Vivo</span>
+            <span id="sv-goal-progress-lbl">0 / 250 🪙</span>
+          </div>
+          <div style="width:100%;height:6px;background:rgba(255,255,255,0.14);border-radius:999px;overflow:hidden;">
+            <div id="sv-goal-fill" style="width:0%;height:100%;background:linear-gradient(90deg,#facc15,#10b981);transition:width 0.3s ease;"></div>
+          </div>
+          <div id="sv-goal-status-msg" style="font-size:10px;color:#6ee7b7;margin-top:3px;display:none;">🏆 ¡Meta cumplida! El creador activó el reto.</div>
+        </div>
+
+        <!-- Barra de Batalla de Creadores (PK Live Battle) -->
+        <div id="sv-live-battle-bar" class="hidden" style="position:absolute;top:54px;left:8px;right:8px;z-index:12;background:rgba(15,10,20,0.9);border:1px solid rgba(239,68,68,0.65);border-radius:11px;padding:6px 10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:900;color:#fca5a5;margin-bottom:4px;gap:6px;">
+            <span id="sv-battle-left-lbl">⚔️ Creador: 0 🪙</span>
+            <span style="background:#ef4444;color:#fff;padding:1px 7px;border-radius:999px;font-size:9.5px;">PK • <span id="sv-battle-timer-lbl">03:00</span></span>
+            <span id="sv-battle-right-lbl">Rival: 120 🪙</span>
+          </div>
+          <div id="sv-battle-status-lbl" style="font-size:9.5px;color:#fde68a;text-align:center;margin-bottom:3px;">Regla: 1 🪙 = 1 pt • Gana quien sume más al terminar el tiempo</div>
+          <div style="display:flex;width:100%;height:6px;border-radius:999px;overflow:hidden;background:#1f2937;">
+            <div id="sv-battle-left-bar" style="width:50%;background:linear-gradient(90deg,#facc15,#f59e0b);transition:width 0.3s ease;"></div>
+            <div id="sv-battle-right-bar" style="width:50%;background:linear-gradient(90deg,#ef4444,#b91c1c);transition:width 0.3s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Botón de Orientación Horizontal / Vertical en Live -->
+        <button type="button" onclick="toggleLiveRoomOrientation()" style="position:absolute;bottom:8px;right:8px;z-index:12;background:rgba(0,0,0,0.78);border:1px solid rgba(250,204,21,0.55);color:#fef08a;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:999px;cursor:pointer;">
+          📐 Horiz / Vert
+        </button>
+
         <iframe id="live-iframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
         <div id="creator-vip-alert" class="creator-vip-alert">
           <div style="display:flex;align-items:center;gap:8px;">
@@ -1006,6 +1054,10 @@
           <div id="progress-bar" class="progress-fill"></div>
         </div>
 
+        <label class="check-row" style="margin-bottom:8px;">
+          <input id="upload-legal-chk" type="checkbox" required />
+          <span>Acepto los <a href="/terms" target="_blank" style="color:#93c5fd;">Términos</a>: declaro que el video es propio/autorizado y asumo <strong>exclusiva responsabilidad</strong> por su contenido, insinuaciones o infracciones legales. StarVibe no se responsabiliza por actos del usuario.</span>
+        </label>
         <button id="submit-btn" type="submit" class="submit-btn" data-i18n="publish_btn">Publicar en StarVibe</button>
       </form>
     </div>
@@ -1030,8 +1082,39 @@
         </label>
         <label class="check-row">
           <input type="checkbox" required />
-          <span data-i18n="live_terms_chk">Soy mayor de 18 años y acepto las normas de transmisión y reparto (65% StarVibe / 35% Creador).</span>
+          <span data-i18n="live_terms_chk">Soy mayor de 18 años, acepto los <a href="/terms" target="_blank" style="color:#93c5fd;">Términos</a> y asumo <strong>exclusiva responsabilidad</strong> por lo que transmita, insinúe o realice en vivo (StarVibe no se responsabiliza por infracciones del creador).</span>
         </label>
+        <div style="background:#121520;border:1px solid #262c3d;border-radius:12px;padding:9px;margin-bottom:8px;">
+          <div style="font-size:11.5px;font-weight:800;color:#fef08a;margin-bottom:6px;">🎯 Meta de Regalos del Creador (Opcional)</div>
+          <div style="display:flex;gap:6px;">
+            <input id="live-goal-title-input" type="text" maxlength="45" placeholder="Ej: Reto 500 🪙 o Gameplay 2h..." class="text-input" style="margin-bottom:0;flex:1.4;font-size:12px;padding:8px;" />
+            <input id="live-goal-target-input" type="number" min="50" max="50000" step="50" value="250" placeholder="Meta 🪙" class="text-input" style="margin-bottom:0;flex:0.8;font-size:12px;padding:8px;" />
+          </div>
+        </div>
+        <div style="background:#121520;border:1px solid #262c3d;border-radius:12px;padding:9px;margin-bottom:8px;">
+          <label class="check-row" style="margin-bottom:6px;">
+            <input id="live-battle-check" type="checkbox" onchange="document.getElementById('live-battle-config-box').classList.toggle('hidden', !this.checked)" />
+            <span>⚔️ Activar <strong>Batalla de Creadores (PK)</strong> en esta transmisión</span>
+          </label>
+          <div id="live-battle-config-box" class="hidden" style="display:flex;flex-direction:column;gap:6px;">
+            <input id="live-battle-rival-input" type="text" maxlength="40" placeholder="Nombre del creador rival o equipo (Ej: @TeamRival)..." class="text-input" style="margin-bottom:0;font-size:12px;padding:8px;" />
+            <label style="font-size:10.5px;color:#d1d5db;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span>⏱️ Duración de Batalla PK:</span>
+              <select id="live-battle-duration-select" class="text-input" style="margin-bottom:0;width:auto;padding:5px 8px;font-size:11.5px;">
+                <option value="180" selected>3 minutos (03:00)</option>
+                <option value="300">5 minutos (05:00)</option>
+                <option value="600">10 minutos (10:00)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;font-size:11.5px;color:#d1d5db;">
+          <span>📐 Orientación inicial:</span>
+          <select id="live-orientation-select" class="text-input" style="margin-bottom:0;flex:1;padding:7px;font-size:12px;">
+            <option value="vertical">Vertical (9:16 Móvil)</option>
+            <option value="horizontal">Horizontal (16:9 Pantalla Completa)</option>
+          </select>
+        </div>
         <button type="submit" class="submit-btn" data-i18n="activate_live_btn">Activar Mi Sala En Vivo</button>
       </form>
     </div>
@@ -2447,6 +2530,130 @@
       }
     }
 
+
+    let liveGoalTarget = 250;
+    let liveGoalCurrent = 0;
+    let liveBattleActive = false;
+    let liveBattleCreatorPts = 0;
+    let liveBattleRivalPts = 120;
+    let liveBattleSecondsLeft = 180;
+    let liveBattleInterval = null;
+
+    function formatBattleClock(sec) {
+      const safe = Math.max(0, Number(sec || 0));
+      const m = Math.floor(safe / 60);
+      const s = safe % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function startPkBattleTimer(seconds) {
+      if (liveBattleInterval) {
+        clearInterval(liveBattleInterval);
+        liveBattleInterval = null;
+      }
+      liveBattleSecondsLeft = Math.max(30, Number(seconds || 180));
+      const tEl = document.getElementById('sv-battle-timer-lbl');
+      const stEl = document.getElementById('sv-battle-status-lbl');
+      if (tEl) tEl.textContent = formatBattleClock(liveBattleSecondsLeft);
+      if (stEl) stEl.textContent = 'Regla: 1 🪙 = 1 pt • Gana quien sume más al terminar el tiempo';
+
+      liveBattleInterval = setInterval(() => {
+        if (!liveBattleActive) {
+          clearInterval(liveBattleInterval);
+          liveBattleInterval = null;
+          return;
+        }
+        liveBattleSecondsLeft -= 1;
+        if (tEl) tEl.textContent = formatBattleClock(Math.max(0, liveBattleSecondsLeft));
+        if (liveBattleSecondsLeft <= 0) {
+          clearInterval(liveBattleInterval);
+          liveBattleInterval = null;
+          const creatorName = '@' + (activeLiveRoom?.user || 'Creador');
+          const rivalName = activeLiveRoom?.battleRival || '@Rival';
+          const outcome = liveBattleCreatorPts > liveBattleRivalPts
+            ? `🏆 ¡Ganó ${creatorName} (${liveBattleCreatorPts} vs ${liveBattleRivalPts} 🪙)!`
+            : (liveBattleRivalPts > liveBattleCreatorPts
+              ? `🏆 ¡Ganó ${rivalName} (${liveBattleRivalPts} vs ${liveBattleCreatorPts} 🪙)!`
+              : `🤝 ¡Empate técnico (${liveBattleCreatorPts} 🪙)!`);
+          if (stEl) stEl.textContent = outcome;
+          toast(outcome);
+        }
+      }, 1000);
+    }
+    let liveRoomHorizontal = false;
+
+    function refreshLiveGoalAndBattleUI() {
+      const titleEl = document.getElementById('sv-goal-title-lbl');
+      const progEl = document.getElementById('sv-goal-progress-lbl');
+      const fillEl = document.getElementById('sv-goal-fill');
+      const msgEl = document.getElementById('sv-goal-status-msg');
+      const target = Math.max(10, Number(liveGoalTarget || 250));
+      const cur = Math.max(0, Number(liveGoalCurrent || 0));
+      const pct = Math.min(100, Math.round((cur / target) * 100));
+      if (progEl) progEl.textContent = cur.toLocaleString('es-ES') + ' / ' + target.toLocaleString('es-ES') + ' 🪙';
+      if (fillEl) fillEl.style.width = pct + '%';
+      if (msgEl) msgEl.style.display = cur >= target ? 'block' : 'none';
+      if (titleEl && activeLiveRoom && activeLiveRoom.goalTitle) {
+        titleEl.textContent = '🎯 Meta: ' + activeLiveRoom.goalTitle;
+      }
+
+      const bBar = document.getElementById('sv-live-battle-bar');
+      if (bBar) {
+        bBar.classList.toggle('hidden', !liveBattleActive);
+        if (liveBattleActive) {
+          const leftLbl = document.getElementById('sv-battle-left-lbl');
+          const rightLbl = document.getElementById('sv-battle-right-lbl');
+          const leftBar = document.getElementById('sv-battle-left-bar');
+          const rightBar = document.getElementById('sv-battle-right-bar');
+          const total = Math.max(1, liveBattleCreatorPts + liveBattleRivalPts);
+          const leftPct = Math.max(10, Math.min(90, Math.round((liveBattleCreatorPts / total) * 100)));
+          if (leftLbl) leftLbl.textContent = '⚔️ @' + (activeLiveRoom?.user || 'Creador') + ': ' + liveBattleCreatorPts + ' 🪙';
+          if (rightLbl) rightLbl.textContent = (activeLiveRoom?.battleRival || '@Rival') + ': ' + liveBattleRivalPts + ' 🪙';
+          if (leftBar) leftBar.style.width = leftPct + '%';
+          if (rightBar) rightBar.style.width = (100 - leftPct) + '%';
+        }
+      }
+    }
+
+    window.toggleFeedOrientation = (vidId, btnEl) => {
+      const slide = btnEl ? btnEl.closest('.slide') : document.querySelector(`.slide[data-vid-id="${vidId}"]`);
+      const vid = slide ? slide.querySelector('video') : null;
+      if (!vid) return;
+      const isHoriz = vid.dataset.horiz === '1';
+      if (!isHoriz) {
+        vid.dataset.horiz = '1';
+        vid.style.width = '100vw';
+        vid.style.height = '56.25vw';
+        vid.style.maxHeight = '72vh';
+        vid.style.objectFit = 'contain';
+        if (btnEl) btnEl.textContent = '📱 Vertical';
+        toast('📐 Vista horizontal activada');
+      } else {
+        vid.dataset.horiz = '0';
+        vid.style.width = '100%';
+        vid.style.height = '100%';
+        vid.style.maxHeight = '100%';
+        vid.style.objectFit = 'cover';
+        if (btnEl) btnEl.textContent = '📐 Vert/Horiz';
+        toast('📱 Vista vertical activada');
+      }
+    };
+
+    window.toggleLiveRoomOrientation = () => {
+      const box = document.getElementById('sv-live-player-box');
+      if (!box) return;
+      liveRoomHorizontal = !liveRoomHorizontal;
+      if (liveRoomHorizontal) {
+        box.style.height = '260px';
+        box.style.aspectRatio = '16 / 9';
+        toast('📐 Live en formato horizontal');
+      } else {
+        box.style.height = '';
+        box.style.aspectRatio = '';
+        toast('📱 Live en formato vertical');
+      }
+    };
+
     window.sendVirtualGift = async (giftName, coinCost, brlValue, tier = 'basic', tierLabel = 'REGALO EN VIVO') => {
       if (!activeLiveRoom) return;
       const currentCoins = getCoinsBalance();
@@ -2460,6 +2667,9 @@
         localStorage.setItem('sv_paid_coins', String(Math.max(0, paidCoins - coinCost)));
       }
       setCoinsBalance(currentCoins - coinCost);
+      liveGoalCurrent += Number(coinCost || 0);
+      if (liveBattleActive) liveBattleCreatorPts += Number(coinCost || 0);
+      refreshLiveGoalAndBattleUI();
 
       const creatorPct = getCreatorSplitPct();
       const creatorShare = isPromoCoins ? 0 : +(brlValue * (creatorPct / 100)).toFixed(2);
@@ -2645,7 +2855,10 @@
         slide.dataset.creatorUid = v.uid || '';
         slide.dataset.durationSec = String(v.durationSec || 0);
         slide.innerHTML = `
-          <video src="${v.videoUrl}" loop playsinline ${isMuted ? 'muted' : ''} preload="metadata"></video>
+          <video src="${v.videoUrl}" loop playsinline ${isMuted ? 'muted' : ''} preload="metadata" style="transition:transform 0.25s ease,width 0.25s ease,height 0.25s ease;"></video>
+          <button type="button" onclick="toggleFeedOrientation('${v.id}', this)" title="Cambiar orientación Vertical / Horizontal" style="position:absolute;top:64px;right:12px;z-index:8;background:rgba(10,12,18,0.78);border:1px solid rgba(250,204,21,0.55);color:#fef08a;font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;cursor:pointer;backdrop-filter:blur(6px);">
+            📐 Vert/Horiz
+          </button>
           <div class="speed-badge" id="spd-${v.id}">⏩ 2x</div>
           <div class="seek-feedback" id="seekfb-${v.id}">⏪ -5s</div>
           <div class="heart-burst" id="burst-${v.id}">❤️</div>
@@ -2818,29 +3031,32 @@
         if ((idx + 1) % 2 === 0 || (videosToRender.length === 1 && idx === 0)) {
           const adSlide = document.createElement('div');
           adSlide.className = 'slide ad-slide';
+          adSlide.style.padding = '0';
           const currentAdUrl = activeMonetagUrl || MONETAG_DIRECT_LINK;
           const adSpotId = 'adspot-' + idx + '-' + Math.random().toString(36).slice(2, 6);
           adSlide.innerHTML = `
-            <div style="position:relative;width:100%;height:100%;background:radial-gradient(circle at 50% 32%,#231b08 0%,#06070b 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
-              <div style="position:absolute;top:62px;left:14px;right:14px;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                <span style="background:rgba(0,0,0,0.78);border:1px solid rgba(250,204,21,0.6);color:#fef08a;font-size:10.5px;font-weight:800;padding:5px 10px;border-radius:999px;">
-                  📢 ANUNCIO • <span id="cd-${adSpotId}">5s</span>
+            <div style="position:relative;width:100%;height:100%;min-height:100%;background:linear-gradient(165deg,#2a1f08 0%,#12100a 42%,#050507 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:84px 22px 84px;text-align:center;box-sizing:border-box;">
+              <div style="position:absolute;top:68px;left:14px;right:14px;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span style="background:rgba(0,0,0,0.82);border:1px solid rgba(250,204,21,0.65);color:#fef08a;font-size:11px;font-weight:800;padding:5px 11px;border-radius:999px;">
+                  📢 PATROCINADO • <span id="cd-${adSpotId}">5s</span>
                 </span>
-                <button type="button" onclick="skipFeedAdSlide(this)" style="background:linear-gradient(135deg,#facc15,#d97706);color:#000;border:none;border-radius:999px;padding:6px 13px;font-size:11.5px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.6);">
+                <button type="button" onclick="skipFeedAdSlide(this)" style="background:linear-gradient(135deg,#facc15,#d97706);color:#000;border:none;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.65);">
                   Saltar ✕
                 </button>
               </div>
-              <div style="width:80px;height:80px;border-radius:24px;background:rgba(250,204,21,0.14);border:1.5px solid rgba(250,204,21,0.5);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:14px;box-shadow:0 0 30px rgba(250,204,21,0.22);animation:pulse 1.8s infinite;">🚀</div>
-              <h3 style="font-size:20px;font-weight:900;color:#fef08a;margin-bottom:8px;">Impulsa tu Canal y Gana en StarVibe</h3>
-              <p style="font-size:13px;color:#d1d5db;max-width:305px;line-height:1.5;margin-bottom:16px;">
-                Anuncio activo con contador automático y salto inmediato. Explora la oferta destacada o desliza hacia arriba.
+              <div style="width:94px;height:94px;border-radius:28px;background:rgba(250,204,21,0.16);border:1.5px solid rgba(250,204,21,0.6);display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:18px;box-shadow:0 0 36px rgba(250,204,21,0.25);">🚀</div>
+              <div style="font-size:11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:#facc15;margin-bottom:6px;">Publicidad en Pantalla Completa</div>
+              <h3 style="font-size:23px;font-weight:900;color:#fff;margin-bottom:10px;max-width:340px;line-height:1.2;">Impulsa tu Canal y Gana en StarVibe</h3>
+              <p style="font-size:13.5px;color:#d1d5db;max-width:330px;line-height:1.55;margin-bottom:20px;">
+                Disfruta el anuncio con contador automático y botón Saltar ✕, o abre la oferta patrocinada al instante.
               </p>
-              <div style="width:220px;height:5px;background:rgba(255,255,255,0.14);border-radius:999px;overflow:hidden;margin-bottom:16px;">
+              <div style="width:240px;height:6px;background:rgba(255,255,255,0.14);border-radius:999px;overflow:hidden;margin-bottom:20px;">
                 <div id="bar-${adSpotId}" style="width:100%;height:100%;background:linear-gradient(90deg,#facc15,#f59e0b);transition:width 1s linear;"></div>
               </div>
-              <a href="${currentAdUrl}" target="_blank" rel="noopener sponsored" class="ad-cta" style="max-width:260px;padding:12px 18px;border-radius:999px;font-weight:900;text-decoration:none;">
-                ↗️ Ver Anuncio / Oferta
+              <a href="${currentAdUrl}" target="_blank" rel="noopener sponsored" class="ad-cta" style="max-width:290px;padding:14px 22px;border-radius:999px;font-size:14px;font-weight:900;text-decoration:none;box-shadow:0 10px 28px rgba(250,204,21,0.28);">
+                ↗️ Abrir Anuncio en Pantalla Completa
               </a>
+              <span style="margin-top:16px;font-size:11.5px;color:#9ca3af;">Desliza hacia arriba para continuar</span>
             </div>
           `;
           feedEl.appendChild(adSlide);
@@ -3289,10 +3505,29 @@
       const f = getFormalData() || {};
       const stableCreatorId = getActiveUserId();
       try {
+        const goalTitle = (document.getElementById('live-goal-title-input')?.value || '').trim() || 'Reto de Comunidad en Vivo';
+        const goalTarget = Math.max(50, Number(document.getElementById('live-goal-target-input')?.value || 250));
+        const battleEnabled = Boolean(document.getElementById('live-battle-check')?.checked);
+        const battleRival = (document.getElementById('live-battle-rival-input')?.value || '').trim() || '@CreadorRival';
+        const preferredOrientation = document.getElementById('live-orientation-select')?.value || 'vertical';
+        liveGoalTarget = goalTarget;
+        liveGoalCurrent = 0;
+        const battleDurationSec = Number(document.getElementById('live-battle-duration-select')?.value || 180);
+        liveBattleActive = battleEnabled;
+        liveBattleCreatorPts = 0;
+        liveBattleRivalPts = battleEnabled ? 120 : 0;
+        if (battleEnabled) startPkBattleTimer(battleDurationSec);
+        liveRoomHorizontal = preferredOrientation === 'horizontal';
+        refreshLiveGoalAndBattleUI();
         const docRef = await addDoc(collection(db, 'lives'), {
           title,
           streamUrl,
           offerUrl,
+          goalTitle,
+          goalTarget,
+          battleEnabled,
+          battleRival,
+          preferredOrientation,
           user: getUserName(),
           verifiedOwnerName: f.fullName || getUserName(),
           uid: stableCreatorId,
@@ -4080,32 +4315,31 @@
     let activeMonetagUrl = localStorage.getItem('sv_monetag_url') || MONETAG_DIRECT_LINK;
     window.dismissEntryPromo = () => {
       const ov = document.getElementById('entry-promo-overlay');
-      const frame = document.getElementById('entry-promo-frame');
-      if (frame) frame.src = 'about:blank';
       if (ov) ov.classList.add('hidden');
       clearInterval(window._promoTimer);
     };
 
+    function dismissBrandSplash() {
+      const sp = document.getElementById('sv-brand-splash');
+      if (!sp) return;
+      sp.style.opacity = '0';
+      sp.style.pointerEvents = 'none';
+      setTimeout(() => { try { sp.remove(); } catch (e) {} }, 250);
+    }
+
     window.openEntryPromoNow = () => {
       localStorage.removeItem('sv_last_entry_promo');
-      // Arranque limpio directo al feed de StarVibe (sin iframe invasivo ni pantallas técnicas al abrir)
-    setTimeout(() => {
-      const sp = document.getElementById('sv-brand-splash');
-      if (sp) {
-        sp.style.opacity = '0';
-        setTimeout(() => sp.remove(), 350);
-      }
-    }, 850);
+      dismissBrandSplash();
+      initEntryPromo(true);
     };
 
     function initEntryPromo() {
       const lastShown = Number(localStorage.getItem('sv_last_entry_promo') || 0);
-      const testCooldown = 3 * 60 * 1000;
+      const testCooldown = 15 * 60 * 1000;
       if (Date.now() - lastShown < testCooldown) return;
       localStorage.setItem('sv_last_entry_promo', String(Date.now()));
 
       const ov = document.getElementById('entry-promo-overlay');
-      const frame = document.getElementById('entry-promo-frame');
       const skipBtn = document.getElementById('entry-promo-skip');
       const secLbl = document.getElementById('promo-sec-lbl');
       const progFill = document.getElementById('promo-progress-fill');
@@ -4114,10 +4348,9 @@
 
       const adUrl = activeMonetagUrl || 'https://uplcm.com/4/12342382';
       if (ctaEl) ctaEl.href = adUrl;
-      if (frame) frame.src = adUrl;
       ov.classList.remove('hidden');
 
-      const totalSec = 6;
+      const totalSec = 5;
       let sec = totalSec;
       if (secLbl) secLbl.textContent = sec + 's';
       if (progFill) progFill.style.width = '15%';
@@ -4160,6 +4393,8 @@
       }
     }).catch(() => {});
 
+    setTimeout(dismissBrandSplash, 700);
+    setTimeout(dismissBrandSplash, 2000);
     initEntryPromo();
 
     setLanguage(currentLang);
