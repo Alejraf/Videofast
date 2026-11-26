@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "sbs.cashplayapp.starvibe",
+      "sha256_cert_fingerprints": [
+        "E6:10:04:DF:5C:3C:C5:91:83:9B:67:F3:85:6E:6F:3D:51:CD:D6:EE:BE:74:AF:C1:0C:25:45:0B:35:6C:E2:40"
+      ]
+    }
+  }
+]
